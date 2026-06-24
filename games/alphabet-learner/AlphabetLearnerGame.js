@@ -34,6 +34,8 @@ export class AlphabetLearnerGame extends GameModule {
     this.buttonsContainer = null;
     this.keyboardHints = null;
     this.feedbackElement = null;
+    this.sparkleField = null;
+    this.rewardLayer = null;
     
     // State flags
     this.isWaitingForInput = false;
@@ -251,6 +253,7 @@ export class AlphabetLearnerGame extends GameModule {
 
     // Play success sound
     this.platform.audioManager.playSound('success');
+    this.showRewardBurst();
 
     // Show picture with celebration animation
     await this.showPicture();
@@ -348,6 +351,31 @@ export class AlphabetLearnerGame extends GameModule {
   }
 
   /**
+   * Show a short star burst to reward the correct answer.
+   */
+  showRewardBurst() {
+    if (!this.rewardLayer) return;
+
+    this.rewardLayer.innerHTML = '';
+    const stars = 12;
+
+    for (let i = 0; i < stars; i++) {
+      const star = document.createElement('span');
+      star.className = 'reward-star';
+      star.style.setProperty('--angle', `${(360 / stars) * i}deg`);
+      star.style.setProperty('--distance', `${75 + (i % 3) * 18}px`);
+      star.style.setProperty('--delay', `${(i % 4) * 35}ms`);
+      this.rewardLayer.appendChild(star);
+    }
+
+    setTimeout(() => {
+      if (this.rewardLayer) {
+        this.rewardLayer.innerHTML = '';
+      }
+    }, 1100);
+  }
+
+  /**
    * Update which button is highlighted
    * @param {string} char - Character to highlight
    */
@@ -377,6 +405,12 @@ export class AlphabetLearnerGame extends GameModule {
     this.gameContainer = document.createElement('div');
     this.gameContainer.className = 'game-container';
     this.gameContainer.id = 'alphabet-learner-game';
+
+    this.sparkleField = document.createElement('div');
+    this.sparkleField.className = 'sparkle-field';
+    this.sparkleField.setAttribute('aria-hidden', 'true');
+    this.createSparkleField();
+    this.gameContainer.appendChild(this.sparkleField);
 
     // Header
     const header = document.createElement('div');
@@ -430,9 +464,14 @@ export class AlphabetLearnerGame extends GameModule {
     this.feedbackElement = document.createElement('div');
     this.feedbackElement.className = 'feedback-display';
 
+    this.rewardLayer = document.createElement('div');
+    this.rewardLayer.className = 'reward-burst';
+    this.rewardLayer.setAttribute('aria-hidden', 'true');
+
     card.appendChild(this.letterDisplay);
     card.appendChild(this.pictureDisplay);
     card.appendChild(this.feedbackElement);
+    card.appendChild(this.rewardLayer);
     content.appendChild(card);
 
     // Keyboard hints (hidden on mobile)
@@ -452,6 +491,34 @@ export class AlphabetLearnerGame extends GameModule {
     }
 
     this.gameContainer.appendChild(content);
+  }
+
+  /**
+   * Create slow floating stars in the background.
+   */
+  createSparkleField() {
+    const stars = [
+      { x: 8, y: 18, size: 22, delay: 0, duration: 6.2 },
+      { x: 18, y: 72, size: 16, delay: 1.1, duration: 7.4 },
+      { x: 31, y: 9, size: 14, delay: 2.2, duration: 6.8 },
+      { x: 73, y: 13, size: 18, delay: 0.7, duration: 7.1 },
+      { x: 88, y: 34, size: 24, delay: 1.6, duration: 6.5 },
+      { x: 82, y: 76, size: 15, delay: 2.7, duration: 7.8 },
+      { x: 48, y: 83, size: 20, delay: 0.4, duration: 7.2 },
+      { x: 6, y: 48, size: 13, delay: 3.1, duration: 6.9 }
+    ];
+
+    stars.forEach((config, index) => {
+      const star = document.createElement('span');
+      star.className = 'floating-star';
+      star.style.setProperty('--x', `${config.x}%`);
+      star.style.setProperty('--y', `${config.y}%`);
+      star.style.setProperty('--size', `${config.size}px`);
+      star.style.setProperty('--delay', `${config.delay}s`);
+      star.style.setProperty('--duration', `${config.duration}s`);
+      star.style.setProperty('--spin', index % 2 === 0 ? '10deg' : '-12deg');
+      this.sparkleField.appendChild(star);
+    });
   }
 
   /**

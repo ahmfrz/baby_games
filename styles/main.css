@@ -322,7 +322,10 @@ html, body {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-green) 100%);
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(255, 230, 109, 0.92) 0%, rgba(149, 225, 211, 0.9) 48%, rgba(255, 107, 157, 0.55) 100%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 10px, rgba(255, 255, 255, 0) 10px 26px);
   
   /* Leave space for ads at bottom */
   padding-bottom: var(--ad-safe-zone-height);
@@ -338,15 +341,18 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-lg);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.65);
   box-shadow: 0 2px 8px var(--shadow);
   z-index: 10;
+  backdrop-filter: blur(12px);
 }
 
 .game-title {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-dark);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.65);
 }
 
 .game-back-btn {
@@ -373,6 +379,8 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: var(--spacing-lg);
+  position: relative;
+  z-index: 1;
 }
 
 /* ============================================
