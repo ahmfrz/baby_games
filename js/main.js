@@ -10,7 +10,7 @@ import { audioManager } from '../services/AudioManager.js';
 import { storageManager } from '../services/StorageManager.js';
 import { assetManager } from '../services/AssetManager.js';
 import { deviceDetector } from '../services/DeviceDetector.js';
-import { adManager } from '../services/AdManager.js';
+import { monetizationManager } from '../services/MonetizationManager.js';
 import { AlphabetLearnerGame } from '../games/alphabet-learner/AlphabetLearnerGame.js';
 
 // ============================================
@@ -25,7 +25,7 @@ class BabyGamesPlatform {
       storageManager,
       assetManager,
       deviceDetector,
-      adManager,
+      monetizationManager,
       eventEmitter
     };
 
@@ -50,9 +50,9 @@ class BabyGamesPlatform {
       // Load ad configuration
       try {
         const adConfig = await fetch('config/ads.json').then(r => r.json());
-        await adManager.initialize(adConfig);
+        await monetizationManager.initialize(adConfig);
       } catch (err) {
-        console.warn('[BabyGamesPlatform] Failed to load ad config:', err);
+        console.warn('[BabyGamesPlatform] Failed to load monetization config:', err);
       }
 
       // Register games
