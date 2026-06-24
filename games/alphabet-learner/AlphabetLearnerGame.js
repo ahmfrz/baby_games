@@ -11,7 +11,7 @@ export class AlphabetLearnerGame extends GameModule {
     description: 'Learn letters A-Z and numbers 0-9 with fun pictures and sounds!',
     version: '1.0.0',
     author: 'Baby Games',
-    assetPath: '/games/alphabet-learner/'
+    assetPath: 'games/alphabet-learner/'
   };
 
   constructor(platform) {
