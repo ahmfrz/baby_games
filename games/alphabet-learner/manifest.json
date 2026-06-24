@@ -6,48 +6,258 @@
       "char": "A",
       "imagePath": "assets/images/A-apple.png",
       "sound": "success",
-      "name": "Apple"
+      "name": "Apple",
+      "emoji": "\ud83c\udf4e"
     },
     {
       "char": "B",
       "imagePath": "assets/images/B-ball.png",
       "sound": "success",
-      "name": "Ball"
+      "name": "Ball",
+      "emoji": "\ud83c\udf88"
     },
     {
       "char": "C",
       "imagePath": "assets/images/C-cat.png",
       "sound": "success",
-      "name": "Cat"
+      "name": "Cat",
+      "emoji": "\ud83d\udc31"
     },
     {
       "char": "D",
       "imagePath": "assets/images/D-dog.png",
       "sound": "success",
-      "name": "Dog"
+      "name": "Dog",
+      "emoji": "\ud83d\udc36"
     },
     {
       "char": "E",
       "imagePath": "assets/images/E-elephant.png",
       "sound": "success",
-      "name": "Elephant"
+      "name": "Elephant",
+      "emoji": "\ud83d\udc18"
+    },
+    {
+      "char": "F",
+      "imagePath": "assets/images/F-fish.png",
+      "sound": "success",
+      "name": "Fish",
+      "emoji": "\ud83d\udc20"
+    },
+    {
+      "char": "G",
+      "imagePath": "assets/images/G-giraffe.png",
+      "sound": "success",
+      "name": "Giraffe",
+      "emoji": "\ud83e\udd92"
+    },
+    {
+      "char": "H",
+      "imagePath": "assets/images/H-house.png",
+      "sound": "success",
+      "name": "House",
+      "emoji": "\ud83c\udfe0"
+    },
+    {
+      "char": "I",
+      "imagePath": "assets/images/I-ice cream.png",
+      "sound": "success",
+      "name": "Ice Cream",
+      "emoji": "\ud83c\udf66"
+    },
+    {
+      "char": "J",
+      "imagePath": "assets/images/J-jellyfish.png",
+      "sound": "success",
+      "name": "Jellyfish",
+      "emoji": "\ud83e\udebc"
+    },
+    {
+      "char": "K",
+      "imagePath": "assets/images/K-kite.png",
+      "sound": "success",
+      "name": "Kite",
+      "emoji": "\ud83e\ude81"
+    },
+    {
+      "char": "L",
+      "imagePath": "assets/images/L-lion.png",
+      "sound": "success",
+      "name": "Lion",
+      "emoji": "\ud83e\udd81"
+    },
+    {
+      "char": "M",
+      "imagePath": "assets/images/M-monkey.png",
+      "sound": "success",
+      "name": "Monkey",
+      "emoji": "\ud83d\udc35"
+    },
+    {
+      "char": "N",
+      "imagePath": "assets/images/N-nest.png",
+      "sound": "success",
+      "name": "Nest",
+      "emoji": "\ud83e\udeb9"
+    },
+    {
+      "char": "O",
+      "imagePath": "assets/images/O-orange.png",
+      "sound": "success",
+      "name": "Orange",
+      "emoji": "\ud83c\udf4a"
+    },
+    {
+      "char": "P",
+      "imagePath": "assets/images/P-pig.png",
+      "sound": "success",
+      "name": "Pig",
+      "emoji": "\ud83d\udc37"
+    },
+    {
+      "char": "Q",
+      "imagePath": "assets/images/Q-queen.png",
+      "sound": "success",
+      "name": "Queen",
+      "emoji": "\ud83d\udc51"
+    },
+    {
+      "char": "R",
+      "imagePath": "assets/images/R-rainbow.png",
+      "sound": "success",
+      "name": "Rainbow",
+      "emoji": "\ud83c\udf08"
+    },
+    {
+      "char": "S",
+      "imagePath": "assets/images/S-sun.png",
+      "sound": "success",
+      "name": "Sun",
+      "emoji": "\u2600\ufe0f"
+    },
+    {
+      "char": "T",
+      "imagePath": "assets/images/T-tiger.png",
+      "sound": "success",
+      "name": "Tiger",
+      "emoji": "\ud83d\udc05"
+    },
+    {
+      "char": "U",
+      "imagePath": "assets/images/U-umbrella.png",
+      "sound": "success",
+      "name": "Umbrella",
+      "emoji": "\u2602\ufe0f"
+    },
+    {
+      "char": "V",
+      "imagePath": "assets/images/V-van.png",
+      "sound": "success",
+      "name": "Van",
+      "emoji": "\ud83d\ude90"
+    },
+    {
+      "char": "W",
+      "imagePath": "assets/images/W-whale.png",
+      "sound": "success",
+      "name": "Whale",
+      "emoji": "\ud83d\udc0b"
+    },
+    {
+      "char": "X",
+      "imagePath": "assets/images/X-xylophone.png",
+      "sound": "success",
+      "name": "Xylophone",
+      "emoji": "\ud83c\udfb9"
+    },
+    {
+      "char": "Y",
+      "imagePath": "assets/images/Y-yo-yo.png",
+      "sound": "success",
+      "name": "Yo-yo",
+      "emoji": "\ud83e\ude80"
+    },
+    {
+      "char": "Z",
+      "imagePath": "assets/images/Z-zebra.png",
+      "sound": "success",
+      "name": "Zebra",
+      "emoji": "\ud83e\udd93"
     },
     {
       "char": "0",
       "imagePath": "assets/images/0-zero.png",
       "sound": "success",
-      "name": "Zero"
+      "name": "Zero",
+      "emoji": "\ud83c\udf69"
     },
     {
       "char": "1",
       "imagePath": "assets/images/1-one.png",
       "sound": "success",
-      "name": "One"
+      "name": "One",
+      "emoji": "\u261d\ufe0f"
+    },
+    {
+      "char": "2",
+      "imagePath": "assets/images/2-two.png",
+      "sound": "success",
+      "name": "Two",
+      "emoji": "\u270c\ufe0f"
+    },
+    {
+      "char": "3",
+      "imagePath": "assets/images/3-three.png",
+      "sound": "success",
+      "name": "Three",
+      "emoji": "\ud83e\udd1f"
+    },
+    {
+      "char": "4",
+      "imagePath": "assets/images/4-four.png",
+      "sound": "success",
+      "name": "Four",
+      "emoji": "\u270b"
+    },
+    {
+      "char": "5",
+      "imagePath": "assets/images/5-five.png",
+      "sound": "success",
+      "name": "Five",
+      "emoji": "\ud83d\udd90\ufe0f"
+    },
+    {
+      "char": "6",
+      "imagePath": "assets/images/6-six.png",
+      "sound": "success",
+      "name": "Six",
+      "emoji": "\ud83d\udc4c"
+    },
+    {
+      "char": "7",
+      "imagePath": "assets/images/7-seven.png",
+      "sound": "success",
+      "name": "Seven",
+      "emoji": "\ud83c\udfaf"
+    },
+    {
+      "char": "8",
+      "imagePath": "assets/images/8-eight.png",
+      "sound": "success",
+      "name": "Eight",
+      "emoji": "\u267e\ufe0f"
+    },
+    {
+      "char": "9",
+      "imagePath": "assets/images/9-nine.png",
+      "sound": "success",
+      "name": "Nine",
+      "emoji": "\ud83c\udfb2"
     }
   ],
   "sounds": {
-    "success": "assets/sounds/success.mp3",
-    "fail": "assets/sounds/fail.mp3"
+    "success": "assets/sounds/success.wav",
+    "fail": "assets/sounds/fail.wav"
   },
-  "description": "This is a placeholder manifest. Add all letters A-Z (with image/sound files) and numbers 0-9 to complete the game."
+  "description": "Complete asset pack for Alphabet Learner game"
 }
