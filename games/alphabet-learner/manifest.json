@@ -1,0 +1,53 @@
+{
+  "name": "Alphabet & Numbers Learner",
+  "version": "1.0.0",
+  "characters": [
+    {
+      "char": "A",
+      "imagePath": "assets/images/A-apple.png",
+      "sound": "success",
+      "name": "Apple"
+    },
+    {
+      "char": "B",
+      "imagePath": "assets/images/B-ball.png",
+      "sound": "success",
+      "name": "Ball"
+    },
+    {
+      "char": "C",
+      "imagePath": "assets/images/C-cat.png",
+      "sound": "success",
+      "name": "Cat"
+    },
+    {
+      "char": "D",
+      "imagePath": "assets/images/D-dog.png",
+      "sound": "success",
+      "name": "Dog"
+    },
+    {
+      "char": "E",
+      "imagePath": "assets/images/E-elephant.png",
+      "sound": "success",
+      "name": "Elephant"
+    },
+    {
+      "char": "0",
+      "imagePath": "assets/images/0-zero.png",
+      "sound": "success",
+      "name": "Zero"
+    },
+    {
+      "char": "1",
+      "imagePath": "assets/images/1-one.png",
+      "sound": "success",
+      "name": "One"
+    }
+  ],
+  "sounds": {
+    "success": "assets/sounds/success.mp3",
+    "fail": "assets/sounds/fail.mp3"
+  },
+  "description": "This is a placeholder manifest. Add all letters A-Z (with image/sound files) and numbers 0-9 to complete the game."
+}

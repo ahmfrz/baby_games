@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ff6b9d">
+  <title>Baby Games - Learning & Fun</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="games/alphabet-learner/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Game launcher section -->
+    <div id="launcher" class="launcher-container">
+      <div class="launcher-content">
+        <h1 class="launcher-title">🎮 Baby Games</h1>
+        <p class="launcher-subtitle">Learning and Fun for Your Little One</p>
+        
+        <div id="gamesList" class="games-list">
+          <!-- Games will be dynamically added here -->
+        </div>
+
+        <div class="launcher-footer">
+          <p class="made-with-love">Made with ❤️ for babies</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ad banner placeholder (bottom-safe zone, doesn't interfere with game) -->
+    <div id="adBanner" class="ad-banner-container" style="display:none;">
+      <!-- Ads will be rendered here in Phase 2 -->
+    </div>
+
+    <!-- Game container (replaces launcher when game starts) -->
+    <div id="gameContainer" class="game-container" style="display:none;">
+      <!-- Game content goes here -->
+    </div>
+
+    <!-- Interstitial ad placeholder -->
+    <div id="interstitial" class="interstitial-container" style="display:none;">
+      <!-- Interstitial ads will be rendered here in Phase 2 -->
+    </div>
+  </div>
+
+  <!-- Main application script -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

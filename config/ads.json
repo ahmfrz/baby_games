@@ -1,0 +1,30 @@
+{
+  "enabled": false,
+  "placements": {
+    "banner": {
+      "position": "bottom",
+      "height": 60,
+      "enabled": false
+    },
+    "interstitial": {
+      "trigger": "between-rounds",
+      "frequency": 5,
+      "enabled": false
+    },
+    "rewarded": {
+      "enabled": false
+    }
+  },
+  "networks": {
+    "google-adsense": {
+      "enabled": false,
+      "clientId": "ca-pub-xxxxxxxxxxxxxxxx",
+      "type": "banner"
+    },
+    "google-admob": {
+      "enabled": false,
+      "publisherId": "ca-app-pub-xxxxxxxxxxxxxxxx",
+      "type": "mobile"
+    }
+  }
+}
