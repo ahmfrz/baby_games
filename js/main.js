@@ -90,6 +90,31 @@ class BabyGamesPlatform {
       this.launchGame(e.detail.gameId);
     });
 
+    // Credits modal handlers
+    const creditsBtn = document.getElementById('creditsBtn');
+    const creditsModal = document.getElementById('creditsModal');
+    const closeCreditsBtn = document.getElementById('closeCreditsBtn');
+
+    if (creditsBtn) {
+      creditsBtn.addEventListener('click', () => {
+        if (creditsModal) creditsModal.style.display = 'flex';
+      });
+    }
+
+    if (closeCreditsBtn) {
+      closeCreditsBtn.addEventListener('click', () => {
+        if (creditsModal) creditsModal.style.display = 'none';
+      });
+    }
+
+    if (creditsModal) {
+      creditsModal.addEventListener('click', (e) => {
+        if (e.target === creditsModal) {
+          creditsModal.style.display = 'none';
+        }
+      });
+    }
+
     // Initialize audio on first user interaction
     document.addEventListener('click', () => {
       audioManager.initialize().catch(err => {
