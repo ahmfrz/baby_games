@@ -99,10 +99,18 @@ class BabyGamesPlatform {
       creditsBtn.addEventListener('click', () => {
         if (creditsModal) creditsModal.style.display = 'flex';
       });
+      creditsBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (creditsModal) creditsModal.style.display = 'flex';
+      });
     }
 
     if (closeCreditsBtn) {
       closeCreditsBtn.addEventListener('click', () => {
+        if (creditsModal) creditsModal.style.display = 'none';
+      });
+      closeCreditsBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
         if (creditsModal) creditsModal.style.display = 'none';
       });
     }
@@ -170,12 +178,17 @@ class BabyGamesPlatform {
       this.launchGame(gameMetadata.id);
     });
 
-    card.addEventListener('touchstart', (e) => {
-      e.preventDefault();
+    card.addEventListener('touchstart', () => {
       card.classList.add('active');
     });
 
-    card.addEventListener('touchend', () => {
+    card.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      card.classList.remove('active');
+      this.launchGame(gameMetadata.id);
+    });
+
+    card.addEventListener('touchcancel', () => {
       card.classList.remove('active');
     });
 
