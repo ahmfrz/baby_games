@@ -37,7 +37,7 @@ export class DeviceDetector {
     // Also check viewport width
     const isSmallViewport = window.innerWidth < 768;
 
-    return isMobileOrTablet || (isTouchDevice() && isSmallViewport);
+    return isMobileOrTablet || isTouchDevice() || isSmallViewport;
   }
 
   /**
