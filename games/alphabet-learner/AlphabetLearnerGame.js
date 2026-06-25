@@ -24,7 +24,6 @@ export class AlphabetLearnerGame extends GameModule {
     this.score = 0;
     this.sessionStartTime = null;
     this.gameMode = 'random'; // 'random' or 'sequence'
-    this.showLettersOnly = true; // Toggle between letters and numbers
     this.gameDataMap = new Map(); // Maps characters to image/sound data
     
     // UI elements
@@ -150,6 +149,7 @@ export class AlphabetLearnerGame extends GameModule {
     this.currentChar = null;
     this.isWaitingForInput = false;
     this.inputLocked = false;
+    this.prepareCharacterList();
     this.updateScoreDisplay();
     this.nextRound();
   }
@@ -164,16 +164,12 @@ export class AlphabetLearnerGame extends GameModule {
   prepareCharacterList() {
     this.charList = [];
 
-    // Add letters if enabled
-    if (this.showLettersOnly) {
-      for (let i = 0; i < 26; i++) {
-        this.charList.push(String.fromCharCode(65 + i)); // A-Z
-      }
-    } else {
-      // Add numbers 0-9
-      for (let i = 0; i < 10; i++) {
-        this.charList.push(i.toString());
-      }
+    for (let i = 0; i < 26; i++) {
+      this.charList.push(String.fromCharCode(65 + i)); // A-Z
+    }
+
+    for (let i = 0; i < 10; i++) {
+      this.charList.push(i.toString()); // 0-9
     }
 
     // Shuffle for random mode
@@ -512,11 +508,12 @@ export class AlphabetLearnerGame extends GameModule {
     this.scoreDisplay.textContent = 'Score: 0';
     scoreAndMode.appendChild(this.scoreDisplay);
 
-    // Mode toggle button
+    // Order mode button
     const modeToggle = document.createElement('button');
     modeToggle.className = 'mode-toggle-btn';
-    modeToggle.textContent = 'A-Z';
-    modeToggle.addEventListener('click', () => this.toggleMode());
+    modeToggle.textContent = this.getModeButtonText();
+    modeToggle.setAttribute('aria-label', 'Switch between random and sequence order');
+    modeToggle.addEventListener('click', () => this.toggleOrderMode());
     scoreAndMode.appendChild(modeToggle);
 
     // Back button
@@ -694,15 +691,30 @@ export class AlphabetLearnerGame extends GameModule {
   }
 
   /**
-   * Toggle between letters and numbers
+   * Toggle between random and sequential order.
    */
-  toggleMode() {
-    this.showLettersOnly = !this.showLettersOnly;
+  toggleOrderMode() {
+    this.gameMode = this.gameMode === 'random' ? 'sequence' : 'random';
     this.reset();
-    const modeBtn = document.querySelector('.mode-toggle-btn');
-    if (modeBtn) {
-      modeBtn.textContent = this.showLettersOnly ? 'A-Z' : '0-9';
-    }
+    this.updateModeButton();
+  }
+
+  /**
+   * Update order mode button label.
+   */
+  updateModeButton() {
+    const modeBtn = this.gameContainer.querySelector('.mode-toggle-btn');
+    if (!modeBtn) return;
+
+    modeBtn.textContent = this.getModeButtonText();
+  }
+
+  /**
+   * Get visible label for the current order mode.
+   * @returns {string}
+   */
+  getModeButtonText() {
+    return this.gameMode === 'random' ? 'Random' : 'Sequence';
   }
 
   /**
