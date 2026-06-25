@@ -36,6 +36,7 @@ export class AlphabetLearnerGame extends GameModule {
     this.feedbackElement = null;
     this.sparkleField = null;
     this.rewardLayer = null;
+    this.ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
     
     // State flags
     this.isWaitingForInput = false;
@@ -125,6 +126,7 @@ export class AlphabetLearnerGame extends GameModule {
     console.log('[AlphabetLearnerGame] Game stopped');
 
     this.isRunning = false;
+    this.stopSpeech();
     this.platform.inputManager.clear();
 
     // Save final score
@@ -142,6 +144,7 @@ export class AlphabetLearnerGame extends GameModule {
    * Reset game to initial state
    */
   reset() {
+    this.stopSpeech();
     this.score = 0;
     this.charIndex = 0;
     this.currentChar = null;
@@ -221,6 +224,7 @@ export class AlphabetLearnerGame extends GameModule {
 
     // Update button highlights
     this.updateButtonHighlights(this.currentChar);
+    this.speakPrompt();
   }
 
   /**
@@ -254,6 +258,7 @@ export class AlphabetLearnerGame extends GameModule {
     // Play success sound
     this.platform.audioManager.playSound('success');
     this.showRewardBurst();
+    this.speakCorrectAnswer();
 
     // Show picture with celebration animation
     await this.showPicture();
@@ -276,6 +281,7 @@ export class AlphabetLearnerGame extends GameModule {
 
     // Play fail sound
     this.platform.audioManager.playSound('fail');
+    this.speakWrongAnswer();
 
     // Show shake animation
     this.shakeCard();
@@ -373,6 +379,83 @@ export class AlphabetLearnerGame extends GameModule {
         this.rewardLayer.innerHTML = '';
       }
     }, 1100);
+  }
+
+  /**
+   * Speak the current learning prompt when browser TTS is available.
+   */
+  speakPrompt() {
+    this.speak(`Where is ${this.getSpokenCharacter(this.currentChar)}?`);
+  }
+
+  /**
+   * Speak a positive reinforcement phrase for the current character.
+   */
+  speakCorrectAnswer() {
+    const charData = this.gameDataMap.get(this.currentChar);
+    const spokenChar = this.getSpokenCharacter(this.currentChar);
+
+    if (charData && charData.name) {
+      this.speak(`Correct, ${spokenChar} for ${charData.name}!`);
+      return;
+    }
+
+    this.speak(`Correct, ${spokenChar}!`);
+  }
+
+  /**
+   * Speak a gentle retry prompt.
+   */
+  speakWrongAnswer() {
+    this.speak('Oh! That is not right, try again!');
+  }
+
+  /**
+   * Speak text using the browser's free built-in speech synthesis.
+   * @param {string} text - Text to speak
+   */
+  speak(text) {
+    if (!this.ttsSupported || !text) return;
+
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.82;
+      utterance.pitch = 1.18;
+      utterance.volume = 1;
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.warn('[AlphabetLearnerGame] Text-to-speech failed:', err);
+    }
+  }
+
+  /**
+   * Stop any queued or active speech.
+   */
+  stopSpeech() {
+    if (!this.ttsSupported) return;
+
+    try {
+      window.speechSynthesis.cancel();
+    } catch (err) {
+      console.warn('[AlphabetLearnerGame] Failed to stop speech:', err);
+    }
+  }
+
+  /**
+   * Make letters and numbers sound natural in spoken prompts.
+   * @param {string} char - Current character
+   * @returns {string}
+   */
+  getSpokenCharacter(char) {
+    const charData = this.gameDataMap.get(char);
+
+    if (/^\d$/.test(char) && charData && charData.name) {
+      return charData.name;
+    }
+
+    return char;
   }
 
   /**
