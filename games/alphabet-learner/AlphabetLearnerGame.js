@@ -42,6 +42,7 @@ export class AlphabetLearnerGame extends GameModule {
     this.startSessionBtn = null;
     this.sparkleField = null;
     this.rewardLayer = null;
+    this.secretBackHandler = null;
     this.ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
     
     // State flags
@@ -82,6 +83,9 @@ export class AlphabetLearnerGame extends GameModule {
 
       // Initialize input handlers
       this.setupInputHandlers();
+
+      // Register the secret back shortcut
+      this.attachSecretBackShortcut();
 
       // Initialize audio context on first user interaction
       this.platform.audioManager.initialize().catch(err => {
@@ -141,6 +145,7 @@ export class AlphabetLearnerGame extends GameModule {
     this.stopSpeech();
     this.platform.inputManager.clear();
     this.clearTimerInterval();
+    this.detachSecretBackShortcut();
 
     // Save final score
     if (this.sessionStartTime) {
@@ -542,13 +547,6 @@ export class AlphabetLearnerGame extends GameModule {
     modeToggle.addEventListener('click', () => this.toggleOrderMode());
     scoreAndMode.appendChild(modeToggle);
 
-    // Back button
-    const backBtn = document.createElement('button');
-    backBtn.className = 'game-back-btn';
-    backBtn.textContent = '← Back';
-    backBtn.addEventListener('click', () => this.onBackToLauncher());
-    scoreAndMode.appendChild(backBtn);
-
     header.appendChild(scoreAndMode);
     this.gameContainer.appendChild(header);
 
@@ -646,8 +644,6 @@ export class AlphabetLearnerGame extends GameModule {
     timerNote.textContent = 'Choose your session duration before starting. The timer locks once the session begins.';
     timerPanel.appendChild(timerNote);
 
-    content.appendChild(timerPanel);
-
     // On-screen keyboard buttons (always visible)
     this.buttonsContainer = document.createElement('div');
     this.buttonsContainer.className = 'buttons-container';
@@ -655,6 +651,11 @@ export class AlphabetLearnerGame extends GameModule {
     content.appendChild(this.buttonsContainer);
 
     this.gameContainer.appendChild(content);
+
+    const footer = document.createElement('div');
+    footer.className = 'game-footer';
+    footer.appendChild(timerPanel);
+    this.gameContainer.appendChild(footer);
   }
 
   /**
@@ -882,6 +883,25 @@ export class AlphabetLearnerGame extends GameModule {
   onBackToLauncher() {
     this.stop();
     window.location.reload(); // Simple way to go back to launcher
+  }
+
+  attachSecretBackShortcut() {
+    if (this.secretBackHandler) return;
+
+    this.secretBackHandler = event => {
+      if (event.ctrlKey && event.altKey && event.key.toLowerCase() === 'b') {
+        event.preventDefault();
+        this.onBackToLauncher();
+      }
+    };
+
+    document.addEventListener('keydown', this.secretBackHandler);
+  }
+
+  detachSecretBackShortcut() {
+    if (!this.secretBackHandler) return;
+    document.removeEventListener('keydown', this.secretBackHandler);
+    this.secretBackHandler = null;
   }
 
   // ============================================

@@ -417,9 +417,18 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
-  margin-top: 10px;
-  width: min(100%, 560px);
-  max-width: 100%;
+  width: 100%;
+  max-width: 760px;
+}
+
+.game-footer {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  border-top: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.08);
+  z-index: 10;
 }
 
 .timer-info {
