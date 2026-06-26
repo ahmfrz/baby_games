@@ -40,6 +40,7 @@ export class AlphabetLearnerGame extends GameModule {
     this.timerDisplay = null;
     this.timerSelect = null;
     this.startSessionBtn = null;
+    this.timerPanel = null;
     this.sparkleField = null;
     this.rewardLayer = null;
     this.secretBackHandler = null;
@@ -174,6 +175,10 @@ export class AlphabetLearnerGame extends GameModule {
     this.prepareCharacterList();
     this.updateScoreDisplay();
     this.updateTimerDisplay();
+
+    if (this.timerPanel) {
+      this.timerPanel.classList.remove('hidden');
+    }
 
     if (this.timerSelect) {
       this.timerSelect.disabled = false;
@@ -644,6 +649,8 @@ export class AlphabetLearnerGame extends GameModule {
     timerNote.textContent = 'Choose your session duration before starting. The timer locks once the session begins.';
     timerPanel.appendChild(timerNote);
 
+    this.timerPanel = timerPanel;
+
     // On-screen keyboard buttons (always visible)
     this.buttonsContainer = document.createElement('div');
     this.buttonsContainer.className = 'buttons-container';
@@ -803,6 +810,9 @@ export class AlphabetLearnerGame extends GameModule {
     this.prepareCharacterList();
     this.nextRound();
 
+    if (this.timerPanel) {
+      this.timerPanel.classList.add('hidden');
+    }
     this.timerSelect.disabled = true;
     this.clearTimerInterval();
     this.timerInterval = setInterval(() => {
@@ -824,10 +834,13 @@ export class AlphabetLearnerGame extends GameModule {
     this.isSessionActive = false;
     this.isRunning = false;
     this.clearTimerInterval();
+    if (this.timerPanel) {
+      this.timerPanel.classList.remove('hidden');
+    }
     this.startSessionBtn.textContent = 'Start Session';
     this.startSessionBtn.disabled = true;
     if (this.timerSelect) {
-      this.timerSelect.disabled = true;
+      this.timerSelect.disabled = false;
     }
     this.showFeedback('⏰', 'session-ended');
     this.platform.storageManager.set('lastSessionSummary', {

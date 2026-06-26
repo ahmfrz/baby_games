@@ -431,6 +431,10 @@
   z-index: 10;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .timer-info {
   width: 100%;
   display: flex;
@@ -493,6 +497,9 @@
   .timer-panel {
     width: 100%;
     justify-content: center;
+  }
+  .game-footer.hidden {
+    display: none !important;
   }
   .timer-controls {
     flex-direction: column;
