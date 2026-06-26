@@ -213,11 +213,14 @@
   .buttons-container {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 5px;
+    gap: 6px;
     width: min(100%, 360px);
-    max-height: none;
-    overflow: visible;
-    padding: 6px;
+    /* Give the on-screen keyboard more vertical room so it is easier to tap
+       and avoids needing the user to scroll excessively on small phones. */
+    max-height: 38vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px;
     border-radius: 14px;
   }
 }

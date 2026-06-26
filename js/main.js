@@ -12,6 +12,7 @@ import { assetManager } from '../services/AssetManager.js';
 import { deviceDetector } from '../services/DeviceDetector.js';
 import { monetizationManager } from '../services/MonetizationManager.js';
 import { AlphabetLearnerGame } from '../games/alphabet-learner/AlphabetLearnerGame.js';
+import { ImageToLetterGame } from '../games/image-to-letter/ImageToLetterGame.js';
 
 // ============================================
 // Platform Initialization
@@ -77,6 +78,7 @@ class BabyGamesPlatform {
    */
   registerGames() {
     gameRegistry.register(AlphabetLearnerGame);
+    gameRegistry.register(ImageToLetterGame);
     // Future games will be registered here
     console.log(`[BabyGamesPlatform] Registered ${gameRegistry.getGameCount()} game(s)`);
   }
