@@ -620,3 +620,87 @@
 .buttons-container::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.5);
 }
+
+@media (min-width: 1024px) {
+  .game-content {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 24px;
+    padding: 24px;
+  }
+
+  .character-card {
+    width: 220px;
+    height: 220px;
+  }
+
+  .buttons-container {
+    width: min(560px, 100%);
+    max-height: calc(100vh - 360px);
+    padding: 16px;
+  }
+
+  .button-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .char-button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 15px;
+  }
+
+  .timer-panel {
+    width: 100%;
+    max-width: 760px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .game-content {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px;
+  }
+
+  .character-card {
+    width: 220px;
+    height: 220px;
+  }
+
+  .buttons-container {
+    width: min(620px, 100%);
+    max-height: calc(100vh - 360px);
+    padding: 18px;
+  }
+
+  .button-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .char-button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 15px;
+  }
+
+  .timer-panel {
+    width: 100%;
+    max-width: 760px;
+  }
+
+  .game-footer {
+    padding: 14px 24px;
+  }
+}

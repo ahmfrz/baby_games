@@ -789,8 +789,19 @@ export class AlphabetLearnerGame extends GameModule {
    */
   toggleOrderMode() {
     this.gameMode = this.gameMode === 'random' ? 'sequence' : 'random';
-    this.reset();
     this.updateModeButton();
+
+    if (this.isSessionActive) {
+      const current = this.currentChar;
+      this.prepareCharacterList();
+      if (current) {
+        const currentIndex = this.charList.indexOf(current);
+        this.charIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
+      }
+    } else {
+      this.prepareCharacterList();
+      this.charIndex = 0;
+    }
   }
 
   /**
