@@ -23,6 +23,10 @@ export class AlphabetLearnerGame extends GameModule {
     this.charIndex = 0;
     this.score = 0;
     this.sessionStartTime = null;
+    this.sessionTimerDuration = 120; // default timer in seconds (2 minutes)
+    this.remainingSeconds = 120;
+    this.timerInterval = null;
+    this.isSessionActive = false;
     this.gameMode = 'random'; // 'random' or 'sequence'
     this.gameDataMap = new Map(); // Maps characters to image/sound data
     
@@ -33,6 +37,9 @@ export class AlphabetLearnerGame extends GameModule {
     this.buttonsContainer = null;
     this.keyboardHints = null;
     this.feedbackElement = null;
+    this.timerDisplay = null;
+    this.timerSelect = null;
+    this.startSessionBtn = null;
     this.sparkleField = null;
     this.rewardLayer = null;
     this.ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
@@ -94,20 +101,20 @@ export class AlphabetLearnerGame extends GameModule {
   start() {
     console.log('[AlphabetLearnerGame] Starting game...');
 
-    this.isRunning = true;
+    this.isRunning = false;
+    this.isSessionActive = false;
     this.score = 0;
-    this.sessionStartTime = Date.now();
     this.charIndex = 0;
+    this.remainingSeconds = this.sessionTimerDuration;
+    this.sessionStartTime = null;
 
-    // Prepare character list
+    // Prepare character list for the upcoming session
     this.prepareCharacterList();
 
-    // Show launcher controls
+    // Show game UI and timer controls
     this.updateScoreDisplay();
     this.showGameUI();
-
-    // Start first round
-    this.nextRound();
+    this.updateTimerDisplay();
   }
 
   /**
@@ -125,8 +132,10 @@ export class AlphabetLearnerGame extends GameModule {
     console.log('[AlphabetLearnerGame] Game stopped');
 
     this.isRunning = false;
+    this.isSessionActive = false;
     this.stopSpeech();
     this.platform.inputManager.clear();
+    this.clearTimerInterval();
 
     // Save final score
     if (this.sessionStartTime) {
@@ -144,14 +153,17 @@ export class AlphabetLearnerGame extends GameModule {
    */
   reset() {
     this.stopSpeech();
+    this.clearTimerInterval();
     this.score = 0;
     this.charIndex = 0;
     this.currentChar = null;
     this.isWaitingForInput = false;
     this.inputLocked = false;
+    this.isSessionActive = false;
+    this.remainingSeconds = this.sessionTimerDuration;
     this.prepareCharacterList();
     this.updateScoreDisplay();
-    this.nextRound();
+    this.updateTimerDisplay();
   }
 
   // ============================================
@@ -516,6 +528,26 @@ export class AlphabetLearnerGame extends GameModule {
     modeToggle.addEventListener('click', () => this.toggleOrderMode());
     scoreAndMode.appendChild(modeToggle);
 
+    // Timer select
+    this.timerSelect = document.createElement('select');
+    this.timerSelect.className = 'timer-select';
+    this.timerSelect.setAttribute('aria-label', 'Select session duration');
+    ['1', '2', '3', '5'].forEach(minutes => {
+      const option = document.createElement('option');
+      option.value = String(minutes * 60);
+      option.textContent = `${minutes} minute${minutes === '1' ? '' : 's'}`;
+      if (Number(option.value) === this.sessionTimerDuration) {
+        option.selected = true;
+      }
+      this.timerSelect.appendChild(option);
+    });
+    this.timerSelect.addEventListener('change', () => {
+      this.sessionTimerDuration = Number(this.timerSelect.value);
+      this.remainingSeconds = this.sessionTimerDuration;
+      this.updateTimerDisplay();
+    });
+    scoreAndMode.appendChild(this.timerSelect);
+
     // Back button
     const backBtn = document.createElement('button');
     backBtn.className = 'game-back-btn';
@@ -554,7 +586,7 @@ export class AlphabetLearnerGame extends GameModule {
     card.appendChild(this.rewardLayer);
     content.appendChild(card);
 
-    // Keyboard hints (hidden on mobile)
+    // Keyboard hints (desktop only)
     if (this.platform.deviceDetector.shouldShowKeyboardHints()) {
       this.keyboardHints = document.createElement('div');
       this.keyboardHints.className = 'keyboard-hints';
@@ -562,15 +594,28 @@ export class AlphabetLearnerGame extends GameModule {
       content.appendChild(this.keyboardHints);
     }
 
-    // Buttons container (hidden on desktop if keyboard is primary)
-    if (this.platform.deviceDetector.shouldShowButtons()) {
-      this.buttonsContainer = document.createElement('div');
-      this.buttonsContainer.className = 'buttons-container';
-      this.createCharacterButtons();
-      content.appendChild(this.buttonsContainer);
-    }
+    // On-screen keyboard buttons (always visible)
+    this.buttonsContainer = document.createElement('div');
+    this.buttonsContainer.className = 'buttons-container';
+    this.createCharacterButtons();
+    content.appendChild(this.buttonsContainer);
 
     this.gameContainer.appendChild(content);
+
+    // Timer panel display
+    const timerPanel = document.createElement('div');
+    timerPanel.className = 'timer-panel';
+    this.timerDisplay = document.createElement('div');
+    this.timerDisplay.className = 'timer-display';
+    timerPanel.appendChild(this.timerDisplay);
+
+    this.startSessionBtn = document.createElement('button');
+    this.startSessionBtn.className = 'start-session-btn';
+    this.startSessionBtn.textContent = 'Start Session';
+    this.startSessionBtn.addEventListener('click', () => this.startSession());
+    timerPanel.appendChild(this.startSessionBtn);
+
+    content.appendChild(timerPanel);
   }
 
   /**
@@ -688,6 +733,8 @@ export class AlphabetLearnerGame extends GameModule {
       gameContainer.appendChild(this.gameContainer);
       gameContainer.style.display = 'flex';
     }
+
+    this.updateTimerDisplay();
   }
 
   /**
@@ -697,6 +744,75 @@ export class AlphabetLearnerGame extends GameModule {
     this.gameMode = this.gameMode === 'random' ? 'sequence' : 'random';
     this.reset();
     this.updateModeButton();
+  }
+
+  /**
+   * Start the timed session.
+   */
+  startSession() {
+    if (this.isSessionActive) return;
+
+    this.isRunning = true;
+    this.isSessionActive = true;
+    this.sessionStartTime = Date.now();
+    this.remainingSeconds = this.sessionTimerDuration;
+    this.updateTimerDisplay();
+    this.startSessionBtn.textContent = 'Session Running';
+    this.startSessionBtn.disabled = true;
+
+    this.prepareCharacterList();
+    this.nextRound();
+
+    this.clearTimerInterval();
+    this.timerInterval = setInterval(() => {
+      this.remainingSeconds -= 1;
+      this.updateTimerDisplay();
+
+      if (this.remainingSeconds <= 0) {
+        this.endSession();
+      }
+    }, 1000);
+  }
+
+  /**
+   * End the timed session and stop the game.
+   */
+  endSession() {
+    if (!this.isSessionActive) return;
+
+    this.isSessionActive = false;
+    this.isRunning = false;
+    this.clearTimerInterval();
+    this.startSessionBtn.textContent = 'Start Session';
+    this.startSessionBtn.disabled = false;
+    this.showFeedback('⏰', 'session-ended');
+    this.platform.storageManager.set('lastSessionSummary', {
+      score: this.score,
+      duration: this.sessionTimerDuration - this.remainingSeconds,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * Clear the timer interval.
+   */
+  clearTimerInterval() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  /**
+   * Update the timer display text.
+   */
+  updateTimerDisplay() {
+    if (!this.timerDisplay) return;
+
+    const minutes = Math.floor(this.remainingSeconds / 60);
+    const seconds = this.remainingSeconds % 60;
+    const formatted = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    this.timerDisplay.textContent = `Time: ${formatted}`;
   }
 
   /**
