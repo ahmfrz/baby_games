@@ -53,10 +53,10 @@
     },
     {
       "char": "H",
-      "imagePath": "assets/images/H-house.png",
+      "imagePath": "assets/images/H-horse.png",
       "sound": "success",
-      "name": "House",
-      "emoji": "\ud83c\udfe0"
+      "name": "Horse",
+      "emoji": "\ud83d\udc34"
     },
     {
       "char": "I",
@@ -67,17 +67,17 @@
     },
     {
       "char": "J",
-      "imagePath": "assets/images/J-jellyfish.png",
+      "imagePath": "assets/images/J-jug.png",
       "sound": "success",
-      "name": "Jellyfish",
+      "name": "Jug",
       "emoji": "\ud83e\udebc"
     },
     {
       "char": "K",
-      "imagePath": "assets/images/K-kite.png",
+      "imagePath": "assets/images/K-king.png",
       "sound": "success",
-      "name": "Kite",
-      "emoji": "\ud83e\ude81"
+      "name": "King",
+      "emoji": "\ud83d\udc51"
     },
     {
       "char": "L",
@@ -109,10 +109,10 @@
     },
     {
       "char": "P",
-      "imagePath": "assets/images/P-pig.png",
+      "imagePath": "assets/images/P-peacock.png",
       "sound": "success",
-      "name": "Pig",
-      "emoji": "\ud83d\udc37"
+      "name": "Peacock",
+      "emoji": "\ud83d\udc1a"
     },
     {
       "char": "Q",
@@ -123,10 +123,10 @@
     },
     {
       "char": "R",
-      "imagePath": "assets/images/R-rainbow.png",
+      "imagePath": "assets/images/R-rose.png",
       "sound": "success",
-      "name": "Rainbow",
-      "emoji": "\ud83c\udf08"
+      "name": "Rose",
+      "emoji": "\ud83c\udf39"
     },
     {
       "char": "S",
@@ -137,24 +137,24 @@
     },
     {
       "char": "T",
-      "imagePath": "assets/images/T-tiger.png",
+      "imagePath": "assets/images/T-train.png",
       "sound": "success",
-      "name": "Tiger",
-      "emoji": "\ud83d\udc05"
+      "name": "Train",
+      "emoji": "\ud83d\ude82"
     },
     {
       "char": "U",
-      "imagePath": "assets/images/U-umbrella.png",
+      "imagePath": "assets/images/U-unicorn.png",
       "sound": "success",
-      "name": "Umbrella",
-      "emoji": "\u2602\ufe0f"
+      "name": "Unicorn",
+      "emoji": "\ud83e\udd84"
     },
     {
       "char": "V",
-      "imagePath": "assets/images/V-van.png",
+      "imagePath": "assets/images/V-violin.png",
       "sound": "success",
-      "name": "Van",
-      "emoji": "\ud83d\ude90"
+      "name": "Violin",
+      "emoji": "\ud83c\udfb9"
     },
     {
       "char": "W",
@@ -172,10 +172,10 @@
     },
     {
       "char": "Y",
-      "imagePath": "assets/images/Y-yo-yo.png",
+      "imagePath": "assets/images/Y-yak.png",
       "sound": "success",
-      "name": "Yo-yo",
-      "emoji": "\ud83e\ude80"
+      "name": "Yak",
+      "emoji": "\ud83e\udd99"
     },
     {
       "char": "Z",
@@ -183,13 +183,6 @@
       "sound": "success",
       "name": "Zebra",
       "emoji": "\ud83e\udd93"
-    },
-    {
-      "char": "0",
-      "imagePath": "assets/images/0-zero.png",
-      "sound": "success",
-      "name": "Zero",
-      "emoji": "\ud83c\udf69"
     },
     {
       "char": "1",
