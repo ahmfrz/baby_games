@@ -264,6 +264,11 @@ export class AlphabetLearnerGame extends GameModule {
    * @param {string} char - Character pressed/clicked
    */
   handleCharacterInput(char) {
+    if (this.gameMode === 'explore') {
+      this.handleExploreInput(char);
+      return;
+    }
+
     if (!this.isRunning || !this.isWaitingForInput || this.inputLocked || this.isAnimating) {
       return;
     }
@@ -276,6 +281,20 @@ export class AlphabetLearnerGame extends GameModule {
     } else {
       this.handleWrongAnswer();
     }
+  }
+
+  handleExploreInput(char) {
+    if (this.inputLocked) return;
+
+    this.inputLocked = true;
+    this.currentChar = char;
+    this.showPicture();
+    this.showFeedback('👀', 'explore');
+    this.speak(`Here is ${this.getSpokenCharacter(char)}.`);
+
+    setTimeout(() => {
+      this.inputLocked = false;
+    }, 800);
   }
 
   /**
@@ -548,7 +567,7 @@ export class AlphabetLearnerGame extends GameModule {
     const modeToggle = document.createElement('button');
     modeToggle.className = 'mode-toggle-btn';
     modeToggle.textContent = this.getModeButtonText();
-    modeToggle.setAttribute('aria-label', 'Switch between random and sequence order');
+    modeToggle.setAttribute('aria-label', 'Switch between random, sequence, and explore modes');
     modeToggle.addEventListener('click', () => this.toggleOrderMode());
     scoreAndMode.appendChild(modeToggle);
 
@@ -788,7 +807,14 @@ export class AlphabetLearnerGame extends GameModule {
    * Toggle between random and sequential order.
    */
   toggleOrderMode() {
-    this.gameMode = this.gameMode === 'random' ? 'sequence' : 'random';
+    if (this.gameMode === 'random') {
+      this.gameMode = 'sequence';
+    } else if (this.gameMode === 'sequence') {
+      this.gameMode = 'explore';
+    } else {
+      this.gameMode = 'random';
+    }
+
     this.updateModeButton();
 
     if (this.isSessionActive) {
@@ -898,7 +924,9 @@ export class AlphabetLearnerGame extends GameModule {
    * @returns {string}
    */
   getModeButtonText() {
-    return this.gameMode === 'random' ? 'Random' : 'Sequence';
+    if (this.gameMode === 'random') return 'Random';
+    if (this.gameMode === 'sequence') return 'Sequence';
+    return 'Explore';
   }
 
   /**
