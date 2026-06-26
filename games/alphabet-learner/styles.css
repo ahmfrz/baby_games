@@ -195,15 +195,17 @@
   background: rgba(255, 255, 255, 0.24);
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 20px;
-  max-height: 250px;
+  max-height: min(62vh, 520px);
+  min-height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
   backdrop-filter: blur(10px);
   width: min(100%, 760px);
 }
 
 @media (max-width: 768px) {
   .buttons-container {
-    max-height: 200px;
+    max-height: 40vh;
     padding: 12px;
     gap: 8px;
   }

@@ -76,6 +76,7 @@ export class ImageToLetterGame extends GameModule {
     this.prepareCharacterList();
     this.updateScoreDisplay();
     this.updateTimerDisplay();
+    this.showGameUI();
 
     if (this.startSessionBtn) {
       this.startSessionBtn.disabled = true;
@@ -90,7 +91,6 @@ export class ImageToLetterGame extends GameModule {
 
   reset() {
     this.stop();
-    this.start();
     if (this.timerPanel) {
       this.timerPanel.classList.remove('hidden');
     }
@@ -101,6 +101,27 @@ export class ImageToLetterGame extends GameModule {
       this.startSessionBtn.disabled = true;
       this.startSessionBtn.textContent = 'Start Session';
     }
+    this.start();
+  }
+
+  updateScoreDisplay() {
+    if (this.scoreDisplay) {
+      this.scoreDisplay.textContent = `Score: ${this.score}`;
+    }
+  }
+
+  showGameUI() {
+    const launcher = document.getElementById('launcher');
+    const gameContainer = document.getElementById('gameContainer');
+
+    if (launcher) launcher.style.display = 'none';
+    if (gameContainer) {
+      gameContainer.innerHTML = '';
+      gameContainer.appendChild(this.gameContainer);
+      gameContainer.style.display = 'flex';
+    }
+
+    this.updateTimerDisplay();
   }
 
   prepareCharacterList() {
