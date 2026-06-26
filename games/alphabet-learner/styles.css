@@ -244,6 +244,18 @@
   }
 }
 
+@media (max-width: 360px) {
+  .buttons-container {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .char-button {
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+}
+
 .char-button {
   min-width: 50px;
   min-height: 50px;
