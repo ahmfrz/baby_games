@@ -322,6 +322,8 @@ html, body {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 100%;
+  height: 100%;
   overflow: hidden;
   background:
     linear-gradient(135deg, rgba(255, 230, 109, 0.92) 0%, rgba(149, 225, 211, 0.9) 48%, rgba(255, 107, 157, 0.55) 100%),
@@ -333,6 +335,7 @@ html, body {
 
 #gameContainer > .game-container {
   min-height: 0;
+  height: 100%;
   padding-bottom: 0;
 }
 
@@ -377,10 +380,12 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   padding: var(--spacing-lg);
   position: relative;
   z-index: 1;
+  max-height: calc(100vh - 140px);
+  gap: var(--spacing-lg);
 }
 
 /* ============================================

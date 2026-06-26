@@ -372,8 +372,10 @@ export class ImageToLetterGame extends GameModule {
 
     // Speak the prompt
     if (this.ttsSupported) {
+      const isNumber = !Number.isNaN(Number(char));
       const name = charData.name || char;
-      this.speak(`What does ${name} start with?`);
+      const prompt = isNumber ? `Where is ${name}?` : `What does ${name} start with?`;
+      this.speak(prompt);
     }
   }
 

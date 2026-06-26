@@ -203,6 +203,12 @@
   width: min(100%, 760px);
 }
 
+@media (min-width: 1024px) {
+  .buttons-container {
+    max-height: calc(100vh - 420px);
+  }
+}
+
 @media (max-width: 768px) {
   .buttons-container {
     max-height: 40vh;
