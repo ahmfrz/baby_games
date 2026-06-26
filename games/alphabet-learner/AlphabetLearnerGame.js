@@ -115,6 +115,11 @@ export class AlphabetLearnerGame extends GameModule {
     this.updateScoreDisplay();
     this.showGameUI();
     this.updateTimerDisplay();
+
+    if (this.startSessionBtn) {
+      this.startSessionBtn.disabled = true;
+      this.startSessionBtn.textContent = 'Start Session';
+    }
   }
 
   /**
@@ -164,6 +169,15 @@ export class AlphabetLearnerGame extends GameModule {
     this.prepareCharacterList();
     this.updateScoreDisplay();
     this.updateTimerDisplay();
+
+    if (this.timerSelect) {
+      this.timerSelect.disabled = false;
+    }
+
+    if (this.startSessionBtn) {
+      this.startSessionBtn.disabled = false;
+      this.startSessionBtn.textContent = 'Start Session';
+    }
   }
 
   // ============================================
@@ -528,26 +542,6 @@ export class AlphabetLearnerGame extends GameModule {
     modeToggle.addEventListener('click', () => this.toggleOrderMode());
     scoreAndMode.appendChild(modeToggle);
 
-    // Timer select
-    this.timerSelect = document.createElement('select');
-    this.timerSelect.className = 'timer-select';
-    this.timerSelect.setAttribute('aria-label', 'Select session duration');
-    ['1', '2', '3', '5'].forEach(minutes => {
-      const option = document.createElement('option');
-      option.value = String(minutes * 60);
-      option.textContent = `${minutes} minute${minutes === '1' ? '' : 's'}`;
-      if (Number(option.value) === this.sessionTimerDuration) {
-        option.selected = true;
-      }
-      this.timerSelect.appendChild(option);
-    });
-    this.timerSelect.addEventListener('change', () => {
-      this.sessionTimerDuration = Number(this.timerSelect.value);
-      this.remainingSeconds = this.sessionTimerDuration;
-      this.updateTimerDisplay();
-    });
-    scoreAndMode.appendChild(this.timerSelect);
-
     // Back button
     const backBtn = document.createElement('button');
     backBtn.className = 'game-back-btn';
@@ -594,6 +588,66 @@ export class AlphabetLearnerGame extends GameModule {
       content.appendChild(this.keyboardHints);
     }
 
+    // Timer panel display
+    const timerPanel = document.createElement('div');
+    timerPanel.className = 'timer-panel';
+
+    const timerInfo = document.createElement('div');
+    timerInfo.className = 'timer-info';
+    this.timerDisplay = document.createElement('div');
+    this.timerDisplay.className = 'timer-display';
+    timerInfo.appendChild(this.timerDisplay);
+
+    const timerControls = document.createElement('div');
+    timerControls.className = 'timer-controls';
+
+    this.timerSelect = document.createElement('select');
+    this.timerSelect.className = 'timer-select';
+    this.timerSelect.setAttribute('aria-label', 'Select session duration');
+
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = 'Select duration...';
+    placeholderOption.selected = true;
+    placeholderOption.disabled = true;
+    this.timerSelect.appendChild(placeholderOption);
+
+    ['1', '2', '3', '5'].forEach(minutes => {
+      const option = document.createElement('option');
+      option.value = String(minutes * 60);
+      option.textContent = `${minutes} minute${minutes === '1' ? '' : 's'}`;
+      this.timerSelect.appendChild(option);
+    });
+
+    this.timerSelect.addEventListener('change', () => {
+      if (this.isSessionActive) return;
+      if (!this.timerSelect.value) return;
+      this.sessionTimerDuration = Number(this.timerSelect.value);
+      this.remainingSeconds = this.sessionTimerDuration;
+      this.updateTimerDisplay();
+      if (this.startSessionBtn) {
+        this.startSessionBtn.disabled = false;
+      }
+    });
+    timerControls.appendChild(this.timerSelect);
+
+    this.startSessionBtn = document.createElement('button');
+    this.startSessionBtn.className = 'start-session-btn';
+    this.startSessionBtn.textContent = 'Start Session';
+    this.startSessionBtn.disabled = true;
+    this.startSessionBtn.addEventListener('click', () => this.startSession());
+    timerControls.appendChild(this.startSessionBtn);
+
+    timerPanel.appendChild(timerInfo);
+    timerPanel.appendChild(timerControls);
+
+    const timerNote = document.createElement('div');
+    timerNote.className = 'timer-note';
+    timerNote.textContent = 'Choose your session duration before starting. The timer locks once the session begins.';
+    timerPanel.appendChild(timerNote);
+
+    content.appendChild(timerPanel);
+
     // On-screen keyboard buttons (always visible)
     this.buttonsContainer = document.createElement('div');
     this.buttonsContainer.className = 'buttons-container';
@@ -601,21 +655,6 @@ export class AlphabetLearnerGame extends GameModule {
     content.appendChild(this.buttonsContainer);
 
     this.gameContainer.appendChild(content);
-
-    // Timer panel display
-    const timerPanel = document.createElement('div');
-    timerPanel.className = 'timer-panel';
-    this.timerDisplay = document.createElement('div');
-    this.timerDisplay.className = 'timer-display';
-    timerPanel.appendChild(this.timerDisplay);
-
-    this.startSessionBtn = document.createElement('button');
-    this.startSessionBtn.className = 'start-session-btn';
-    this.startSessionBtn.textContent = 'Start Session';
-    this.startSessionBtn.addEventListener('click', () => this.startSession());
-    timerPanel.appendChild(this.startSessionBtn);
-
-    content.appendChild(timerPanel);
   }
 
   /**
@@ -763,6 +802,7 @@ export class AlphabetLearnerGame extends GameModule {
     this.prepareCharacterList();
     this.nextRound();
 
+    this.timerSelect.disabled = true;
     this.clearTimerInterval();
     this.timerInterval = setInterval(() => {
       this.remainingSeconds -= 1;
@@ -784,7 +824,10 @@ export class AlphabetLearnerGame extends GameModule {
     this.isRunning = false;
     this.clearTimerInterval();
     this.startSessionBtn.textContent = 'Start Session';
-    this.startSessionBtn.disabled = false;
+    this.startSessionBtn.disabled = true;
+    if (this.timerSelect) {
+      this.timerSelect.disabled = true;
+    }
     this.showFeedback('⏰', 'session-ended');
     this.platform.storageManager.set('lastSessionSummary', {
       score: this.score,

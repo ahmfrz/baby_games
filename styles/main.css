@@ -527,7 +527,8 @@ html, body {
     gap: var(--spacing-sm);
     padding: var(--spacing-sm);
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    max-height: calc(100vh - 140px);
   }
 }
 

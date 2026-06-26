@@ -413,11 +413,36 @@
 
 .timer-panel {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 14px;
   margin-top: 10px;
+  width: min(100%, 560px);
+  max-width: 100%;
+}
+
+.timer-info {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.timer-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
   flex-wrap: wrap;
+}
+
+.timer-note {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-align: center;
+  max-width: 520px;
 }
 
 .timer-display {
@@ -460,6 +485,10 @@
     width: 100%;
     justify-content: center;
   }
+  .timer-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
   .timer-display {
     width: 100%;
     text-align: center;
@@ -467,6 +496,10 @@
   .timer-select,
   .start-session-btn {
     width: 100%;
+  }
+  .timer-note {
+    font-size: 0.9rem;
+    padding: 0 6px;
   }
 }
 
