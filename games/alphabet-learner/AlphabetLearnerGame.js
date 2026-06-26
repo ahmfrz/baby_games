@@ -106,24 +106,33 @@ export class AlphabetLearnerGame extends GameModule {
   start() {
     console.log('[AlphabetLearnerGame] Starting game...');
 
-    this.isRunning = false;
+    this.isRunning = true;
     this.isSessionActive = false;
+    this.isSessionEnded = false;
+    this.inputLocked = false;
     this.score = 0;
     this.charIndex = 0;
     this.remainingSeconds = this.sessionTimerDuration;
     this.sessionStartTime = null;
 
-    // Prepare character list for the upcoming session
     this.prepareCharacterList();
 
-    // Show game UI and timer controls
     this.updateScoreDisplay();
     this.showGameUI();
     this.updateTimerDisplay();
 
+    if (this.timerSelect && this.timerSelect.value) {
+      this.startSessionBtn.disabled = false;
+    }
     if (this.startSessionBtn) {
-      this.startSessionBtn.disabled = true;
       this.startSessionBtn.textContent = 'Start Session';
+    }
+
+    if (this.gameMode === 'sequence') {
+      this.updateButtonHighlights('A');
+      this.letterDisplay.textContent = 'A';
+    } else {
+      this.clearButtonHighlights();
     }
   }
 
@@ -165,6 +174,7 @@ export class AlphabetLearnerGame extends GameModule {
   reset() {
     this.stopSpeech();
     this.clearTimerInterval();
+    this.isSessionEnded = false;
     this.score = 0;
     this.charIndex = 0;
     this.currentChar = null;
@@ -172,6 +182,7 @@ export class AlphabetLearnerGame extends GameModule {
     this.inputLocked = false;
     this.isSessionActive = false;
     this.remainingSeconds = this.sessionTimerDuration;
+    this.sessionStartTime = null;
     this.prepareCharacterList();
     this.updateScoreDisplay();
     this.updateTimerDisplay();
@@ -187,6 +198,17 @@ export class AlphabetLearnerGame extends GameModule {
     if (this.startSessionBtn) {
       this.startSessionBtn.disabled = false;
       this.startSessionBtn.textContent = 'Start Session';
+    }
+
+    if (this.gameMode === 'sequence') {
+      this.updateButtonHighlights('A');
+      this.letterDisplay.textContent = 'A';
+    } else {
+      this.clearButtonHighlights();
+    }
+
+    if (this.sessionEndOverlay) {
+      this.sessionEndOverlay.classList.add('hidden');
     }
   }
 
@@ -264,7 +286,10 @@ export class AlphabetLearnerGame extends GameModule {
    * @param {string} char - Character pressed/clicked
    */
   handleCharacterInput(char) {
+    if (this.isSessionEnded) return;
+
     if (this.gameMode === 'explore') {
+      if (!this.isRunning || this.inputLocked) return;
       this.handleExploreInput(char);
       return;
     }
@@ -514,17 +539,22 @@ export class AlphabetLearnerGame extends GameModule {
    * @param {string} char - Character to highlight
    */
   updateButtonHighlights(char) {
-    // Only update if buttons container exists (mobile/tablet)
     if (!this.buttonsContainer) return;
 
     const buttons = this.buttonsContainer.querySelectorAll('.char-button');
     buttons.forEach(btn => {
-      if (btn.dataset.char === char) {
+      if (char && btn.dataset.char === char) {
         btn.classList.add('highlighted');
       } else {
         btn.classList.remove('highlighted');
       }
     });
+  }
+
+  clearButtonHighlights() {
+    if (!this.buttonsContainer) return;
+    const buttons = this.buttonsContainer.querySelectorAll('.char-button');
+    buttons.forEach(btn => btn.classList.remove('highlighted'));
   }
 
   // ============================================
@@ -563,13 +593,22 @@ export class AlphabetLearnerGame extends GameModule {
     this.scoreDisplay.textContent = 'Score: 0';
     scoreAndMode.appendChild(this.scoreDisplay);
 
-    // Order mode button
-    const modeToggle = document.createElement('button');
-    modeToggle.className = 'mode-toggle-btn';
-    modeToggle.textContent = this.getModeButtonText();
-    modeToggle.setAttribute('aria-label', 'Switch between random, sequence, and explore modes');
-    modeToggle.addEventListener('click', () => this.toggleOrderMode());
-    scoreAndMode.appendChild(modeToggle);
+    this.modeButtons = {};
+    const modeControls = document.createElement('div');
+    modeControls.className = 'mode-buttons';
+
+    ['random', 'sequence', 'explore'].forEach(mode => {
+      const button = document.createElement('button');
+      button.className = 'mode-button';
+      button.textContent = this.getModeLabel(mode);
+      button.type = 'button';
+      button.setAttribute('aria-pressed', mode === this.gameMode ? 'true' : 'false');
+      button.addEventListener('click', () => this.switchMode(mode));
+      modeControls.appendChild(button);
+      this.modeButtons[mode] = button;
+    });
+
+    scoreAndMode.appendChild(modeControls);
 
     header.appendChild(scoreAndMode);
     this.gameContainer.appendChild(header);
@@ -630,14 +669,16 @@ export class AlphabetLearnerGame extends GameModule {
     const placeholderOption = document.createElement('option');
     placeholderOption.value = '';
     placeholderOption.textContent = 'Select duration...';
-    placeholderOption.selected = true;
     placeholderOption.disabled = true;
     this.timerSelect.appendChild(placeholderOption);
 
-    ['1', '2', '3', '5'].forEach(minutes => {
+    [1, 2, 3, 5, 10, 15].forEach(minutes => {
       const option = document.createElement('option');
       option.value = String(minutes * 60);
-      option.textContent = `${minutes} minute${minutes === '1' ? '' : 's'}`;
+      option.textContent = `${minutes} minute${minutes === 1 ? '' : 's'}`;
+      if (minutes === 2) {
+        option.selected = true;
+      }
       this.timerSelect.appendChild(option);
     });
 
@@ -656,7 +697,7 @@ export class AlphabetLearnerGame extends GameModule {
     this.startSessionBtn = document.createElement('button');
     this.startSessionBtn.className = 'start-session-btn';
     this.startSessionBtn.textContent = 'Start Session';
-    this.startSessionBtn.disabled = true;
+    this.startSessionBtn.disabled = false;
     this.startSessionBtn.addEventListener('click', () => this.startSession());
     timerControls.appendChild(this.startSessionBtn);
 
@@ -682,6 +723,22 @@ export class AlphabetLearnerGame extends GameModule {
     footer.className = 'game-footer';
     footer.appendChild(timerPanel);
     this.gameContainer.appendChild(footer);
+
+    this.sessionEndOverlay = document.createElement('div');
+    this.sessionEndOverlay.className = 'session-end-overlay hidden';
+    this.sessionEndOverlay.innerHTML = `
+      <div class="session-end-dialog">
+        <h2>Session Ended</h2>
+        <p>Great job! The session has ended.</p>
+        <button class="session-end-button" type="button">OK</button>
+      </div>
+    `;
+    this.gameContainer.appendChild(this.sessionEndOverlay);
+
+    const sessionEndButton = this.sessionEndOverlay.querySelector('.session-end-button');
+    if (sessionEndButton) {
+      sessionEndButton.addEventListener('click', () => this.closeSessionEndOverlay());
+    }
   }
 
   /**
@@ -870,6 +927,7 @@ export class AlphabetLearnerGame extends GameModule {
 
     this.isSessionActive = false;
     this.isRunning = false;
+    this.isSessionEnded = true;
     this.clearTimerInterval();
     if (this.timerPanel) {
       this.timerPanel.classList.remove('hidden');
@@ -879,7 +937,7 @@ export class AlphabetLearnerGame extends GameModule {
     if (this.timerSelect) {
       this.timerSelect.disabled = false;
     }
-    this.showFeedback('⏰', 'session-ended');
+    this.showSessionEndOverlay();
     this.platform.storageManager.set('lastSessionSummary', {
       score: this.score,
       duration: this.sessionTimerDuration - this.remainingSeconds,
@@ -927,6 +985,43 @@ export class AlphabetLearnerGame extends GameModule {
     if (this.gameMode === 'random') return 'Random';
     if (this.gameMode === 'sequence') return 'Sequence';
     return 'Explore';
+  }
+
+  getModeLabel(mode) {
+    if (mode === 'random') return 'Random';
+    if (mode === 'sequence') return 'Sequence';
+    return 'Explore';
+  }
+
+  switchMode(mode) {
+    if (this.gameMode === mode) return;
+    this.gameMode = mode;
+    this.updateModeButtons();
+    this.reset();
+  }
+
+  updateModeButtons() {
+    if (!this.modeButtons) return;
+    Object.entries(this.modeButtons).forEach(([mode, button]) => {
+      const selected = mode === this.gameMode;
+      button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      button.classList.toggle('active', selected);
+    });
+  }
+
+  showSessionEndOverlay() {
+    if (!this.sessionEndOverlay) return;
+    this.sessionEndOverlay.classList.remove('hidden');
+  }
+
+  closeSessionEndOverlay() {
+    if (!this.sessionEndOverlay) return;
+    this.sessionEndOverlay.classList.add('hidden');
+    this.isSessionEnded = false;
+    this.inputLocked = true;
+    if (this.timerSelect && this.timerSelect.value) {
+      this.startSessionBtn.disabled = false;
+    }
   }
 
   /**
