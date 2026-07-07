@@ -1,1068 +1,840 @@
 import { GameModule } from '../../core/GameModule.js';
 
-/**
- * Alphabet & Numbers Learner Game
- * Displays letters/numbers one at a time, plays sounds, shows pictures on correct input
- */
+const MODE_SEQUENCE = 'sequential';
+const MODE_RANDOM = 'random';
+const MODE_BUTTON = 'button';
+const MODES = [MODE_SEQUENCE, MODE_RANDOM, MODE_BUTTON];
+const ROUND_ADVANCE_MS = 3000;
+const WRONG_RESET_MS = 850;
+const REVEAL_RESET_MS = 1250;
+
 export class AlphabetLearnerGame extends GameModule {
   static metadata = {
     id: 'alphabet-learner',
-    name: '🔤 Learn Alphabet & Numbers',
-    description: 'Learn letters A-Z and numbers 0-9 with fun pictures and sounds!',
-    version: '1.0.0',
+    name: 'ABC 123 Learner',
+    description: 'Learn letters and numbers with pictures, speech, and gentle play.',
+    version: '3.0.0',
     author: 'Baby Games',
-    assetPath: 'games/alphabet-learner/'
+    assetPath: 'games/alphabet-learner/assets/'
   };
 
   constructor(platform) {
     super(platform);
-    
-    // Game state
-    this.currentChar = null;
-    this.charList = [];
-    this.charIndex = 0;
+
+    this.root = null;
+    this.elements = {};
+    this.items = [];
+    this.itemByChar = new Map();
+    this.sequence = [];
+    this.sequenceIndex = 0;
+    this.currentItem = null;
+    this.mode = MODE_RANDOM;
     this.score = 0;
-    this.sessionStartTime = null;
-    this.sessionTimerDuration = 120; // default timer in seconds (2 minutes)
-    this.remainingSeconds = 120;
-    this.timerInterval = null;
-    this.isSessionActive = false;
-    this.gameMode = 'random'; // 'random' or 'sequence'
-    this.gameDataMap = new Map(); // Maps characters to image/sound data
-    
-    // UI elements
-    this.letterDisplay = null;
-    this.pictureDisplay = null;
-    this.scoreDisplay = null;
-    this.buttonsContainer = null;
-    this.keyboardHints = null;
-    this.feedbackElement = null;
-    this.timerDisplay = null;
-    this.timerSelect = null;
-    this.startSessionBtn = null;
-    this.timerPanel = null;
-    this.sparkleField = null;
-    this.rewardLayer = null;
-    this.secretBackHandler = null;
-    this.ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-    
-    // State flags
-    this.isWaitingForInput = false;
-    this.isAnimating = false;
+    this.remainingSeconds = 0;
+    this.timerId = null;
+    this.isRunning = false;
     this.inputLocked = false;
+    this.boundKeyHandlers = new Map();
+    this.pendingTimeouts = new Set();
+    this.backgroundAudio = null;
   }
 
-  /**
-   * Initialize game - load assets and setup
-   */
   async initialize() {
-    console.log('[AlphabetLearnerGame] Initializing...');
-
-    try {
-      // Load game manifest
-      const manifest = await this.platform.assetManager.loadManifest(
-        AlphabetLearnerGame.metadata.assetPath + 'manifest.json'
-      );
-
-      // Populate game data map from manifest
-      if (manifest.characters) {
-        for (const charData of manifest.characters) {
-          this.gameDataMap.set(charData.char, charData);
-        }
-      }
-
-      // Initialize audio
-      if (manifest.sounds) {
-        for (const [soundKey, soundPath] of Object.entries(manifest.sounds)) {
-          const fullPath = AlphabetLearnerGame.metadata.assetPath + soundPath;
-          await this.platform.audioManager.preloadAudio(fullPath, soundKey);
-        }
-      }
-
-      // Create game UI
-      this.createGameUI();
-
-      // Initialize input handlers
-      this.setupInputHandlers();
-
-      // Register the secret back shortcut
-      this.attachSecretBackShortcut();
-
-      // Initialize audio context on first user interaction
-      this.platform.audioManager.initialize().catch(err => {
-        console.warn('[AlphabetLearnerGame] Audio initialization failed:', err);
-      });
-
-      console.log('[AlphabetLearnerGame] Initialization complete');
-    } catch (err) {
-      console.error('[AlphabetLearnerGame] Initialization failed:', err);
-      throw err;
-    }
+    await this.audioManager?.initialize?.();
+    await this.loadGameData();
+    this.mountUI();
+    this.bindKeyboardInput();
   }
 
-  /**
-   * Start the game
-   */
   start() {
-    console.log('[AlphabetLearnerGame] Starting game...');
-
-    this.isRunning = true;
-    this.isSessionActive = false;
-    this.isSessionEnded = false;
-    this.inputLocked = false;
     this.score = 0;
-    this.charIndex = 0;
-    this.remainingSeconds = this.sessionTimerDuration;
-    this.sessionStartTime = null;
+    this.sequenceIndex = 0;
+    this.currentItem = null;
+    this.inputLocked = false;
+    this.remainingSeconds = this.timerService?.getDuration?.() ?? 120;
+    this.isRunning = true;
 
-    this.prepareCharacterList();
-
-    this.updateScoreDisplay();
-    this.showGameUI();
-    this.updateTimerDisplay();
-
-    if (this.timerSelect && this.timerSelect.value) {
-      this.startSessionBtn.disabled = false;
-    }
-    if (this.startSessionBtn) {
-      this.startSessionBtn.textContent = 'Start Session';
-    }
-
-    if (this.gameMode === 'sequence') {
-      this.updateButtonHighlights('A');
-      this.letterDisplay.textContent = 'A';
-    } else {
-      this.clearButtonHighlights();
-    }
+    this.hideBlocker();
+    this.prepareSequence();
+    this.updateScore();
+    this.updateTimer();
+    this.updateModeButtons();
+    this.showGameContainer();
+    this.bindKeyboardInput();
+    this.startTimer();
+    this.startBackgroundAudio();
+    this.beginRound();
   }
 
-  /**
-   * Pause the game
-   */
   pause() {
     this.isRunning = false;
-    console.log('[AlphabetLearnerGame] Game paused');
-  }
-
-  /**
-   * Stop the game and cleanup
-   */
-  stop() {
-    console.log('[AlphabetLearnerGame] Game stopped');
-
-    this.isRunning = false;
-    this.isSessionActive = false;
+    this.clearTimer();
+    this.clearPendingTimeouts();
     this.stopSpeech();
-    this.platform.inputManager.clear();
-    this.clearTimerInterval();
-    this.detachSecretBackShortcut();
-
-    // Save final score
-    if (this.sessionStartTime) {
-      const duration = Date.now() - this.sessionStartTime;
-      this.platform.storageManager.set('lastGameScore', {
-        score: this.score,
-        duration,
-        timestamp: new Date().toISOString()
-      });
-    }
+    this.stopBackgroundAudio();
   }
 
-  /**
-   * Reset game to initial state
-   */
-  reset() {
-    this.stopSpeech();
-    this.clearTimerInterval();
-    this.isSessionEnded = false;
-    this.score = 0;
-    this.charIndex = 0;
-    this.currentChar = null;
-    this.isWaitingForInput = false;
-    this.inputLocked = false;
-    this.isSessionActive = false;
-    this.remainingSeconds = this.sessionTimerDuration;
-    this.sessionStartTime = null;
-    this.prepareCharacterList();
-    this.updateScoreDisplay();
-    this.updateTimerDisplay();
-
-    if (this.timerPanel) {
-      this.timerPanel.classList.remove('hidden');
-    }
-
-    if (this.timerSelect) {
-      this.timerSelect.disabled = false;
-    }
-
-    if (this.startSessionBtn) {
-      this.startSessionBtn.disabled = false;
-      this.startSessionBtn.textContent = 'Start Session';
-    }
-
-    if (this.gameMode === 'sequence') {
-      this.updateButtonHighlights('A');
-      this.letterDisplay.textContent = 'A';
-    } else {
-      this.clearButtonHighlights();
-    }
-
-    if (this.sessionEndOverlay) {
-      this.sessionEndOverlay.classList.add('hidden');
-    }
-  }
-
-  // ============================================
-  // Game Logic
-  // ============================================
-
-  /**
-   * Prepare the list of characters to display
-   */
-  prepareCharacterList() {
-    this.charList = [];
-
-    for (let i = 0; i < 26; i++) {
-      this.charList.push(String.fromCharCode(65 + i)); // A-Z
-    }
-
-    for (let i = 0; i < 10; i++) {
-      this.charList.push(i.toString()); // 0-9
-    }
-
-    // Shuffle for random mode
-    if (this.gameMode === 'random') {
-      this.shuffleArray(this.charList);
-    }
-  }
-
-  /**
-   * Move to next round
-   */
-  nextRound() {
-    if (!this.isRunning) return;
-
-    // Check if we've gone through all characters
-    if (this.charIndex >= this.charList.length) {
-      this.prepareCharacterList();
-      this.charIndex = 0;
-    }
-
-    this.currentChar = this.charList[this.charIndex];
-    this.charIndex++;
-
-    this.displayCharacter();
-  }
-
-  /**
-   * Display current character in the card
-   */
-  displayCharacter() {
-    this.isWaitingForInput = true;
-    this.inputLocked = false;
-    this.isAnimating = false;
-
-    // Slide in animation
-    this.letterDisplay.classList.remove('display-active');
-    this.pictureDisplay.classList.remove('display-active');
-    this.letterDisplay.style.display = 'flex';
-    this.pictureDisplay.style.display = 'none';
-
-    // Update letter
-    this.letterDisplay.textContent = this.currentChar;
-
-    // Trigger slide in animation
-    setTimeout(() => {
-      this.letterDisplay.classList.add('display-active');
-    }, 50);
-
-    // Update button highlights
-    this.updateButtonHighlights(this.currentChar);
-    this.speakPrompt();
-  }
-
-  /**
-   * Handle character input (from keyboard or button)
-   * @param {string} char - Character pressed/clicked
-   */
-  handleCharacterInput(char) {
-    if (this.isSessionEnded) return;
-
-    if (this.gameMode === 'explore') {
-      if (!this.isRunning || this.inputLocked) return;
-      this.handleExploreInput(char);
-      return;
-    }
-
-    if (!this.isRunning || !this.isWaitingForInput || this.inputLocked || this.isAnimating) {
-      return;
-    }
-
-    this.inputLocked = true;
-    this.isAnimating = true;
-
-    if (char === this.currentChar) {
-      this.handleCorrectAnswer();
-    } else {
-      this.handleWrongAnswer();
-    }
-  }
-
-  handleExploreInput(char) {
-    if (this.inputLocked) return;
-
-    this.inputLocked = true;
-    this.currentChar = char;
-    this.showPicture();
-    this.showFeedback('👀', 'explore');
-    this.speak(`Here is ${this.getSpokenCharacter(char)}.`);
-
-    setTimeout(() => {
-      this.inputLocked = false;
-    }, 800);
-  }
-
-  /**
-   * Handle correct answer
-   */
-  async handleCorrectAnswer() {
-    console.log(`[AlphabetLearnerGame] Correct! ${this.currentChar}`);
-
-    this.score++;
-    this.updateScoreDisplay();
-
-    // Play success sound
-    this.platform.audioManager.playSound('success');
-    this.showRewardBurst();
-    this.speakCorrectAnswer();
-
-    // Show picture with celebration animation
-    await this.showPicture();
-
-    // Add celebration feedback
-    this.showFeedback('✓', 'correct');
-
-    // Wait before next round
-    setTimeout(() => {
-      this.isWaitingForInput = false;
-      this.nextRound();
-    }, 1500);
-  }
-
-  /**
-   * Handle wrong answer
-   */
-  async handleWrongAnswer() {
-    console.log(`[AlphabetLearnerGame] Wrong! Expected ${this.currentChar}`);
-
-    // Play fail sound
-    this.platform.audioManager.playSound('fail');
-    this.speakWrongAnswer();
-
-    // Show shake animation
-    this.shakeCard();
-
-    // Add error feedback
-    this.showFeedback('✗', 'incorrect');
-
-    // Wait before accepting next input
-    setTimeout(() => {
-      this.isAnimating = false;
-      this.inputLocked = false;
-      this.isWaitingForInput = true;
-    }, 600);
-  }
-
-  /**
-   * Display picture for current character
-   */
-  async showPicture() {
-    const charData = this.gameDataMap.get(this.currentChar);
-    if (!charData || !charData.imagePath) {
-      console.warn(`[AlphabetLearnerGame] No image for ${this.currentChar}`);
-      return;
-    }
-
-    try {
-      // Load image if not already loaded
-      const imagePath = AlphabetLearnerGame.metadata.assetPath + charData.imagePath;
-      const cacheKey = `char_${this.currentChar}_image`;
-      await this.platform.assetManager.loadImage(imagePath, cacheKey);
-
-      // Show picture with flip animation
-      const img = this.platform.assetManager.get(cacheKey);
-      this.pictureDisplay.innerHTML = '';
-      this.pictureDisplay.appendChild(img.cloneNode());
-
-      // Flip animation
-      this.letterDisplay.classList.remove('display-active');
-      setTimeout(() => {
-        this.letterDisplay.style.display = 'none';
-        this.pictureDisplay.style.display = 'flex';
-        this.pictureDisplay.classList.add('display-active');
-      }, 300);
-    } catch (err) {
-      console.error(`[AlphabetLearnerGame] Failed to load image for ${this.currentChar}:`, err);
-    }
-  }
-
-  /**
-   * Show shake animation for wrong answers
-   */
-  shakeCard() {
-    const card = this.letterDisplay;
-    card.classList.remove('shake-animation');
-    // Trigger reflow to restart animation
-    void card.offsetWidth;
-    card.classList.add('shake-animation');
-  }
-
-  /**
-   * Show feedback message
-   * @param {string} emoji - Emoji to display
-   * @param {string} type - 'correct' or 'incorrect'
-   */
-  showFeedback(emoji, type) {
-    this.feedbackElement.textContent = emoji;
-    this.feedbackElement.className = `feedback-display feedback-${type}`;
-    this.feedbackElement.style.display = 'flex';
-
-    setTimeout(() => {
-      this.feedbackElement.style.display = 'none';
-    }, 1000);
-  }
-
-  /**
-   * Show a short star burst to reward the correct answer.
-   */
-  showRewardBurst() {
-    if (!this.rewardLayer) return;
-
-    this.rewardLayer.innerHTML = '';
-    const stars = 12;
-
-    for (let i = 0; i < stars; i++) {
-      const star = document.createElement('span');
-      star.className = 'reward-star';
-      star.style.setProperty('--angle', `${(360 / stars) * i}deg`);
-      star.style.setProperty('--distance', `${75 + (i % 3) * 18}px`);
-      star.style.setProperty('--delay', `${(i % 4) * 35}ms`);
-      this.rewardLayer.appendChild(star);
-    }
-
-    setTimeout(() => {
-      if (this.rewardLayer) {
-        this.rewardLayer.innerHTML = '';
-      }
-    }, 1100);
-  }
-
-  /**
-   * Speak the current learning prompt when browser TTS is available.
-   */
-  speakPrompt() {
-    this.speak(`Where is ${this.getSpokenCharacter(this.currentChar)}?`);
-  }
-
-  /**
-   * Speak a positive reinforcement phrase for the current character.
-   */
-  speakCorrectAnswer() {
-    const charData = this.gameDataMap.get(this.currentChar);
-    const spokenChar = this.getSpokenCharacter(this.currentChar);
-
-    if (charData && charData.name) {
-      this.speak(`Correct, ${spokenChar} for ${charData.name}!`);
-      return;
-    }
-
-    this.speak(`Correct, ${spokenChar}!`);
-  }
-
-  /**
-   * Speak a gentle retry prompt.
-   */
-  speakWrongAnswer() {
-    this.speak('Oh! That is not right, try again!');
-  }
-
-  /**
-   * Speak text using the browser's free built-in speech synthesis.
-   * @param {string} text - Text to speak
-   */
-  speak(text) {
-    if (!this.ttsSupported || !text) return;
-
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.82;
-      utterance.pitch = 1.18;
-      utterance.volume = 1;
-      window.speechSynthesis.speak(utterance);
-    } catch (err) {
-      console.warn('[AlphabetLearnerGame] Text-to-speech failed:', err);
-    }
-  }
-
-  /**
-   * Stop any queued or active speech.
-   */
-  stopSpeech() {
-    if (!this.ttsSupported) return;
-
-    try {
-      window.speechSynthesis.cancel();
-    } catch (err) {
-      console.warn('[AlphabetLearnerGame] Failed to stop speech:', err);
-    }
-  }
-
-  /**
-   * Make letters and numbers sound natural in spoken prompts.
-   * @param {string} char - Current character
-   * @returns {string}
-   */
-  getSpokenCharacter(char) {
-    const charData = this.gameDataMap.get(char);
-
-    if (/^\d$/.test(char) && charData && charData.name) {
-      return charData.name;
-    }
-
-    return char;
-  }
-
-  /**
-   * Update which button is highlighted
-   * @param {string} char - Character to highlight
-   */
-  updateButtonHighlights(char) {
-    if (!this.buttonsContainer) return;
-
-    const buttons = this.buttonsContainer.querySelectorAll('.char-button');
-    buttons.forEach(btn => {
-      if (char && btn.dataset.char === char) {
-        btn.classList.add('highlighted');
-      } else {
-        btn.classList.remove('highlighted');
-      }
-    });
-  }
-
-  clearButtonHighlights() {
-    if (!this.buttonsContainer) return;
-    const buttons = this.buttonsContainer.querySelectorAll('.char-button');
-    buttons.forEach(btn => btn.classList.remove('highlighted'));
-  }
-
-  // ============================================
-  // UI Creation
-  // ============================================
-
-  /**
-   * Create game UI elements
-   */
-  createGameUI() {
-    // Create main container
-    this.gameContainer = document.createElement('div');
-    this.gameContainer.className = 'game-container';
-    this.gameContainer.id = 'alphabet-learner-game';
-
-    this.sparkleField = document.createElement('div');
-    this.sparkleField.className = 'sparkle-field';
-    this.sparkleField.setAttribute('aria-hidden', 'true');
-    this.createSparkleField();
-    this.gameContainer.appendChild(this.sparkleField);
-
-    // Header
-    const header = document.createElement('div');
-    header.className = 'game-header';
-
-    const title = document.createElement('div');
-    title.className = 'game-title';
-    title.textContent = '🔤 Alphabet & Numbers';
-    header.appendChild(title);
-
-    const scoreAndMode = document.createElement('div');
-    scoreAndMode.className = 'game-header-controls';
-
-    this.scoreDisplay = document.createElement('div');
-    this.scoreDisplay.className = 'game-score-display';
-    this.scoreDisplay.textContent = 'Score: 0';
-    scoreAndMode.appendChild(this.scoreDisplay);
-
-    this.modeButtons = {};
-    const modeControls = document.createElement('div');
-    modeControls.className = 'mode-buttons';
-
-    ['random', 'sequence', 'explore'].forEach(mode => {
-      const button = document.createElement('button');
-      button.className = 'mode-button';
-      button.textContent = this.getModeLabel(mode);
-      button.type = 'button';
-      button.setAttribute('aria-pressed', mode === this.gameMode ? 'true' : 'false');
-      button.addEventListener('click', () => this.switchMode(mode));
-      modeControls.appendChild(button);
-      this.modeButtons[mode] = button;
-    });
-
-    scoreAndMode.appendChild(modeControls);
-
-    header.appendChild(scoreAndMode);
-    this.gameContainer.appendChild(header);
-
-    // Game content
-    const content = document.createElement('div');
-    content.className = 'game-content';
-
-    // Display card
-    const card = document.createElement('div');
-    card.className = 'character-card';
-
-    this.letterDisplay = document.createElement('div');
-    this.letterDisplay.className = 'character-display display-letter display-active';
-    this.letterDisplay.textContent = 'A';
-
-    this.pictureDisplay = document.createElement('div');
-    this.pictureDisplay.className = 'character-display display-picture';
-
-    this.feedbackElement = document.createElement('div');
-    this.feedbackElement.className = 'feedback-display';
-
-    this.rewardLayer = document.createElement('div');
-    this.rewardLayer.className = 'reward-burst';
-    this.rewardLayer.setAttribute('aria-hidden', 'true');
-
-    card.appendChild(this.letterDisplay);
-    card.appendChild(this.pictureDisplay);
-    card.appendChild(this.feedbackElement);
-    card.appendChild(this.rewardLayer);
-    content.appendChild(card);
-
-    // Keyboard hints (desktop only)
-    if (this.platform.deviceDetector.shouldShowKeyboardHints()) {
-      this.keyboardHints = document.createElement('div');
-      this.keyboardHints.className = 'keyboard-hints';
-      this.keyboardHints.innerHTML = '<small>Press the key on your keyboard</small>';
-      content.appendChild(this.keyboardHints);
-    }
-
-    // Timer panel display
-    const timerPanel = document.createElement('div');
-    timerPanel.className = 'timer-panel';
-
-    const timerInfo = document.createElement('div');
-    timerInfo.className = 'timer-info';
-    this.timerDisplay = document.createElement('div');
-    this.timerDisplay.className = 'timer-display';
-    timerInfo.appendChild(this.timerDisplay);
-
-    const timerControls = document.createElement('div');
-    timerControls.className = 'timer-controls';
-
-    this.timerSelect = document.createElement('select');
-    this.timerSelect.className = 'timer-select';
-    this.timerSelect.setAttribute('aria-label', 'Select session duration');
-
-    const placeholderOption = document.createElement('option');
-    placeholderOption.value = '';
-    placeholderOption.textContent = 'Select duration...';
-    placeholderOption.disabled = true;
-    this.timerSelect.appendChild(placeholderOption);
-
-    [1, 2, 3, 5, 10, 15].forEach(minutes => {
-      const option = document.createElement('option');
-      option.value = String(minutes * 60);
-      option.textContent = `${minutes} minute${minutes === 1 ? '' : 's'}`;
-      if (minutes === 2) {
-        option.selected = true;
-      }
-      this.timerSelect.appendChild(option);
-    });
-
-    this.timerSelect.addEventListener('change', () => {
-      if (this.isSessionActive) return;
-      if (!this.timerSelect.value) return;
-      this.sessionTimerDuration = Number(this.timerSelect.value);
-      this.remainingSeconds = this.sessionTimerDuration;
-      this.updateTimerDisplay();
-      if (this.startSessionBtn) {
-        this.startSessionBtn.disabled = false;
-      }
-    });
-    timerControls.appendChild(this.timerSelect);
-
-    this.startSessionBtn = document.createElement('button');
-    this.startSessionBtn.className = 'start-session-btn';
-    this.startSessionBtn.textContent = 'Start Session';
-    this.startSessionBtn.disabled = false;
-    this.startSessionBtn.addEventListener('click', () => this.startSession());
-    timerControls.appendChild(this.startSessionBtn);
-
-    timerPanel.appendChild(timerInfo);
-    timerPanel.appendChild(timerControls);
-
-    const timerNote = document.createElement('div');
-    timerNote.className = 'timer-note';
-    timerNote.textContent = 'Choose your session duration before starting. The timer locks once the session begins.';
-    timerPanel.appendChild(timerNote);
-
-    this.timerPanel = timerPanel;
-
-    // On-screen keyboard buttons (always visible)
-    this.buttonsContainer = document.createElement('div');
-    this.buttonsContainer.className = 'buttons-container';
-    this.createCharacterButtons();
-    content.appendChild(this.buttonsContainer);
-
-    this.gameContainer.appendChild(content);
-
-    const footer = document.createElement('div');
-    footer.className = 'game-footer';
-    footer.appendChild(timerPanel);
-    this.gameContainer.appendChild(footer);
-
-    this.sessionEndOverlay = document.createElement('div');
-    this.sessionEndOverlay.className = 'session-end-overlay hidden';
-    this.sessionEndOverlay.innerHTML = `
-      <div class="session-end-dialog">
-        <h2>Session Ended</h2>
-        <p>Great job! The session has ended.</p>
-        <button class="session-end-button" type="button">OK</button>
-      </div>
-    `;
-    this.gameContainer.appendChild(this.sessionEndOverlay);
-
-    const sessionEndButton = this.sessionEndOverlay.querySelector('.session-end-button');
-    if (sessionEndButton) {
-      sessionEndButton.addEventListener('click', () => this.closeSessionEndOverlay());
-    }
-  }
-
-  /**
-   * Create slow floating stars in the background.
-   */
-  createSparkleField() {
-    const stars = [
-      { x: 8, y: 18, size: 22, delay: 0, duration: 6.2 },
-      { x: 18, y: 72, size: 16, delay: 1.1, duration: 7.4 },
-      { x: 31, y: 9, size: 14, delay: 2.2, duration: 6.8 },
-      { x: 73, y: 13, size: 18, delay: 0.7, duration: 7.1 },
-      { x: 88, y: 34, size: 24, delay: 1.6, duration: 6.5 },
-      { x: 82, y: 76, size: 15, delay: 2.7, duration: 7.8 },
-      { x: 48, y: 83, size: 20, delay: 0.4, duration: 7.2 },
-      { x: 6, y: 48, size: 13, delay: 3.1, duration: 6.9 }
-    ];
-
-    stars.forEach((config, index) => {
-      const star = document.createElement('span');
-      star.className = 'floating-star';
-      star.style.setProperty('--x', `${config.x}%`);
-      star.style.setProperty('--y', `${config.y}%`);
-      star.style.setProperty('--size', `${config.size}px`);
-      star.style.setProperty('--delay', `${config.delay}s`);
-      star.style.setProperty('--duration', `${config.duration}s`);
-      star.style.setProperty('--spin', index % 2 === 0 ? '10deg' : '-12deg');
-      this.sparkleField.appendChild(star);
-    });
-  }
-
-  /**
-   * Create character buttons (A-Z and 0-9)
-   */
-  createCharacterButtons() {
-    // Letters
-    const lettersRow = document.createElement('div');
-    lettersRow.className = 'button-row';
-
-    for (let i = 0; i < 26; i++) {
-      const char = String.fromCharCode(65 + i);
-      const btn = this.createCharacterButton(char);
-      lettersRow.appendChild(btn);
-    }
-    this.buttonsContainer.appendChild(lettersRow);
-
-    // Numbers
-    const numbersRow = document.createElement('div');
-    numbersRow.className = 'button-row';
-
-    for (let i = 0; i < 10; i++) {
-      const char = i.toString();
-      const btn = this.createCharacterButton(char);
-      numbersRow.appendChild(btn);
-    }
-    this.buttonsContainer.appendChild(numbersRow);
-  }
-
-  /**
-   * Create a single character button
-   * @param {string} char - Character to display on button
-   * @returns {HTMLElement}
-   */
-  createCharacterButton(char) {
-    const btn = document.createElement('button');
-    btn.className = 'char-button';
-    btn.dataset.char = char;
-    btn.textContent = char;
-    btn.addEventListener('click', () => this.handleCharacterInput(char));
-    btn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      btn.classList.add('button-pressed');
-      this.handleCharacterInput(char);
-    });
-    btn.addEventListener('touchend', () => {
-      btn.classList.remove('button-pressed');
-    });
-    return btn;
-  }
-
-  /**
-   * Setup keyboard and button input handlers
-   */
-  setupInputHandlers() {
-    // Keyboard input for all letters and numbers
-    for (let i = 0; i < 26; i++) {
-      const char = String.fromCharCode(65 + i);
-      this.platform.inputManager.onKey(char, () => this.handleCharacterInput(char));
-    }
-
-    for (let i = 0; i < 10; i++) {
-      const char = i.toString();
-      this.platform.inputManager.onKey(char, () => this.handleCharacterInput(char));
-    }
-  }
-
-  /**
-   * Update score display
-   */
-  updateScoreDisplay() {
-    if (this.scoreDisplay) {
-      this.scoreDisplay.textContent = `Score: ${this.score}`;
-    }
-  }
-
-  /**
-   * Show game UI
-   */
-  showGameUI() {
-    const launcher = document.getElementById('launcher');
-    const gameContainer = document.getElementById('gameContainer');
-
-    if (launcher) launcher.style.display = 'none';
-    if (gameContainer) {
-      gameContainer.innerHTML = '';
-      gameContainer.appendChild(this.gameContainer);
-      gameContainer.style.display = 'flex';
-    }
-
-    this.updateTimerDisplay();
-  }
-
-  /**
-   * Toggle between random and sequential order.
-   */
-  toggleOrderMode() {
-    if (this.gameMode === 'random') {
-      this.gameMode = 'sequence';
-    } else if (this.gameMode === 'sequence') {
-      this.gameMode = 'explore';
-    } else {
-      this.gameMode = 'random';
-    }
-
-    this.updateModeButton();
-
-    if (this.isSessionActive) {
-      const current = this.currentChar;
-      this.prepareCharacterList();
-      if (current) {
-        const currentIndex = this.charList.indexOf(current);
-        this.charIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
-      }
-    } else {
-      this.prepareCharacterList();
-      this.charIndex = 0;
-    }
-  }
-
-  /**
-   * Start the timed session.
-   */
-  startSession() {
-    if (this.isSessionActive) return;
+  resume() {
+    if (this.remainingSeconds <= 0 || this.isBlocked()) return;
 
     this.isRunning = true;
-    this.isSessionActive = true;
-    this.sessionStartTime = Date.now();
-    this.remainingSeconds = this.sessionTimerDuration;
-    this.updateTimerDisplay();
-    this.startSessionBtn.textContent = 'Session Running';
-    this.startSessionBtn.disabled = true;
-
-    this.prepareCharacterList();
-    this.nextRound();
-
-    if (this.timerPanel) {
-      this.timerPanel.classList.add('hidden');
-    }
-    this.timerSelect.disabled = true;
-    this.clearTimerInterval();
-    this.timerInterval = setInterval(() => {
-      this.remainingSeconds -= 1;
-      this.updateTimerDisplay();
-
-      if (this.remainingSeconds <= 0) {
-        this.endSession();
-      }
-    }, 1000);
+    this.startTimer();
+    this.startBackgroundAudio();
   }
 
-  /**
-   * End the timed session and stop the game.
-   */
-  endSession() {
-    if (!this.isSessionActive) return;
-
-    this.isSessionActive = false;
+  stop() {
     this.isRunning = false;
-    this.isSessionEnded = true;
-    this.clearTimerInterval();
-    if (this.timerPanel) {
-      this.timerPanel.classList.remove('hidden');
+    this.clearTimer();
+    this.clearPendingTimeouts();
+    this.stopSpeech();
+    this.stopBackgroundAudio();
+    this.unbindKeyboardInput();
+  }
+
+  reset() {
+    this.stop();
+    this.start();
+  }
+
+  cleanup() {
+    this.stop();
+    this.root?.remove();
+    this.root = null;
+    this.elements = {};
+  }
+
+  async loadGameData() {
+    const manifest = await this.fetchManifest();
+    const imageDir = manifest.imageDir || 'images/';
+    const letters = manifest.characters || [];
+    const numbers = manifest.numbers || [];
+
+    this.items = [...letters, ...numbers].map((entry) => {
+      const char = entry.char || entry.character;
+      const kind = /^[0-9]$/.test(char) ? 'Number' : 'Letter';
+      const word = entry.name || char;
+
+      return {
+        char,
+        kind,
+        word,
+        imagePath: `${AlphabetLearnerGame.metadata.assetPath}${imageDir}${entry.imageFile || ''}`
+      };
+    }).filter((item) => item.char);
+
+    if (this.items.length === 0) {
+      this.items = this.createFallbackItems();
     }
-    this.startSessionBtn.textContent = 'Start Session';
-    this.startSessionBtn.disabled = true;
-    if (this.timerSelect) {
-      this.timerSelect.disabled = false;
+
+    if (!this.items.some((item) => item.char === '0')) {
+      this.items.push({
+        char: '0',
+        kind: 'Number',
+        word: 'Zero',
+        imagePath: this.createFallbackImageDataUrl('0', 'Zero')
+      });
     }
-    this.showSessionEndOverlay();
-    this.platform.storageManager.set('lastSessionSummary', {
-      score: this.score,
-      duration: this.sessionTimerDuration - this.remainingSeconds,
-      timestamp: new Date().toISOString()
+
+    this.itemByChar = new Map(this.items.map((item) => [item.char, item]));
+  }
+
+  async fetchManifest() {
+    try {
+      const response = await fetch(`${AlphabetLearnerGame.metadata.assetPath}manifest.json`);
+      if (!response.ok) throw new Error(`Manifest failed: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.warn('[AlphabetLearnerGame] Using fallback alphabet data.', error);
+      return {};
+    }
+  }
+
+  createFallbackItems() {
+    const letters = Array.from({ length: 26 }, (_, index) => {
+      const char = String.fromCharCode(65 + index);
+      return {
+        char,
+        kind: 'Letter',
+        word: char,
+        imagePath: this.createFallbackImageDataUrl(char, char)
+      };
+    });
+
+    const numbers = Array.from({ length: 10 }, (_, index) => {
+      const char = String(index);
+      return {
+        char,
+        kind: 'Number',
+        word: char,
+        imagePath: this.createFallbackImageDataUrl(char, char)
+      };
+    });
+
+    return [...letters, ...numbers];
+  }
+
+  createFallbackImageDataUrl(char, word) {
+    const safeChar = this.escapeSvgText(char);
+    const safeWord = this.escapeSvgText(word);
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480">
+        <rect width="640" height="480" rx="48" fill="#fff7d6"/>
+        <circle cx="138" cy="116" r="58" fill="#5ce1e6" opacity=".75"/>
+        <circle cx="520" cy="350" r="72" fill="#4ade80" opacity=".65"/>
+        <path d="M116 360 C210 245 278 416 372 276 C432 186 486 230 548 136" fill="none" stroke="#fbbf24" stroke-width="34" stroke-linecap="round"/>
+        <text x="320" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="180" font-weight="900" fill="#1f2937">${safeChar}</text>
+        <text x="320" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="54" font-weight="800" fill="#0d9488">${safeWord}</text>
+      </svg>
+    `;
+
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }
+
+  escapeSvgText(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  mountUI() {
+    if (this.root?.isConnected) return;
+
+    const host = this.getGameContainerEl();
+    const root = document.createElement('section');
+    root.id = 'alphabet-learner-game';
+    root.className = 'alphabet-game';
+    root.setAttribute('aria-label', 'Alphabet and numbers learner');
+
+    root.append(
+      this.createHeader(),
+      this.createStage(),
+      this.createKeyboard(),
+      this.createBlocker()
+    );
+
+    host?.appendChild(root);
+    this.root = root;
+    this.renderKeyboard();
+  }
+
+  createHeader() {
+    const header = document.createElement('header');
+    header.className = 'alphabet-header';
+
+    const brand = document.createElement('div');
+    brand.className = 'alphabet-brand';
+    brand.innerHTML = '<span class="brand-mark">ABC</span><span class="brand-submark">123</span>';
+
+    const modes = document.createElement('div');
+    modes.className = 'mode-switcher';
+    modes.setAttribute('aria-label', 'Choose game mode');
+
+    const modeLabels = {
+      [MODE_SEQUENCE]: 'Sequence',
+      [MODE_RANDOM]: 'Random',
+      [MODE_BUTTON]: 'Button'
+    };
+
+    MODES.forEach((mode) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'mode-button';
+      button.dataset.mode = mode;
+      button.textContent = modeLabels[mode];
+      button.addEventListener('click', () => this.setMode(mode));
+      modes.appendChild(button);
+    });
+
+    const status = document.createElement('div');
+    status.className = 'session-status';
+
+    const score = document.createElement('div');
+    score.className = 'status-pill score-pill';
+    score.innerHTML = '<span class="status-icon">Star</span><strong>0</strong>';
+
+    const timer = document.createElement('div');
+    timer.className = 'status-pill timer-pill';
+    timer.innerHTML = '<span class="status-icon">Time</span><strong>0:00</strong>';
+
+    const parentButton = document.createElement('button');
+    parentButton.type = 'button';
+    parentButton.className = 'parent-button';
+    parentButton.textContent = 'Parent';
+    parentButton.addEventListener('click', () => this.showPinBlocker('exit'));
+
+    status.append(score, timer, parentButton);
+    header.append(brand, modes, status);
+
+    this.elements.score = score.querySelector('strong');
+    this.elements.timer = timer.querySelector('strong');
+    this.elements.modeButtons = modes.querySelectorAll('.mode-button');
+
+    return header;
+  }
+
+  createStage() {
+    const stage = document.createElement('main');
+    stage.className = 'learning-stage';
+
+    const ambient = document.createElement('div');
+    ambient.className = 'ambient-shapes';
+    ambient.setAttribute('aria-hidden', 'true');
+    ambient.innerHTML = '<span></span><span></span><span></span><span></span>';
+
+    const card = document.createElement('article');
+    card.className = 'learning-card';
+
+    const prompt = document.createElement('div');
+    prompt.className = 'prompt-line';
+    prompt.textContent = 'Find the glowing key';
+
+    const display = document.createElement('div');
+    display.className = 'character-display';
+
+    const character = document.createElement('div');
+    character.className = 'display-character';
+    character.textContent = '?';
+
+    const imageWrap = document.createElement('div');
+    imageWrap.className = 'display-image-wrap hidden';
+
+    const image = document.createElement('img');
+    image.className = 'display-image';
+    image.alt = '';
+    image.decoding = 'async';
+    image.addEventListener('error', () => {
+      const item = this.currentItem;
+      if (item && image.dataset.fallback !== 'true') {
+        image.dataset.fallback = 'true';
+        image.src = this.createFallbackImageDataUrl(item.char, item.word);
+      }
+    });
+    imageWrap.appendChild(image);
+
+    const word = document.createElement('div');
+    word.className = 'display-word';
+
+    display.append(character, imageWrap, word);
+
+    const feedback = document.createElement('div');
+    feedback.className = 'feedback-badge';
+    feedback.setAttribute('aria-live', 'polite');
+
+    const sparkleLayer = document.createElement('div');
+    sparkleLayer.className = 'sparkle-layer';
+    sparkleLayer.setAttribute('aria-hidden', 'true');
+
+    card.append(prompt, display, feedback, sparkleLayer);
+    stage.append(ambient, card);
+
+    this.elements.prompt = prompt;
+    this.elements.card = card;
+    this.elements.character = character;
+    this.elements.imageWrap = imageWrap;
+    this.elements.image = image;
+    this.elements.word = word;
+    this.elements.feedback = feedback;
+    this.elements.sparkleLayer = sparkleLayer;
+
+    return stage;
+  }
+
+  createKeyboard() {
+    const keyboard = document.createElement('nav');
+    keyboard.className = 'keyboard-panel';
+    keyboard.setAttribute('aria-label', 'Alphabet and number keys');
+    this.elements.keyboard = keyboard;
+    return keyboard;
+  }
+
+  createBlocker() {
+    const blocker = document.createElement('div');
+    blocker.className = 'session-blocker hidden';
+    blocker.setAttribute('role', 'dialog');
+    blocker.setAttribute('aria-modal', 'true');
+    blocker.innerHTML = `
+      <div class="blocker-card">
+        <div class="blocker-burst" aria-hidden="true">ABC</div>
+        <h2 class="blocker-title">Session complete</h2>
+        <p class="blocker-score">Score: <strong>0</strong></p>
+        <label class="pin-label" for="alphabetPinInput">Parent PIN</label>
+        <input id="alphabetPinInput" class="pin-entry" type="password" maxlength="4" inputmode="numeric" autocomplete="off">
+        <p class="pin-error" aria-live="polite"></p>
+        <button type="button" class="unlock-button">Unlock</button>
+      </div>
+    `;
+
+    const input = blocker.querySelector('.pin-entry');
+    const unlock = blocker.querySelector('.unlock-button');
+    const submit = () => this.handlePinSubmit();
+
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/\D/g, '');
+      this.elements.pinError.textContent = '';
+    });
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') submit();
+    });
+    unlock.addEventListener('click', submit);
+
+    this.elements.blocker = blocker;
+    this.elements.blockerTitle = blocker.querySelector('.blocker-title');
+    this.elements.blockerScore = blocker.querySelector('.blocker-score strong');
+    this.elements.pinInput = input;
+    this.elements.pinError = blocker.querySelector('.pin-error');
+
+    return blocker;
+  }
+
+  renderKeyboard() {
+    const keyboard = this.elements.keyboard;
+    if (!keyboard) return;
+
+    keyboard.innerHTML = '';
+    this.items.forEach((item) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'character-key';
+      button.dataset.char = item.char;
+      button.textContent = item.char;
+      button.setAttribute('aria-label', `${item.kind} ${item.char}`);
+      button.addEventListener('pointerdown', () => this.resumeAudioContext());
+      button.addEventListener('click', () => this.handleInput(item.char));
+      keyboard.appendChild(button);
     });
   }
 
-  /**
-   * Clear the timer interval.
-   */
-  clearTimerInterval() {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.timerInterval = null;
+  bindKeyboardInput() {
+    this.unbindKeyboardInput();
+    this.items.forEach((item) => {
+      const handler = () => this.handleInput(item.char);
+      this.boundKeyHandlers.set(item.char, handler);
+      this.platform.inputManager?.onKey?.(item.char, handler);
+    });
+  }
+
+  unbindKeyboardInput() {
+    this.boundKeyHandlers.forEach((handler, char) => {
+      this.platform.inputManager?.offKey?.(char, handler);
+    });
+    this.boundKeyHandlers.clear();
+  }
+
+  showGameContainer() {
+    const host = this.getGameContainerEl();
+    if (host) host.style.display = 'flex';
+    this.root?.classList.remove('hidden');
+  }
+
+  setMode(mode) {
+    if (!MODES.includes(mode) || mode === this.mode) return;
+
+    this.mode = mode;
+    this.inputLocked = false;
+    this.clearPendingTimeouts();
+    this.prepareSequence();
+    this.updateModeButtons();
+    this.beginRound();
+  }
+
+  prepareSequence() {
+    this.sequence = [...this.items];
+    if (this.mode === MODE_RANDOM) this.shuffle(this.sequence);
+    this.sequenceIndex = 0;
+  }
+
+  beginRound() {
+    if (!this.isRunning || this.isBlocked()) return;
+
+    this.inputLocked = false;
+    this.clearFeedback();
+    this.clearKeyStates();
+
+    if (this.mode === MODE_BUTTON) {
+      this.currentItem = null;
+      this.elements.prompt.textContent = 'Tap any key';
+      this.showPlaceholder();
+      this.speak('Tap any key.');
+      return;
+    }
+
+    if (this.sequenceIndex >= this.sequence.length) {
+      this.prepareSequence();
+    }
+
+    this.currentItem = this.sequence[this.sequenceIndex];
+    this.sequenceIndex += 1;
+    this.elements.prompt.textContent = 'Find the glowing key';
+    this.showCharacter(this.currentItem);
+    this.highlightKey(this.currentItem.char);
+    this.speak(`Where is ${this.currentItem.char}?`);
+  }
+
+  handleInput(char) {
+    if (!this.isRunning || this.inputLocked || this.isBlocked()) return;
+
+    this.resumeAudioContext();
+    const item = this.itemByChar.get(char);
+    if (!item) return;
+
+    if (this.mode === MODE_BUTTON) {
+      this.revealButtonModeItem(item);
+      return;
+    }
+
+    if (char === this.currentItem?.char) {
+      this.handleCorrect(item);
+    } else {
+      this.handleIncorrect(char);
     }
   }
 
-  /**
-   * Update the timer display text.
-   */
-  updateTimerDisplay() {
-    if (!this.timerDisplay) return;
+  handleCorrect(item) {
+    this.inputLocked = true;
+    this.score += 1;
+    this.updateScore();
+    this.markKey(item.char, 'correct');
+    this.showImage(item);
+    this.showFeedback('Yay!', 'correct');
+    this.playCorrectSound();
+    this.speak(`That is correct, ${this.answerPhrase(item)}!`);
+    this.launchSparkles('correct');
 
-    const minutes = Math.floor(this.remainingSeconds / 60);
-    const seconds = this.remainingSeconds % 60;
-    const formatted = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    this.timerDisplay.textContent = `Time: ${formatted}`;
+    this.setManagedTimeout(() => {
+      this.clearKeyStates();
+      this.beginRound();
+    }, ROUND_ADVANCE_MS);
   }
 
-  /**
-   * Update order mode button label.
-   */
-  updateModeButton() {
-    const modeBtn = this.gameContainer.querySelector('.mode-toggle-btn');
-    if (!modeBtn) return;
+  handleIncorrect(char) {
+    this.inputLocked = true;
+    this.markKey(char, 'wrong');
+    this.showFeedback('Try again', 'wrong');
+    this.playWrongSound();
+    this.speak(`Oops! You pressed ${char}, where is ${this.currentItem.char}?`);
+    this.elements.card.classList.remove('gentle-shake');
+    void this.elements.card.offsetWidth;
+    this.elements.card.classList.add('gentle-shake');
 
-    modeBtn.textContent = this.getModeButtonText();
+    this.setManagedTimeout(() => {
+      this.inputLocked = false;
+      this.clearFeedback();
+      this.clearKeyStates();
+      this.highlightKey(this.currentItem?.char);
+    }, WRONG_RESET_MS);
   }
 
-  /**
-   * Get visible label for the current order mode.
-   * @returns {string}
-   */
-  getModeButtonText() {
-    if (this.gameMode === 'random') return 'Random';
-    if (this.gameMode === 'sequence') return 'Sequence';
-    return 'Explore';
+  revealButtonModeItem(item) {
+    this.inputLocked = true;
+    this.currentItem = item;
+    this.markKey(item.char, 'correct');
+    this.showImage(item);
+    this.showFeedback('Hello!', 'correct');
+    this.playCorrectSound();
+    this.speak(this.answerPhrase(item));
+    this.launchSparkles('correct');
+
+    this.setManagedTimeout(() => {
+      this.clearKeyStates();
+      this.inputLocked = false;
+      this.showPlaceholder();
+      this.elements.prompt.textContent = 'Tap any key';
+    }, REVEAL_RESET_MS);
   }
 
-  getModeLabel(mode) {
-    if (mode === 'random') return 'Random';
-    if (mode === 'sequence') return 'Sequence';
-    return 'Explore';
+  showPlaceholder() {
+    this.elements.character.textContent = '?';
+    this.elements.character.classList.remove('hidden');
+    this.elements.imageWrap.classList.add('hidden');
+    this.elements.image.removeAttribute('src');
+    this.elements.word.textContent = '';
+    this.elements.card.classList.remove('image-revealed');
   }
 
-  switchMode(mode) {
-    if (this.gameMode === mode) return;
-    this.gameMode = mode;
-    this.updateModeButtons();
-    this.reset();
+  showCharacter(item) {
+    this.elements.character.textContent = item.char;
+    this.elements.character.classList.remove('hidden');
+    this.elements.imageWrap.classList.add('hidden');
+    this.elements.image.removeAttribute('src');
+    this.elements.word.textContent = '';
+    this.elements.card.classList.remove('image-revealed');
+    this.pulseCard();
+  }
+
+  showImage(item) {
+    this.elements.character.classList.add('hidden');
+    this.elements.imageWrap.classList.remove('hidden');
+    this.elements.image.dataset.fallback = 'false';
+    this.elements.image.src = item.imagePath;
+    this.elements.image.alt = `${item.char} for ${item.word}`;
+    this.elements.word.textContent = `${item.char} - ${item.word}`;
+    this.elements.card.classList.add('image-revealed');
+    this.pulseCard();
+  }
+
+  pulseCard() {
+    this.elements.card.classList.remove('card-pop');
+    void this.elements.card.offsetWidth;
+    this.elements.card.classList.add('card-pop');
   }
 
   updateModeButtons() {
-    if (!this.modeButtons) return;
-    Object.entries(this.modeButtons).forEach(([mode, button]) => {
-      const selected = mode === this.gameMode;
-      button.setAttribute('aria-pressed', selected ? 'true' : 'false');
-      button.classList.toggle('active', selected);
+    this.elements.modeButtons?.forEach((button) => {
+      const active = button.dataset.mode === this.mode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
     });
   }
 
-  showSessionEndOverlay() {
-    if (!this.sessionEndOverlay) return;
-    this.sessionEndOverlay.classList.remove('hidden');
+  updateScore() {
+    if (this.elements.score) this.elements.score.textContent = String(this.score);
   }
 
-  closeSessionEndOverlay() {
-    if (!this.sessionEndOverlay) return;
-    this.sessionEndOverlay.classList.add('hidden');
-    this.isSessionEnded = false;
-    this.inputLocked = true;
-    if (this.timerSelect && this.timerSelect.value) {
-      this.startSessionBtn.disabled = false;
+  updateTimer() {
+    if (!this.elements.timer) return;
+    const clamped = Math.max(0, this.remainingSeconds);
+    const minutes = Math.floor(clamped / 60);
+    const seconds = String(clamped % 60).padStart(2, '0');
+    this.elements.timer.textContent = `${minutes}:${seconds}`;
+  }
+
+  startTimer() {
+    this.clearTimer();
+    this.timerId = setInterval(() => {
+      this.remainingSeconds -= 1;
+      this.updateTimer();
+      if (this.remainingSeconds <= 0) this.endSession();
+    }, 1000);
+  }
+
+  clearTimer() {
+    if (this.timerId !== null) {
+      clearInterval(this.timerId);
+      this.timerId = null;
     }
   }
 
-  /**
-   * Called when back button is clicked
-   */
-  onBackToLauncher() {
-    this.stop();
-    window.location.reload(); // Simple way to go back to launcher
+  endSession() {
+    if (!this.isRunning) return;
+    this.isRunning = false;
+    this.clearTimer();
+    this.clearPendingTimeouts();
+    this.stopSpeech();
+    this.stopBackgroundAudio();
+    this.clearKeyStates();
+    this.showPinBlocker('sessionEnd');
   }
 
-  attachSecretBackShortcut() {
-    if (this.secretBackHandler) return;
+  showPinBlocker(mode) {
+    if (mode === 'exit') {
+      this.elements.blockerTitle.textContent = 'Parent unlock';
+      this.elements.blockerScore.parentElement.classList.add('hidden');
+    } else {
+      this.elements.blockerTitle.textContent = 'Great learning!';
+      this.elements.blockerScore.textContent = String(this.score);
+      this.elements.blockerScore.parentElement.classList.remove('hidden');
+    }
 
-    this.secretBackHandler = event => {
-      if (event.ctrlKey && event.altKey && event.key.toLowerCase() === 'b') {
-        event.preventDefault();
-        this.onBackToLauncher();
-      }
-    };
-
-    document.addEventListener('keydown', this.secretBackHandler);
+    this.elements.pinError.textContent = '';
+    this.elements.pinInput.value = '';
+    this.elements.blocker.classList.remove('hidden');
+    this.elements.pinInput.focus({ preventScroll: true });
   }
 
-  detachSecretBackShortcut() {
-    if (!this.secretBackHandler) return;
-    document.removeEventListener('keydown', this.secretBackHandler);
-    this.secretBackHandler = null;
+  hideBlocker() {
+    this.elements.blocker?.classList.add('hidden');
   }
 
-  // ============================================
-  // Utility Methods
-  // ============================================
+  isBlocked() {
+    return !!this.elements.blocker && !this.elements.blocker.classList.contains('hidden');
+  }
 
-  /**
-   * Fisher-Yates shuffle algorithm
-   * @param {Array} array - Array to shuffle
-   */
-  shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
+  handlePinSubmit() {
+    const pin = this.elements.pinInput.value;
+    if (!this.timerService?.checkResetPin?.(pin)) {
+      this.elements.pinError.textContent = 'Incorrect PIN';
+      this.elements.pinInput.value = '';
+      this.playWrongSound();
+      return;
+    }
+
+    this.hideBlocker();
+    this.exitToTimerSetup();
+  }
+
+  async exitToTimerSetup() {
+    this.cleanup();
+
+    const gameContainer = this.getGameContainerEl();
+    const launcher = document.getElementById('launcher');
+    if (gameContainer) gameContainer.style.display = 'none';
+    if (launcher) launcher.style.display = 'none';
+    if (this.platform) this.platform.currentGame = null;
+
+    await this.platform?.showTimerUI?.();
+  }
+
+  highlightKey(char) {
+    if (!char) return;
+    this.findKey(char)?.classList.add('target');
+  }
+
+  markKey(char, state) {
+    const key = this.findKey(char);
+    if (!key) return;
+    key.classList.remove('target', 'correct', 'wrong');
+    key.classList.add(state);
+  }
+
+  clearKeyStates() {
+    this.elements.keyboard?.querySelectorAll('.character-key').forEach((key) => {
+      key.classList.remove('target', 'correct', 'wrong');
+    });
+  }
+
+  findKey(char) {
+    return this.elements.keyboard?.querySelector(`[data-char="${CSS.escape(char)}"]`);
+  }
+
+  showFeedback(text, type) {
+    this.elements.feedback.textContent = text;
+    this.elements.feedback.className = `feedback-badge show ${type}`;
+  }
+
+  clearFeedback() {
+    this.elements.feedback.textContent = '';
+    this.elements.feedback.className = 'feedback-badge';
+  }
+
+  launchSparkles(type) {
+    const layer = this.elements.sparkleLayer;
+    if (!layer) return;
+
+    layer.innerHTML = '';
+    for (let index = 0; index < 16; index += 1) {
+      const sparkle = document.createElement('span');
+      sparkle.className = `sparkle ${type}`;
+      sparkle.style.setProperty('--angle', `${index * 22.5}deg`);
+      sparkle.style.setProperty('--distance', `${90 + (index % 4) * 18}px`);
+      layer.appendChild(sparkle);
+    }
+
+    this.setManagedTimeout(() => {
+      if (layer.isConnected) layer.innerHTML = '';
+    }, 1000);
+  }
+
+  speak(text) {
+    if (!text || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.82;
+    utterance.pitch = 1.18;
+    utterance.volume = 1;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  stopSpeech() {
+    try {
+      window.speechSynthesis?.cancel();
+    } catch {
+      // Speech synthesis is optional.
+    }
+  }
+
+  answerPhrase(item) {
+    return `${item.char} for ${item.word}`;
+  }
+
+  resumeAudioContext() {
+    if (this.audioManager?.context?.state === 'suspended') {
+      this.audioManager.context.resume();
+    }
+  }
+
+  playCorrectSound() {
+    this.playToneSequence([523.25, 659.25, 783.99], 0.08, 'sine', 0.18);
+  }
+
+  playWrongSound() {
+    this.playToneSequence([220, 196], 0.09, 'triangle', 0.12);
+  }
+
+  playToneSequence(frequencies, noteDuration, type, volume) {
+    const context = this.audioManager?.context;
+    if (!context) return;
+
+    this.resumeAudioContext();
+    frequencies.forEach((frequency, index) => {
+      const start = context.currentTime + index * noteDuration;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(volume, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + noteDuration);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(start);
+      oscillator.stop(start + noteDuration + 0.02);
+    });
+  }
+
+  startBackgroundAudio() {
+    const context = this.audioManager?.context;
+    if (!context || this.backgroundAudio) return;
+
+    this.resumeAudioContext();
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.025, context.currentTime + 0.8);
+    gain.connect(context.destination);
+
+    const oscillators = [261.63, 329.63, 392].map((frequency) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+      oscillator.connect(gain);
+      oscillator.start();
+      return oscillator;
+    });
+
+    this.backgroundAudio = { context, gain, oscillators };
+  }
+
+  stopBackgroundAudio() {
+    if (!this.backgroundAudio) return;
+
+    const { context, gain, oscillators } = this.backgroundAudio;
+    const stopAt = context.currentTime + 0.35;
+    gain.gain.cancelScheduledValues(context.currentTime);
+    gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+    oscillators.forEach((oscillator) => oscillator.stop(stopAt + 0.02));
+    this.backgroundAudio = null;
+  }
+
+  setManagedTimeout(callback, delay) {
+    const id = setTimeout(() => {
+      this.pendingTimeouts.delete(id);
+      callback();
+    }, delay);
+    this.pendingTimeouts.add(id);
+  }
+
+  clearPendingTimeouts() {
+    this.pendingTimeouts.forEach((id) => clearTimeout(id));
+    this.pendingTimeouts.clear();
+  }
+
+  shuffle(items) {
+    for (let index = items.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
     }
   }
 }

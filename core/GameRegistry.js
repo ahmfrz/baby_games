@@ -38,11 +38,13 @@ export class GameRegistry {
    * Instantiate a game
    * @param {string} gameId - Game ID
    * @param {Object} platform - Platform services to inject
+   * @param {Object} [options] - Optional additional services
    * @returns {GameModule} Game instance
    */
-  instantiate(gameId, platform) {
+  instantiate(gameId, platform, options = {}) {
     const GameClass = this.getGame(gameId);
-    return new GameClass(platform);
+    const gameInstance = new GameClass(platform, options);
+    return gameInstance;
   }
 
   /**

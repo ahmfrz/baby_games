@@ -18,11 +18,15 @@ export class GameModule {
   /**
    * Constructor
    * @param {Object} platform - Platform services (AudioManager, InputManager, etc.)
+   * @param {Object} [options] - Optional additional services or configurations
    */
-  constructor(platform) {
+  constructor(platform, options = {}) {
     this.platform = platform;
     this.isRunning = false;
     this.gameContainer = null;
+
+    this.timerService = platform?.timerService || options?.timerService;
+    this.audioManager = platform?.audioManager || options?.audioManager;
   }
 
   /**
@@ -82,5 +86,12 @@ export class GameModule {
     if (this.gameContainer && this.gameContainer.parentNode) {
       this.gameContainer.parentNode.removeChild(this.gameContainer);
     }
+  }
+
+  /**
+   * Returns the platform's game container element where games mount their UI.
+   */
+  getGameContainerEl() {
+    return this.platform?.gameContainerEl ?? this.platform?.gameContainer;
   }
 }

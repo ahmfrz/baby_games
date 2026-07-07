@@ -11,11 +11,12 @@
 <body>
   <div id="app">
     <!-- Game launcher section -->
+    <!-- Game launcher section -->
     <div id="launcher" class="launcher-container">
       <div class="launcher-content">
         <h1 class="launcher-title">🎮 Baby Games</h1>
         <p class="launcher-subtitle">Learning and Fun for Your Little One</p>
-        
+
         <div id="gamesList" class="games-list">
           <!-- Games will be dynamically added here -->
         </div>
@@ -23,6 +24,57 @@
         <div class="launcher-footer">
           <p class="made-with-love">Made with ❤️ for babies</p>
           <button id="creditsBtn" class="credits-button" aria-label="View credits and licenses">📋 Credits & License</button>
+        </div>
+      </div>
+    </div>
+
+      <!-- Timer Setup Section -->
+      <div id="timerSetup" class="timer-setup" style="display: none; z-index: 95;">
+      <div class="timer-setup-content">
+        <div class="timer-setup-header">
+          <h2 class="timer-setup-title">⏱️ Session Timer</h2>
+          <p class="timer-setup-description">Set the length of your learning session</p>
+        </div>
+
+        <div class="timer-setup-options">
+          <div class="timer-option" data-duration="60">
+            <div class="timer-option-emoji">🕐</div>
+            <div class="timer-option-text">1 minute</div>
+          </div>
+          <div class="timer-option active" data-duration="120">
+            <div class="timer-option-emoji">⏰</div>
+            <div class="timer-option-text">2 minutes</div>
+          </div>
+          <div class="timer-option" data-duration="300">
+            <div class="timer-option-emoji">⏰</div>
+            <div class="timer-option-text">5 minutes</div>
+          </div>
+          <div class="timer-option" data-duration="600">
+            <div class="timer-option-emoji">⏰</div>
+            <div class="timer-option-text">10 minutes</div>
+          </div>
+        </div>
+
+        <div class="timer-setup-footer">
+          <button id="resetTimerPinBtn" class="reset-timer-btn" aria-label="Reset timer settings with PIN">🔐 Reset Timer</button>
+          <span class="timer-setup-current">Current: <span id="timerDisplay">2 minutes</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIN Dialog for Timer Reset -->
+    <div id="pinDialog" class="pin-dialog hidden" style="z-index: 200;">
+      <div class="pin-dialog-content">
+        <h2 class="pin-dialog-title">🔐 PIN Required</h2>
+        <p class="pin-dialog-description">Enter PIN to reset timer settings</p>
+
+        <div class="pin-input-container">
+          <input type="password" id="pinInput" class="pin-input" maxlength="4" inputmode="numeric" placeholder="1234">
+        </div>
+
+        <div class="pin-buttons">
+          <button id="pinCancel" class="pin-button cancel">Cancel</button>
+          <button id="pinSubmit" class="pin-button submit">Submit</button>
         </div>
       </div>
     </div>
@@ -81,6 +133,109 @@
   </div>
 
   <!-- Main application script -->
+  <script>
+    // Capture runtime errors and recent console errors for debugging
+    window.__capturedErrors = [];
+    window.__capturedConsole = [];
+    window.addEventListener('error', (e) => {
+      window.__capturedErrors.push({message: e.message, filename: e.filename, lineno: e.lineno});
+    });
+    ['error','warn','info','log'].forEach(level => {
+      const orig = console[level];
+      console[level] = function(...args) {
+        try { window.__capturedConsole.push({level, args}); } catch (err) {}
+        orig.apply(console, args);
+      };
+    });
+  </script>
   <script type="module" src="js/main.js"></script>
+  
+  <style>
+    /* Additional dynamic animations */
+    @keyframes emojiBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      25% { transform: translateY(-8px) scale(1.1); }
+      50% { transform: translateY(0) scale(1); }
+      75% { transform: translateY(-4px) scale(0.95); }
+    }
+    
+    .emoji-bounce {
+      animation: emojiBounce 2s ease-in-out infinite;
+    }
+    
+    @keyframes glowPulse {
+      0%, 100% { 
+        box-shadow: 0 0 20px rgba(5, 150, 105, 0.3);
+      }
+      50% { 
+        box-shadow: 0 0 40px rgba(5, 150, 105, 0.6);
+      }
+    }
+    
+    .glow-pulse {
+      animation: glowPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes ripple {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: ripple 0.6s ease-out;
+      background: rgba(255, 255, 255, 0.4);
+    }
+    
+    .character-button {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .character-button::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: all 0.3s ease;
+    }
+    
+    .character-button:active::after {
+      width: 300px;
+      height: 300px;
+    }
+    
+    /* Responsive touch feedback */
+    @media (hover: none) {
+      .game-card:hover {
+        transform: none;
+      }
+      
+      .game-card:active {
+        transform: scale(0.98);
+      }
+      
+      .character-button:hover {
+        transform: scale(1);
+      }
+      
+      .character-button:active {
+        transform: scale(0.95);
+      }
+    }
+  </style>
 </body>
 </html>

@@ -1,99 +1,84 @@
-/**
- * Unified input manager for keyboard and button clicks
- * Handles both desktop (keyboard) and mobile (button) input
- */
 export class InputManager {
-  constructor() {
-    this.keyListeners = new Map();
-    this.buttonListeners = new Map();
-    this.isInitialized = false;
+  /**
+   * Key press callback map
+   * @type {Object<string, Function>}
+   */
+  keyCallbacks = {};
+
+  /**
+   * Register a key callback
+   * @param {string} key - The key character
+   * @param {Function} callback - Callback function to execute when key is pressed
+   */
+  onKey(key, callback) {
+    if (!this.keyCallbacks[key]) {
+      this.keyCallbacks[key] = [];
+    }
+    this.keyCallbacks[key].push(callback);
   }
 
   /**
-   * Initialize input manager - set up event listeners
+   * Unregister a key callback
+   * @param {string} key - The key character
+   * @param {Function} callback - Callback function to remove
    */
-  initialize() {
-    if (this.isInitialized) return;
-
-    // Keyboard events
-    document.addEventListener('keydown', e => this.handleKeyDown(e));
-    document.addEventListener('keyup', e => this.handleKeyUp(e));
-
-    this.isInitialized = true;
-    console.log('[InputManager] Initialized');
+  offKey(key, callback) {
+    if (!this.keyCallbacks[key]) return;
+    const index = this.keyCallbacks[key].indexOf(callback);
+    if (index > -1) {
+      this.keyCallbacks[key].splice(index, 1);
+    }
   }
 
   /**
-   * Register a keyboard key listener
-   * @param {string} key - Key to listen for (e.g., 'A', 'Enter', 'ArrowUp')
-   * @param {Function} onPress - Callback when key is pressed
-   * @param {Function} onRelease - Optional callback when key is released
+   * Trigger a key press
+   * @param {string} key - The key character
    */
-  onKey(key, onPress, onRelease = null) {
-    const keyUpper = key.toUpperCase();
-    this.keyListeners.set(keyUpper, { onPress, onRelease });
+  triggerKey(key) {
+    if (this.keyCallbacks[key] && this.keyCallbacks[key].length > 0) {
+      this.keyCallbacks[key].forEach(callback => callback());
+    }
   }
 
   /**
-   * Unregister a keyboard key listener
-   * @param {string} key - Key to stop listening for
+   * Handle global keyboard events
    */
-  offKey(key) {
-    this.keyListeners.delete(key.toUpperCase());
-  }
+  setupGlobalKeyHandlers() {
+    document.addEventListener('keydown', (event) => {
+      if (this.isEditableTarget(event.target)) {
+        return;
+      }
 
-  /**
-   * Register a button click listener
-   * @param {HTMLElement} button - Button element
-   * @param {Function} onClick - Callback when button is clicked
-   */
-  onButton(button, onClick) {
-    button.addEventListener('click', () => onClick());
-    this.buttonListeners.set(button, onClick);
-  }
-
-  /**
-   * Unregister a button click listener
-   * @param {HTMLElement} button - Button element
-   */
-  offButton(button) {
-    button.removeEventListener('click', this.buttonListeners.get(button));
-    this.buttonListeners.delete(button);
-  }
-
-  /**
-   * Clear all input listeners
-   */
-  clear() {
-    this.keyListeners.clear();
-    this.buttonListeners.forEach((listener, button) => {
-      button.removeEventListener('click', listener);
+      // Ignore if game container exists
+      if (this.gameContainer && this.gameContainer.offsetParent !== null) {
+        const key = event.key.toUpperCase();
+        // Check if key is a letter or number (or maybe emoji)
+        if (/^[A-Z0-9]$/.test(key)) {
+          this.triggerKey(key);
+          // Prevent default behavior for game keys
+          event.preventDefault();
+        }
+      }
     });
-    this.buttonListeners.clear();
   }
 
-  // Private methods
-  handleKeyDown(event) {
-    const key = event.key.toUpperCase();
-    if (this.keyListeners.has(key)) {
-      const { onPress } = this.keyListeners.get(key);
-      if (onPress) {
-        onPress(key);
-        event.preventDefault();
-      }
-    }
+  /**
+   * Let form controls receive normal typing, especially parent PIN inputs.
+   * @param {EventTarget} target - Event target from the keydown event
+   * @returns {boolean}
+   */
+  isEditableTarget(target) {
+    if (!(target instanceof HTMLElement)) return false;
+    const tagName = target.tagName.toLowerCase();
+    return tagName === 'input' || tagName === 'textarea' || tagName === 'select' || target.isContentEditable;
   }
 
-  handleKeyUp(event) {
-    const key = event.key.toUpperCase();
-    if (this.keyListeners.has(key)) {
-      const { onRelease } = this.keyListeners.get(key);
-      if (onRelease) {
-        onRelease(key);
-        event.preventDefault();
-      }
-    }
+  /**
+   * Check if a key is registered
+   * @param {string} key - The key character
+   * @returns {boolean}
+   */
+  hasKey(key) {
+    return !!this.keyCallbacks[key];
   }
 }
-
-export const inputManager = new InputManager();

@@ -1,128 +1,100 @@
-/**
- * Audio manager for playing sounds
- * Handles audio context initialization (required by modern browsers)
- */
 export class AudioManager {
   constructor() {
-    this.audioContext = null;
-    this.masterVolume = 1.0;
-    this.soundCache = new Map();
-    this.isInitialized = false;
+    this.context = null;
+    this.volume = 1.0;
   }
 
-  /**
-   * Initialize audio context (required by browsers for audio playback)
-   * Call this on first user interaction
-   */
   async initialize() {
-    if (this.isInitialized) return;
-
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      this.audioContext = new AudioContext();
-
-      // Resume audio context if suspended
-      if (this.audioContext.state === 'suspended') {
-        this.audioContext.resume();
-      }
-
-      this.isInitialized = true;
-      console.log('[AudioManager] Initialized');
-    } catch (err) {
-      console.error('[AudioManager] Failed to initialize:', err);
+      this.context = new (window.AudioContext || window.webkitAudioContext)();
+      console.log('[AudioManager] Initialized with AudioContext');
+    } catch (error) {
+      console.warn('[AudioManager] AudioContext not available:', error);
     }
   }
 
   /**
-   * Preload an audio file
-   * @param {string} url - URL to audio file
-   * @param {string} cacheKey - Key to store in cache
-   * @returns {Promise<AudioBuffer>}
+   * Play a sound using Web Audio API
+   * @param {string} type - Type of sound (success, click, error, etc.)
+   * @param {number} frequency - Frequency in Hz
+   * @param {number} duration - Duration in seconds
    */
-  async preloadAudio(url, cacheKey) {
-    if (this.soundCache.has(cacheKey)) {
-      return this.soundCache.get(cacheKey);
+  playSound(type, frequency = 440, duration = 0.3) {
+    if (!this.context) {
+      console.warn('[AudioManager] AudioContext not initialized');
+      return;
     }
 
     try {
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-      this.soundCache.set(cacheKey, audioBuffer);
-      return audioBuffer;
-    } catch (err) {
-      console.error(`[AudioManager] Failed to preload audio: ${url}`, err);
-      return null;
+      const oscillator = this.context.createOscillator();
+      const gainNode = this.context.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(this.context.destination);
+
+      oscillator.frequency.value = frequency;
+      oscillator.type = type === 'success' ? 'sine' : 'square';
+
+      gainNode.gain.setValueAtTime(this.volume, this.context.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + duration);
+
+      oscillator.start(this.context.currentTime);
+      oscillator.stop(this.context.currentTime + duration);
+
+      console.log(`[AudioManager] Playing ${type} sound: ${frequency}Hz`);
+    } catch (error) {
+      console.warn('[AudioManager] Error playing sound:', error);
     }
   }
 
   /**
-   * Play a sound from cache
-   * @param {string} cacheKey - Key of preloaded audio
-   * @param {number} volume - Volume (0-1), default 1.0
+   * Play TTS speech
+   * @param {string} text - Text to speak
+   * @param {number} rate - Speech rate (0.1 - 10)
    */
-  playSound(cacheKey, volume = 1.0) {
-    if (!this.audioContext) {
-      console.warn('[AudioManager] Audio context not initialized. Call initialize() first.');
+  speak(text, rate = 1.0) {
+    if (!('speechSynthesis' in window)) {
+      console.warn('[AudioManager] Speech synthesis not supported');
       return;
     }
 
-    const audioBuffer = this.soundCache.get(cacheKey);
-    if (!audioBuffer) {
-      console.warn(`[AudioManager] Sound not found in cache: ${cacheKey}`);
-      return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = rate;
+    utterance.volume = 1.0;
+    utterance.pitch = 1.0;
+
+    window.speechSynthesis.speak(utterance);
+    console.log(`[AudioManager] Speaking: "${text}"`);
+  }
+
+  /**
+   * Stop all current speech
+   */
+  stopSpeaking() {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      console.log('[AudioManager] Stopped speaking');
     }
-
-    const source = this.audioContext.createBufferSource();
-    const gainNode = this.audioContext.createGain();
-
-    source.buffer = audioBuffer;
-    gainNode.gain.value = volume * this.masterVolume;
-
-    source.connect(gainNode);
-    gainNode.connect(this.audioContext.destination);
-    source.start(0);
   }
 
   /**
-   * Play audio from URL directly (useful for one-off sounds)
-   * Note: subject to CORS, prefer preloading
-   * @param {string} url - URL to audio file
-   * @param {number} volume - Volume (0-1), default 1.0
+   * Set volume level
+   * @param {number} volume - Volume level 0-1
    */
-  playFromURL(url, volume = 1.0) {
-    if (!this.audioContext) {
-      console.warn('[AudioManager] Audio context not initialized.');
-      return;
+  setVolume(volume) {
+    this.volume = Math.max(0, Math.min(1, volume));
+    console.log(`[AudioManager] Volume set to ${this.volume}`);
+  }
+
+  /**
+   * Cleanup resources
+   */
+  cleanup() {
+    if (this.context) {
+      this.context.close();
+      this.context = null;
+      console.log('[AudioManager] Cleanup complete');
     }
-
-    const audio = new Audio(url);
-    audio.volume = volume * this.masterVolume;
-    audio.play().catch(err => console.error('[AudioManager] Failed to play audio:', err));
-  }
-
-  /**
-   * Set master volume
-   * @param {number} volume - Volume (0-1)
-   */
-  setMasterVolume(volume) {
-    this.masterVolume = Math.max(0, Math.min(1, volume));
-  }
-
-  /**
-   * Get master volume
-   * @returns {number}
-   */
-  getMasterVolume() {
-    return this.masterVolume;
-  }
-
-  /**
-   * Clear all cached sounds
-   */
-  clearCache() {
-    this.soundCache.clear();
+    this.stopSpeaking();
   }
 }
-
-export const audioManager = new AudioManager();
