@@ -1,0 +1,83 @@
+{
+  "version": "1.0.0",
+  "stories": [
+    {
+      "id": "demo-story",
+      "title": "The Kind Little Star",
+      "coverImage": "demo-story/cover.svg",
+      "pages": [
+        {
+          "image": "demo-story/page-1.svg",
+          "caption": "One dark night, a little star looked down and saw the village below had no light."
+        },
+        {
+          "image": "demo-story/page-2.svg",
+          "caption": "\"I'll shine bright for everyone!\" said the little star, swooping down from the sky."
+        },
+        {
+          "image": "demo-story/page-3.svg",
+          "caption": "The whole village glowed warm and golden, and everyone slept safe and happy. The End."
+        }
+      ]
+    },
+    {
+      "id": "babas-big-jump",
+      "title": "Baba's Big Jump",
+      "coverImage": "babas-big-jump/page-1.png",
+      "pages": [
+        {
+          "image": "babas-big-jump/page-1.png",
+          "caption": "Once upon a time, baba was a young boy in his village."
+        },
+        {
+          "image": "babas-big-jump/page-2.png",
+          "caption": "One day, his cousin Osama came to visit all the way from the city!"
+        },
+        {
+          "image": "babas-big-jump/page-3.png",
+          "caption": "Baba wanted to impress Osama, so he took Osama and Owais mamu to the river."
+        },
+        {
+          "image": "babas-big-jump/page-4.png",
+          "caption": "First, baba showed them the big green farms."
+        },
+        {
+          "image": "babas-big-jump/page-5.png",
+          "caption": "Then he showed them how to cross the river, stepping stone by stone."
+        },
+        {
+          "image": "babas-big-jump/page-6.png",
+          "caption": "He showed them the open grounds, the tall trees, and the little fish in the water."
+        },
+        {
+          "image": "babas-big-jump/page-7.png",
+          "caption": "Then baba found the perfect spot. \"Look at me!\" he said, and got ready to jump."
+        },
+        {
+          "image": "babas-big-jump/page-8.png",
+          "caption": "And baba jumped!"
+        },
+        {
+          "image": "babas-big-jump/page-9.png",
+          "caption": "But the ground wasn't solid — it was a gutter! First his feet, then his shins sank in, then his knees, thighs, hips, stomach, chest, arms, and head everything went in."
+        },
+        {
+          "image": "babas-big-jump/page-10.png",
+          "caption": "Everyone pulled and pulled until baba popped out — covered in mud from head to toe!"
+        },
+        {
+          "image": "babas-big-jump/page-11.png",
+          "caption": "Baba went back to nani's house like that. Mom looked at him and shouted, \"What did you do, Ahmed?\""
+        },
+        {
+          "image": "babas-big-jump/page-12.png",
+          "caption": "Osama drew a funny sketch showing exactly how baba had jumped in. Everyone laughed!"
+        },
+        {
+          "image": "babas-big-jump/page-13.png",
+          "caption": "But baba learned something important that day: always think before you act. The End."
+        }
+      ]
+    }
+  ]
+}
