@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "fruits": [
+    { "id": "apple", "name": "Apple", "file": "apple.svg" },
+    { "id": "banana", "name": "Banana", "file": "banana.svg" },
+    { "id": "orange", "name": "Orange", "file": "orange.svg" },
+    { "id": "strawberry", "name": "Strawberry", "file": "strawberry.svg" },
+    { "id": "watermelon", "name": "Watermelon", "file": "watermelon.svg" },
+    { "id": "grapes", "name": "Grapes", "file": "grapes.svg" }
+  ]
+}

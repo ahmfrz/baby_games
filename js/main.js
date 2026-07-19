@@ -9,6 +9,7 @@ import { AudioManager } from '../services/AudioManager.js';
 import { InputManager } from '../services/InputManager.js';
 import { AlphabetLearnerGame } from '../games/alphabet-learner/AlphabetLearnerGame.js';
 import { ComicStoryGame } from '../games/comic-stories/ComicStoryGame.js';
+import { FruitColorGame } from '../games/fruit-color/FruitColorGame.js';
 
 // ============================================
 // Platform Initialization
@@ -74,6 +75,7 @@ class BabyGamesPlatform {
   async registerGames() {
     gameRegistry.register(AlphabetLearnerGame);
     gameRegistry.register(ComicStoryGame);
+    gameRegistry.register(FruitColorGame);
 
     console.log(`[BabyGamesPlatform] Registered ${gameRegistry.getGameCount()} game(s)`);
   }
