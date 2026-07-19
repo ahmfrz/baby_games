@@ -102,6 +102,8 @@ html, body {
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   overflow: hidden;
   touch-action: manipulation;
+  overscroll-behavior: none;
+  overscroll-behavior-x: none;
   -webkit-font-smoothing: antialiased;
 }
 

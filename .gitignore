@@ -10,3 +10,11 @@ build/
 *.log
 .env
 .env.local
+.playwright/
+.playwright-mcp/
+.opencode/
+.agents/
+.remember/
+.env*
+AGENTS.md
+CLAUDE.md
