@@ -1,11 +1,63 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "canvasSize": 400,
   "fruits": [
-    { "id": "apple", "name": "Apple", "file": "apple.svg" },
-    { "id": "banana", "name": "Banana", "file": "banana.svg" },
-    { "id": "orange", "name": "Orange", "file": "orange.svg" },
-    { "id": "strawberry", "name": "Strawberry", "file": "strawberry.svg" },
-    { "id": "watermelon", "name": "Watermelon", "file": "watermelon.svg" },
-    { "id": "grapes", "name": "Grapes", "file": "grapes.svg" }
+    {
+      "id": "apple", "name": "Apple",
+      "outline": "outlines/apple-outline.png",
+      "regionMap": "regionmaps/apple-regions.png",
+      "regions": [
+        { "id": "body", "mapColor": "#FF0000", "targetColor": "#E5484D" },
+        { "id": "stem", "mapColor": "#0000FF", "targetColor": "#7C4A2D" },
+        { "id": "leaf", "mapColor": "#00FF00", "targetColor": "#4CAF50" }
+      ]
+    },
+    {
+      "id": "orange", "name": "Orange",
+      "outline": "outlines/orange-outline.png",
+      "regionMap": "regionmaps/orange-regions.png",
+      "regions": [
+        { "id": "body", "mapColor": "#FF0000", "targetColor": "#FB923C" },
+        { "id": "stem", "mapColor": "#0000FF", "targetColor": "#7C4A2D" },
+        { "id": "leaf", "mapColor": "#00FF00", "targetColor": "#4CAF50" }
+      ]
+    },
+    {
+      "id": "banana", "name": "Banana",
+      "outline": "outlines/banana-outline.png",
+      "regionMap": "regionmaps/banana-regions.png",
+      "regions": [
+        { "id": "body", "mapColor": "#FF0000", "targetColor": "#FBCB3B" },
+        { "id": "tip", "mapColor": "#0000FF", "targetColor": "#5D4037" }
+      ]
+    },
+    {
+      "id": "watermelon", "name": "Watermelon",
+      "outline": "outlines/watermelon-outline.png",
+      "regionMap": "regionmaps/watermelon-regions.png",
+      "regions": [
+        { "id": "rind", "mapColor": "#FF0000", "targetColor": "#2E7D32" },
+        { "id": "white_ring", "mapColor": "#0000FF", "targetColor": "#F1F8E9" },
+        { "id": "flesh", "mapColor": "#00FF00", "targetColor": "#E5484D" }
+      ]
+    },
+    {
+      "id": "muskmelon", "name": "Musk Melon",
+      "outline": "outlines/muskmelon-outline.png",
+      "regionMap": "regionmaps/muskmelon-regions.png",
+      "regions": [
+        { "id": "rind", "mapColor": "#FF0000", "targetColor": "#C9A227" },
+        { "id": "flesh", "mapColor": "#00FF00", "targetColor": "#FFA726" }
+      ]
+    },
+    {
+      "id": "cranberry", "name": "Cranberry",
+      "outline": "outlines/cranberry-outline.png",
+      "regionMap": "regionmaps/cranberry-regions.png",
+      "regions": [
+        { "id": "cluster", "mapColor": "#FF0000", "targetColor": "#B71C1C" },
+        { "id": "stem", "mapColor": "#0000FF", "targetColor": "#6D8A3A" }
+      ]
+    }
   ]
 }

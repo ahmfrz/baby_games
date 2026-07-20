@@ -1,14 +1,17 @@
 import { GameModule } from '../../core/GameModule.js';
 
-const FILL_STEP = 7;         // progress gained per pointermove sample while scrubbing a region
-const COMPLETE_THRESHOLD = 96;
+const CANVAS_SIZE = 400;
+const BRUSH_RADIUS = 24;
+const MIN_DAB_SPACING = 5;      // px in canvas space, avoids redundant dabs
+const COVERAGE_CHECK_EVERY = 5; // dabs
+const COMPLETE_THRESHOLD = 0.80; // 80% of a region's pixels painted
 
 export class FruitColorGame extends GameModule {
   static metadata = {
     id: 'fruit-color',
     name: '🍎 Fruit Coloring',
-    description: 'Rub your finger on the fruit to color it in — colors are fixed so it always looks right.',
-    version: '1.0.0',
+    description: 'Rub your finger on the fruit to paint it — color appears where you touch, and only ever the right color.',
+    version: '2.0.0',
     author: 'Baby Games',
     assetPath: 'games/fruit-color/assets/'
   };
@@ -20,14 +23,21 @@ export class FruitColorGame extends GameModule {
     this.elements = {};
     this.fruits = [];
     this.currentFruit = null;
-    this.regionProgress = new Map();
-    this.regionElements = new Map();
     this.isRunning = false;
-    this.isDrawing = false;
-    this.activePointerId = null;
     this.remainingSeconds = 0;
     this.timerId = null;
     this.pendingTimeouts = new Set();
+
+    // Per-fruit-session painting state
+    this.regionMeta = new Map();     // id -> { maskData, maskCanvas, totalPixels, bbox, targetColor }
+    this.paintCanvas = null;
+    this.paintCtx = null;
+    this.scratchCanvas = null;
+    this.scratchCtx = null;
+    this.isDrawing = false;
+    this.activePointerId = null;
+    this.lastDabPoint = null;
+    this.dabsSinceCheck = 0;
   }
 
   async initialize() {
@@ -82,7 +92,7 @@ export class FruitColorGame extends GameModule {
 
   async loadGameData() {
     const manifest = await this.fetchManifest();
-    this.fruits = (manifest.fruits || []).filter((fruit) => fruit?.id && fruit?.file);
+    this.fruits = (manifest.fruits || []).filter((fruit) => fruit?.id && fruit?.outline && fruit?.regionMap);
   }
 
   async fetchManifest() {
@@ -96,8 +106,8 @@ export class FruitColorGame extends GameModule {
     }
   }
 
-  resolveSvg(file) {
-    return `${FruitColorGame.metadata.assetPath}svg/${file}`;
+  resolveAsset(relativePath) {
+    return `${FruitColorGame.metadata.assetPath}${relativePath}`;
   }
 
   // ============================================
@@ -191,7 +201,7 @@ export class FruitColorGame extends GameModule {
       thumb.className = 'fruit-thumb';
       thumb.alt = fruit.name || 'Fruit';
       thumb.loading = 'lazy';
-      thumb.src = this.resolveSvg(fruit.file);
+      thumb.src = this.resolveAsset(fruit.outline);
 
       const label = document.createElement('span');
       label.className = 'fruit-label';
@@ -216,6 +226,15 @@ export class FruitColorGame extends GameModule {
     const stage = document.createElement('div');
     stage.className = 'fruit-stage';
 
+    const paintCanvas = document.createElement('canvas');
+    paintCanvas.className = 'fruit-paint-layer';
+    paintCanvas.width = CANVAS_SIZE;
+    paintCanvas.height = CANVAS_SIZE;
+
+    const outlineImg = document.createElement('img');
+    outlineImg.className = 'fruit-outline-layer';
+    outlineImg.alt = '';
+
     const celebration = document.createElement('div');
     celebration.className = 'fruit-celebration hidden';
     celebration.innerHTML = `
@@ -226,7 +245,8 @@ export class FruitColorGame extends GameModule {
         <button type="button" class="celebration-next">Next fruit</button>
       </div>
     `;
-    stage.appendChild(celebration);
+
+    stage.append(paintCanvas, outlineImg, celebration);
 
     const footer = document.createElement('div');
     footer.className = 'canvas-footer';
@@ -245,7 +265,19 @@ export class FruitColorGame extends GameModule {
 
     this.elements.canvasScreen = screen;
     this.elements.stage = stage;
+    this.elements.paintCanvas = paintCanvas;
+    this.elements.outlineImg = outlineImg;
     this.elements.celebration = celebration;
+
+    this.paintCanvas = paintCanvas;
+    this.paintCtx = paintCanvas.getContext('2d');
+
+    this.scratchCanvas = document.createElement('canvas');
+    this.scratchCanvas.width = CANVAS_SIZE;
+    this.scratchCanvas.height = CANVAS_SIZE;
+    this.scratchCtx = this.scratchCanvas.getContext('2d');
+
+    this.bindPointerEvents(paintCanvas);
 
     return screen;
   }
@@ -304,7 +336,9 @@ export class FruitColorGame extends GameModule {
     this.elements.library.classList.add('hidden');
     this.elements.canvasScreen.classList.remove('hidden');
     this.elements.celebration.classList.add('hidden');
-    await this.loadFruitSvg(fruit);
+    this.elements.outlineImg.src = this.resolveAsset(fruit.outline);
+    this.clearPaint();
+    await this.loadRegionMasks(fruit);
   }
 
   openNextFruit() {
@@ -314,112 +348,81 @@ export class FruitColorGame extends GameModule {
     else this.showLibrary();
   }
 
-  async loadFruitSvg(fruit) {
-    this.regionProgress.clear();
-    this.regionElements.clear();
-
-    const stage = this.elements.stage;
-    stage.querySelector('svg')?.remove();
-
-    try {
-      const response = await fetch(this.resolveSvg(fruit.file));
-      const svgText = await response.text();
-      const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
-      const svg = doc.documentElement;
-      svg.classList.add('fruit-svg');
-      svg.setAttribute('role', 'img');
-      svg.setAttribute('aria-label', fruit.name || 'Fruit to color');
-
-      stage.insertBefore(svg, this.elements.celebration);
-      this.wireRegions(svg);
-      this.bindPointerEvents(svg);
-    } catch (error) {
-      console.warn('[FruitColorGame] Could not load fruit artwork.', error);
-    }
+  clearPaint() {
+    this.paintCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   }
 
-  wireRegions(svg) {
-    const regionNodes = svg.querySelectorAll('.fruit-region');
-    regionNodes.forEach((node) => {
-      const regionId = node.dataset.regionId;
-      if (!regionId) return;
-      if (!this.regionElements.has(regionId)) {
-        this.regionElements.set(regionId, []);
-        this.regionProgress.set(regionId, 0);
+  // ============================================
+  // Region mask setup (runs once per fruit open)
+  // ============================================
+
+  async loadRegionMasks(fruit) {
+    this.regionMeta.clear();
+
+    const mapImg = await this.loadImage(this.resolveAsset(fruit.regionMap));
+    const sampleCanvas = document.createElement('canvas');
+    sampleCanvas.width = CANVAS_SIZE;
+    sampleCanvas.height = CANVAS_SIZE;
+    const sampleCtx = sampleCanvas.getContext('2d');
+    sampleCtx.drawImage(mapImg, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    const mapData = sampleCtx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE).data;
+
+    (fruit.regions || []).forEach((region) => {
+      const target = this.hexToRgb(region.mapColor);
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = CANVAS_SIZE;
+      maskCanvas.height = CANVAS_SIZE;
+      const maskCtx = maskCanvas.getContext('2d');
+      const maskImageData = maskCtx.createImageData(CANVAS_SIZE, CANVAS_SIZE);
+
+      let totalPixels = 0;
+      let minX = CANVAS_SIZE, minY = CANVAS_SIZE, maxX = 0, maxY = 0;
+
+      for (let y = 0; y < CANVAS_SIZE; y += 1) {
+        for (let x = 0; x < CANVAS_SIZE; x += 1) {
+          const idx = (y * CANVAS_SIZE + x) * 4;
+          const match = this.colorsClose(mapData, idx, target);
+          if (match) {
+            maskImageData.data[idx + 3] = 255;
+            totalPixels += 1;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
       }
-      this.regionElements.get(regionId).push(node);
-    });
 
-    // Normalize the resting appearance regardless of whatever raw `fill`
-    // value the SVG file happens to have authored — this is what lets new
-    // fruit art skip hand-tuning a pale starting color per region.
-    this.regionElements.forEach((_, regionId) => this.paintRegion(regionId, 0));
-  }
+      maskCtx.putImageData(maskImageData, 0, 0);
 
-  // ============================================
-  // Pointer / rub-to-fill interaction
-  // ============================================
-
-  bindPointerEvents(svg) {
-    svg.style.touchAction = 'none';
-
-    svg.addEventListener('pointerdown', (event) => {
-      if (!this.isRunning || this.isBlocked()) return;
-      this.isDrawing = true;
-      this.activePointerId = event.pointerId;
-      svg.setPointerCapture?.(event.pointerId);
-      this.applyAtPoint(event.clientX, event.clientY);
-      event.preventDefault();
-    });
-
-    svg.addEventListener('pointermove', (event) => {
-      if (!this.isDrawing || event.pointerId !== this.activePointerId) return;
-      this.applyAtPoint(event.clientX, event.clientY);
-      event.preventDefault();
-    });
-
-    ['pointerup', 'pointercancel', 'pointerleave'].forEach((type) => {
-      svg.addEventListener(type, (event) => {
-        if (event.pointerId === this.activePointerId) this.endDrawing();
+      this.regionMeta.set(region.id, {
+        mapColor: target,
+        targetColor: region.targetColor,
+        maskCanvas,
+        maskData: maskImageData.data,
+        totalPixels: Math.max(1, totalPixels),
+        bbox: { minX, minY, maxX, maxY }
       });
     });
+
+    this.mapSampleData = mapData;
   }
 
-  endDrawing() {
-    this.isDrawing = false;
-    this.activePointerId = null;
-  }
-
-  applyAtPoint(clientX, clientY) {
-    const target = document.elementFromPoint(clientX, clientY);
-    const regionId = target?.dataset?.regionId;
-    if (!regionId || !this.regionElements.has(regionId)) return;
-
-    const current = this.regionProgress.get(regionId) || 0;
-    const next = Math.min(100, current + FILL_STEP);
-    this.regionProgress.set(regionId, next);
-    this.paintRegion(regionId, next);
-    this.checkCompletion();
-  }
-
-  paintRegion(regionId, progress) {
-    const elementsForRegion = this.regionElements.get(regionId);
-    if (!elementsForRegion?.length) return;
-
-    const targetHex = elementsForRegion[0].dataset.targetColor;
-    const color = this.interpolateColor(targetHex, progress / 100);
-    elementsForRegion.forEach((el) => {
-      el.style.fill = color;
+  loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
     });
   }
 
-  interpolateColor(targetHex, t) {
-    const target = this.hexToRgb(targetHex);
-    const base = { r: 255 * 0.82 + target.r * 0.18, g: 255 * 0.82 + target.g * 0.18, b: 255 * 0.82 + target.b * 0.18 };
-    const r = base.r + (target.r - base.r) * t;
-    const g = base.g + (target.g - base.g) * t;
-    const b = base.b + (target.b - base.b) * t;
-    return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+  colorsClose(data, idx, target, tolerance = 30) {
+    return (
+      Math.abs(data[idx] - target.r) <= tolerance &&
+      Math.abs(data[idx + 1] - target.g) <= tolerance &&
+      Math.abs(data[idx + 2] - target.b) <= tolerance
+    );
   }
 
   hexToRgb(hex) {
@@ -431,11 +434,152 @@ export class FruitColorGame extends GameModule {
     };
   }
 
+  // ============================================
+  // Pointer / paint-where-you-touch interaction
+  // ============================================
+
+  bindPointerEvents(canvas) {
+    canvas.style.touchAction = 'none';
+
+    canvas.addEventListener('pointerdown', (event) => {
+      if (!this.isRunning || this.isBlocked()) return;
+      this.isDrawing = true;
+      this.activePointerId = event.pointerId;
+      this.lastDabPoint = null;
+      canvas.setPointerCapture?.(event.pointerId);
+      this.paintAtClientPoint(event.clientX, event.clientY);
+      event.preventDefault();
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+      if (!this.isDrawing || event.pointerId !== this.activePointerId) return;
+      this.paintAtClientPoint(event.clientX, event.clientY);
+      event.preventDefault();
+    });
+
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((type) => {
+      canvas.addEventListener(type, (event) => {
+        if (event.pointerId === this.activePointerId) this.endDrawing();
+      });
+    });
+  }
+
+  endDrawing() {
+    this.isDrawing = false;
+    this.activePointerId = null;
+    this.lastDabPoint = null;
+  }
+
+  paintAtClientPoint(clientX, clientY) {
+    const rect = this.paintCanvas.getBoundingClientRect();
+    const scaleX = CANVAS_SIZE / rect.width;
+    const scaleY = CANVAS_SIZE / rect.height;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+
+    if (this.lastDabPoint) {
+      const dist = Math.hypot(x - this.lastDabPoint.x, y - this.lastDabPoint.y);
+      if (dist < MIN_DAB_SPACING) return;
+    }
+    this.lastDabPoint = { x, y };
+
+    const regionId = this.regionIdAt(x, y);
+    if (!regionId) return;
+
+    this.paintDab(regionId, x, y);
+
+    this.dabsSinceCheck += 1;
+    if (this.dabsSinceCheck >= COVERAGE_CHECK_EVERY) {
+      this.dabsSinceCheck = 0;
+      this.checkCompletion();
+    }
+  }
+
+  regionIdAt(x, y) {
+    const xi = Math.max(0, Math.min(CANVAS_SIZE - 1, Math.floor(x)));
+    const yi = Math.max(0, Math.min(CANVAS_SIZE - 1, Math.floor(y)));
+    const idx = (yi * CANVAS_SIZE + xi) * 4;
+    for (const [regionId, meta] of this.regionMeta.entries()) {
+      if (this.colorsClose(this.mapSampleData, idx, meta.mapColor)) return regionId;
+    }
+    return null;
+  }
+
+  paintDab(regionId, x, y) {
+    const meta = this.regionMeta.get(regionId);
+    if (!meta) return;
+
+    const ctx = this.scratchCtx;
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+    const rgb = this.hexToRawRgb(meta.targetColor);
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, BRUSH_RADIUS);
+    gradient.addColorStop(0, `rgba(${rgb.r},${rgb.g},${rgb.b},0.95)`);
+    gradient.addColorStop(0.7, `rgba(${rgb.r},${rgb.g},${rgb.b},0.9)`);
+    gradient.addColorStop(1, `rgba(${rgb.r},${rgb.g},${rgb.b},0)`);
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, BRUSH_RADIUS, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(meta.maskCanvas, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+
+    this.paintCtx.drawImage(this.scratchCanvas, 0, 0);
+  }
+
+  hexToRawRgb(hex) {
+    const value = hex.replace('#', '');
+    return {
+      r: parseInt(value.substring(0, 2), 16),
+      g: parseInt(value.substring(2, 4), 16),
+      b: parseInt(value.substring(4, 6), 16)
+    };
+  }
+
+  // ============================================
+  // Completion check (real pixel coverage, not a heuristic counter)
+  // ============================================
+
   checkCompletion() {
-    const progressValues = Array.from(this.regionProgress.values());
-    if (!progressValues.length) return;
-    const allDone = progressValues.every((value) => value >= COMPLETE_THRESHOLD);
-    if (allDone) this.celebrate();
+    if (!this.regionMeta.size) return;
+
+    let totalRatio = 0;
+    let allAbove = true;
+
+    this.regionMeta.forEach((meta) => {
+      const ratio = this.coverageRatio(meta);
+      totalRatio += ratio;
+      if (ratio < COMPLETE_THRESHOLD) allAbove = false;
+    });
+
+    if (allAbove) this.celebrate();
+  }
+
+  coverageRatio(meta) {
+    const { minX, minY, maxX, maxY } = meta.bbox;
+    const w = maxX - minX + 1;
+    const h = maxY - minY + 1;
+    if (w <= 0 || h <= 0) return 1;
+
+    const paintData = this.paintCtx.getImageData(minX, minY, w, h).data;
+    let painted = 0;
+
+    for (let y = 0; y < h; y += 1) {
+      for (let x = 0; x < w; x += 1) {
+        const localIdx = (y * w + x) * 4;
+        const globalX = minX + x;
+        const globalY = minY + y;
+        const maskIdx = (globalY * CANVAS_SIZE + globalX) * 4;
+        if (meta.maskData[maskIdx + 3] > 0 && paintData[localIdx + 3] > 40) {
+          painted += 1;
+        }
+      }
+    }
+
+    return painted / meta.totalPixels;
   }
 
   celebrate() {
@@ -448,10 +592,8 @@ export class FruitColorGame extends GameModule {
   resetCurrentFruit() {
     if (!this.currentFruit) return;
     this.elements.celebration.classList.add('hidden');
-    this.regionProgress.forEach((_, regionId) => {
-      this.regionProgress.set(regionId, 0);
-      this.paintRegion(regionId, 0);
-    });
+    this.clearPaint();
+    this.dabsSinceCheck = 0;
   }
 
   speak(text) {

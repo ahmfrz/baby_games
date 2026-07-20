@@ -1,17 +1,66 @@
-# Fruit Coloring — new game module
+# Fruit Coloring v2 — paint-where-you-touch
 
-Rub-to-fill coloring: colors are fixed per region (leaves are always green,
-apple body is always red, etc.) and every stroke is snapped to whichever
-region is under the finger — there's no way to color outside the lines,
-by construction, not by careful drawing.
+Rebuilt from the SVG version based on feedback: this is now a real canvas
+brush that paints exactly where the finger drags, not a whole shape
+brightening at once. Colors are still fixed and confined to the correct
+shape — that part didn't change, just *how* it's confined.
 
-Ships with 6 fruits ready to go: **Apple, Banana, Orange, Strawberry,
-Watermelon, Grapes.** Your full wishlist is covered by the spec table below
-so the rest are quick to add.
+**Current art status:** Apple, Banana, Orange, Watermelon, Musk Melon, and
+Cranberry now use your ChatGPT-generated outlines (converted via
+flood-fill into region maps). Strawberry and Grapes are still the earlier
+procedural placeholders — send those outlines whenever, same drop-in
+process. Cranberry is a new fruit not in the original 6.
 
-## 1. Add the files to your repo
+## How it works technically
 
-Copy `fruit-color` into `baby_games/games/`:
+Each fruit is two PNG images at the same size, plus a small color config:
+
+1. **`outlines/{fruit}-outline.png`** — the artwork you actually see: black
+   line art, a soft highlight for a bit of shine, transparent everywhere
+   else. This sits on top, always crisp, never touched by the interaction.
+2. **`regionmaps/{fruit}-regions.png`** — invisible. Each enclosed area
+   (body, leaf, stem…) is filled with a flat, unmixed ID color (pure red,
+   pure green, pure blue). Never shown on screen — it's purely a lookup
+   table.
+
+At runtime:
+- A `<canvas>` sits *underneath* the outline image and *above* the page
+  background — this is what actually receives touches.
+- On every drag position, the game checks the region-map at that exact
+  pixel to find out which shape is under the finger, then paints a soft
+  brush dab **only within that shape's boundary** (clipped using the
+  region map as a mask) in that shape's fixed color.
+- Progress is tracked by literally counting painted pixels vs. each
+  region's total pixel count — not a guess, actual coverage — so "done"
+  reliably means the whole shape looks colored, however she scrubbed it.
+
+This is the same core technique real coloring-book apps use. The line art
+and the interaction are now fully decoupled, which also means: whatever
+the art source, the mechanic doesn't change.
+
+## On the artwork itself
+
+I rebuilt the shapes with better geometry (an apple is now a proper
+apple-like blob with shoulders and a top dip, not a circle) plus a subtle
+gloss highlight. It's still procedurally drawn by code, so there's a
+ceiling on how organic it can look.
+
+If you want noticeably better-looking fruit, the highest-quality path is
+the same one we used for the comic story: **generate the outline art in
+ChatGPT**, and I'll turn your output into the matching region map. Rough
+shape of that:
+
+1. Ask ChatGPT for a children's-coloring-book-style outline of the fruit —
+   flat, clean, closed black outlines, no shading, transparent or white
+   background, distinct enclosed areas for each part you want colored
+   separately (e.g. body / leaf / stem as clearly separate closed regions).
+2. Send me the image — I'll trace it into a region map and wire up the
+   manifest entry so it drops straight into this same engine.
+
+Either path (my procedural version or ChatGPT-generated) plugs into the
+exact same runtime unchanged.
+
+## Files
 
 ```
 games/
@@ -20,12 +69,14 @@ games/
     styles.css
     assets/
       manifest.json
-      svg/
-        apple.svg, banana.svg, orange.svg,
-        strawberry.svg, watermelon.svg, grapes.svg
+      outlines/     (visible line art)
+      regionmaps/    (invisible ID-color lookup maps)
 ```
 
-## 2. Wire it in (same 2 edits as before)
+## Wiring it in
+
+Same as before — no change needed if you already added this from the
+previous version:
 
 **`index.html`:**
 ```html
@@ -35,80 +86,36 @@ games/
 **`js/main.js`:**
 ```js
 import { FruitColorGame } from '../games/fruit-color/FruitColorGame.js';
-
-// inside registerGames():
-gameRegistry.register(FruitColorGame);
+gameRegistry.register(FruitColorGame); // inside registerGames()
 ```
 
-Test locally with `python -m http.server 8000` before pushing.
+If you already have `FruitColorGame.js` from before, just **overwrite the
+whole `fruit-color` folder** with this one — the manifest format changed
+(`file` → `outline` + `regionMap` + `regions` with `mapColor`/`targetColor`),
+so old and new manifests aren't compatible.
 
-## 3. How the coloring mechanic works
+## Tuning knobs
 
-- She picks a fruit from the grid → a blank/pale outline appears.
-- Rubbing a finger over any part fills *that region* toward its fixed
-  color, gradually, the longer she rubs it — real "coloring" feel, not an
-  instant tap-fill.
-- Once every region is filled, it celebrates and offers "Color again" or
-  "Next fruit."
-- There is no color picker and no way to paint a region the wrong color —
-  each shape only ever fills toward the one color it's assigned.
+At the top of `FruitColorGame.js`:
+- `BRUSH_RADIUS` — how big each dab is (default 24px on a 400px canvas)
+- `COMPLETE_THRESHOLD` — fraction of a region's pixels that must be
+  painted to count as "done" (default 0.80 — a little under 100% since
+  soft round dabs never perfectly cover jagged mask edges)
+- `MIN_DAB_SPACING` — minimum drag distance between dabs, prevents
+  over-painting when dragging slowly
 
-## 4. Adding more fruits
+Worth a quick real-device test to see if these feel right for her — happy
+to adjust based on what you see.
 
-Each fruit is one SVG file + one manifest entry. The engine only needs two
-things on each colorable shape:
+## Adding more fruits later
 
-```html
-<path class="fruit-region"
-      data-region-id="body"
-      data-target-color="#E53935"
-      d="M ... Z" />
-```
+For each new fruit you need:
+1. An outline PNG (visible art)
+2. A region-map PNG, same dimensions, one flat unmixed color per region
+3. A manifest entry listing each region's `mapColor` (which color marks it
+   on the map) and `targetColor` (what it fills to)
 
-- `data-region-id` — groups shapes that fill together (e.g. all the little
-  circles in a grape bunch can share `data-region-id="cluster"` and fill as
-  one region).
-- `data-target-color` — the fixed color that region fills toward. That's
-  it — the pale "uncolored" starting look is generated automatically, so
-  you don't need to hand-tune a starting fill.
-- Anything decorative that shouldn't be interactive (seeds, texture lines,
-  outline strokes) just goes in a plain `<g pointer-events="none">` group
-  with a fixed fill — see any of the shipped SVGs for the pattern.
-- Keep regions reasonably large — a toddler's finger is not precise, so
-  avoid lots of tiny sub-regions (this is why seeds/texture are static
-  decoration rather than colorable regions in the shipped fruits).
-
-Then add a line to `assets/manifest.json`:
-```json
-{ "id": "kiwi", "name": "Kiwi", "file": "kiwi.svg" }
-```
-
-### Spec table for the rest of your list
-
-Region breakdown + suggested colors, ready to hand to an illustrator, paste
-into a ChatGPT image-gen prompt for reference, or ask me to build next.
-
-| Fruit | Suggested regions (id — color) | Shape note |
-|---|---|---|
-| Musk melon | `rind` #C9A227, `flesh` #FFA726 | slice/wedge, same technique as watermelon |
-| Kiwi | `skin` #8D6E63, `flesh` #AED581, `core` #FAFAFA | round cross-section slice (concentric circles), seeds as static dots |
-| Blueberries | `berries` #3F51B5 (cluster of small circles) | grape-cluster technique, smaller circles |
-| Cherries | `fruit` #C62828 (×2 circles), `stem` #558B2F | pair of circles joined by curved stems |
-| Cranberry | `berries` #B71C1C (small cluster) | like blueberries, red |
-| Raspberry | `druplets` #E91E63 (cluster of tiny circles, domed), `leaves` #43A047 | strawberry-crown technique on a rounder body |
-| Papaya | `body` #F9A825, `stem` #6D4C41, seeds as static dots | tall vertical oval |
-| Mango | `body` #FFA000, `stem` #6D4C41 | rotated oval, slightly kidney-angled |
-| Guava | `body` #AFB42B, `leaf` #43A047, `stem` #6D4C41 | round body, same technique as apple/orange |
-| Custard apple | `body` #8BC34A, `leaf` #43A047 | round body + static scale-pattern texture lines |
-| Chikoo | `body` #8D6E63, `stem` #6D4C41 | small brown oval |
-| Coconut | `body` #6D4C41 | round body + static fiber-texture lines + 3 small "eye" dots |
-
-A few more common ones worth adding once you're past this batch: **Pineapple**
-(body #F9A825 + spiky green crown), **Pomegranate** (body #C62828 + a
-star-shaped calyx), **Pear** (body #C0CA33, teardrop like strawberry but
-narrower top), **Peach** (body #FFAB91, with a center-line crease as static
-detail), **Lychee** / **Sweet lime (mosambi)** (round, same apple/orange
-technique with different colors).
-
-Happy to generate the SVGs for any batch of these the same way I did the
-first six — just say which ones.
+I can keep generating these the same way I did this batch — just say which
+fruits from your list to do next (Kiwi, Mango, Papaya, Pineapple, etc. are
+all good next candidates), or send me ChatGPT-generated outlines and I'll
+build the region maps to match.

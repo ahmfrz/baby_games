@@ -138,17 +138,29 @@
   overflow: hidden;
 }
 
-.fruit-svg {
-  width: 90%;
-  height: 90%;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-drag: none;
+/* Paint layer (interactive) and outline layer (visual only) are
+   stacked exactly on top of each other, both square and centered. */
+.fruit-paint-layer,
+.fruit-outline-layer {
+  position: absolute;
+  width: min(92%, 92vh);
+  aspect-ratio: 1 / 1;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.fruit-region {
+.fruit-paint-layer {
+  touch-action: none;
   cursor: pointer;
-  transition: fill 0.05s linear;
+  z-index: 1;
+}
+
+.fruit-outline-layer {
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .canvas-footer {
