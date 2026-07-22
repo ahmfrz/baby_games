@@ -32,6 +32,15 @@
       ]
     },
     {
+      "id": "strawberry", "name": "Strawberry",
+      "outline": "outlines/strawberry-outline.png",
+      "regionMap": "regionmaps/strawberry-regions.png",
+      "regions": [
+        { "id": "body", "mapColor": "#FF0000", "targetColor": "#E5484D" },
+        { "id": "leaves", "mapColor": "#00FF00", "targetColor": "#4CAF50" }
+      ]
+    },
+    {
       "id": "watermelon", "name": "Watermelon",
       "outline": "outlines/watermelon-outline.png",
       "regionMap": "regionmaps/watermelon-regions.png",
@@ -39,6 +48,15 @@
         { "id": "rind", "mapColor": "#FF0000", "targetColor": "#2E7D32" },
         { "id": "white_ring", "mapColor": "#0000FF", "targetColor": "#F1F8E9" },
         { "id": "flesh", "mapColor": "#00FF00", "targetColor": "#E5484D" }
+      ]
+    },
+    {
+      "id": "grapes", "name": "Grapes",
+      "outline": "outlines/grapes-outline.png",
+      "regionMap": "regionmaps/grapes-regions.png",
+      "regions": [
+        { "id": "cluster", "mapColor": "#FF0000", "targetColor": "#8E24AA" },
+        { "id": "stem", "mapColor": "#0000FF", "targetColor": "#7C4A2D" }
       ]
     },
     {
@@ -57,6 +75,62 @@
       "regions": [
         { "id": "cluster", "mapColor": "#FF0000", "targetColor": "#B71C1C" },
         { "id": "stem", "mapColor": "#0000FF", "targetColor": "#6D8A3A" }
+      ]
+    },
+    {
+      "id": "blueberry", "name": "Blueberries",
+      "outline": "outlines/blueberry-outline.png",
+      "regionMap": "regionmaps/blueberry-regions.png",
+      "regions": [
+        { "id": "cluster", "mapColor": "#FF0000", "targetColor": "#3F51B5" },
+        { "id": "stem", "mapColor": "#0000FF", "targetColor": "#6D8A3A" }
+      ]
+    },
+    {
+      "id": "cherry", "name": "Cherries",
+      "outline": "outlines/cherry-outline.png",
+      "regionMap": "regionmaps/cherry-regions.png",
+      "regions": [
+        { "id": "fruit", "mapColor": "#FF0000", "targetColor": "#C62828" },
+        { "id": "leaf", "mapColor": "#00FF00", "targetColor": "#4CAF50" },
+        { "id": "stem", "mapColor": "#0000FF", "targetColor": "#558B2F" }
+      ]
+    },
+    {
+      "id": "raspberry", "name": "Raspberry",
+      "outline": "outlines/raspberry-outline.png",
+      "regionMap": "regionmaps/raspberry-regions.png",
+      "regions": [
+        { "id": "druplets", "mapColor": "#FF0000", "targetColor": "#E91E63" },
+        { "id": "leaves", "mapColor": "#00FF00", "targetColor": "#4CAF50" }
+      ]
+    },
+    {
+      "id": "mango", "name": "Mango",
+      "outline": "outlines/mango-outline.png",
+      "regionMap": "regionmaps/mango-regions.png",
+      "regions": [
+        { "id": "body", "mapColor": "#FF0000", "targetColor": "#FFA000" },
+        { "id": "stem", "mapColor": "#0000FF", "targetColor": "#7C4A2D" }
+      ]
+    },
+    {
+      "id": "guava", "name": "Guava",
+      "outline": "outlines/guava-outline.png",
+      "regionMap": "regionmaps/guava-regions.png",
+      "regions": [
+        { "id": "body", "mapColor": "#FF0000", "targetColor": "#AFB42B" },
+        { "id": "leaf", "mapColor": "#00FF00", "targetColor": "#4CAF50" },
+        { "id": "stem", "mapColor": "#0000FF", "targetColor": "#7C4A2D" }
+      ]
+    },
+    {
+      "id": "papaya", "name": "Papaya",
+      "outline": "outlines/papaya-outline.png",
+      "regionMap": "regionmaps/papaya-regions.png",
+      "regions": [
+        { "id": "body", "mapColor": "#FF0000", "targetColor": "#F9A825" },
+        { "id": "stem", "mapColor": "#0000FF", "targetColor": "#7C4A2D" }
       ]
     }
   ]

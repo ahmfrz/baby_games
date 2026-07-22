@@ -5,11 +5,13 @@ brush that paints exactly where the finger drags, not a whole shape
 brightening at once. Colors are still fixed and confined to the correct
 shape — that part didn't change, just *how* it's confined.
 
-**Current art status:** Apple, Banana, Orange, Watermelon, Musk Melon, and
-Cranberry now use your ChatGPT-generated outlines (converted via
-flood-fill into region maps). Strawberry and Grapes are still the earlier
-procedural placeholders — send those outlines whenever, same drop-in
-process. Cranberry is a new fruit not in the original 6.
+**Current art status:** 13 of 14 fruits now use your ChatGPT-generated
+outlines (converted via flood-fill into region maps): Apple, Banana,
+Orange, Watermelon, Musk Melon, Cranberry, Blueberry, Cherry, Raspberry,
+Strawberry, Mango, Guava, Papaya. **Grapes** is the only one still on the
+procedural placeholder — the image labeled "grapes" in an earlier batch
+was actually a raspberry-style druplet cluster (added as its own fruit,
+id `raspberry`), so grapes itself still needs a dedicated upload.
 
 ## How it works technically
 
