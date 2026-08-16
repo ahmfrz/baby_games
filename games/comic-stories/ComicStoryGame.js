@@ -37,7 +37,8 @@ export class ComicStoryGame extends GameModule {
     this.isRunning = true;
     this.currentStory = null;
     this.currentPageIndex = 0;
-    this.remainingSeconds = this.timerService?.getDuration?.() ?? 300;
+    this.timerService?.startSession?.();
+    this.remainingSeconds = this.timerService?.getRemainingSeconds?.() ?? this.timerService?.getDuration?.() ?? 300;
 
     this.hideBlocker();
     this.updateTimer();
@@ -456,10 +457,13 @@ export class ComicStoryGame extends GameModule {
   startTimer() {
     this.clearTimer();
     this.timerId = setInterval(() => {
-      this.remainingSeconds -= 1;
+      this.remainingSeconds = this.timerService?.getRemainingSeconds?.() ?? Math.max(0, this.remainingSeconds - 1);
       this.updateTimer();
-      if (this.remainingSeconds <= 0) this.endSession();
-    }, 1000);
+      if (this.remainingSeconds <= 0) {
+        this.timerService?.endSession?.();
+        this.endSession();
+      }
+    }, 250);
   }
 
   clearTimer() {

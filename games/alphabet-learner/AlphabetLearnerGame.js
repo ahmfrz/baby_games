@@ -51,7 +51,8 @@ export class AlphabetLearnerGame extends GameModule {
     this.sequenceIndex = 0;
     this.currentItem = null;
     this.inputLocked = false;
-    this.remainingSeconds = this.timerService?.getDuration?.() ?? 120;
+    this.timerService?.startSession?.();
+    this.remainingSeconds = this.timerService?.getRemainingSeconds?.() ?? this.timerService?.getDuration?.() ?? 120;
     this.isRunning = true;
 
     this.hideBlocker();
@@ -603,10 +604,13 @@ export class AlphabetLearnerGame extends GameModule {
   startTimer() {
     this.clearTimer();
     this.timerId = setInterval(() => {
-      this.remainingSeconds -= 1;
+      this.remainingSeconds = this.timerService?.getRemainingSeconds?.() ?? Math.max(0, this.remainingSeconds - 1);
       this.updateTimer();
-      if (this.remainingSeconds <= 0) this.endSession();
-    }, 1000);
+      if (this.remainingSeconds <= 0) {
+        this.timerService?.endSession?.();
+        this.endSession();
+      }
+    }, 250);
   }
 
   clearTimer() {

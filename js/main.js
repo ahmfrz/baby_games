@@ -7,6 +7,11 @@ import { gameRegistry } from '../core/GameRegistry.js';
 import { TimerService } from '../services/TimerService.js';
 import { AudioManager } from '../services/AudioManager.js';
 import { InputManager } from '../services/InputManager.js';
+import { AdManager } from '../services/AdManager.js';
+import { tapFeedback } from '../services/FeedbackService.js';
+import { StarCollectorGame } from '../games/star-collector/StarCollectorGame.js';
+import { FruitSliceGame } from '../games/fruit-slice/FruitSliceGame.js';
+import { ShapePopGame } from '../games/shape-pop/ShapePopGame.js';
 import { AlphabetLearnerGame } from '../games/alphabet-learner/AlphabetLearnerGame.js';
 import { ComicStoryGame } from '../games/comic-stories/ComicStoryGame.js';
 import { FruitColorGame } from '../games/fruit-color/FruitColorGame.js';
@@ -20,6 +25,7 @@ class BabyGamesPlatform {
     this.timerService = new TimerService();
     this.audioManager = new AudioManager();
     this.inputManager = new InputManager();
+    this.adManager = new AdManager();
     this.currentGame = null;
     this.isInitialized = false;
     this.gameContainerEl = null;
@@ -42,6 +48,9 @@ class BabyGamesPlatform {
 
       // Register games
       await this.registerGames();
+
+      this.adManager.initialize();
+      this.setupGlobalFeedback();
 
       // Setup UI event listeners
       this.setupEventListeners();
@@ -76,6 +85,9 @@ class BabyGamesPlatform {
     gameRegistry.register(AlphabetLearnerGame);
     gameRegistry.register(ComicStoryGame);
     gameRegistry.register(FruitColorGame);
+    gameRegistry.register(StarCollectorGame);
+    gameRegistry.register(FruitSliceGame);
+    gameRegistry.register(ShapePopGame);
 
     console.log(`[BabyGamesPlatform] Registered ${gameRegistry.getGameCount()} game(s)`);
   }
@@ -100,6 +112,9 @@ class BabyGamesPlatform {
     const pinInput = document.getElementById('pinInput');
     const pinCancel = document.getElementById('pinCancel');
     const resetTimerPinBtn = document.getElementById('resetTimerPinBtn');
+    const customTimerBtn = document.getElementById('customTimerBtn');
+
+    if (customTimerBtn) customTimerBtn.addEventListener('click', () => this.handleCustomDuration());
 
     // Reset timer button triggers a PIN flow for resetting settings
     if (resetTimerPinBtn) {
@@ -138,6 +153,9 @@ class BabyGamesPlatform {
     const launcher = document.getElementById('launcher');
     const gameContainer = document.getElementById('gameContainer');
 
+    this.hideGameNavigation();
+    if (this.adManager) this.adManager.render();
+
     // Hide everything first
     if (gameContainer) gameContainer.style.display = 'none';
     if (launcher) launcher.style.display = 'none';
@@ -154,38 +172,42 @@ class BabyGamesPlatform {
    * @param {string} duration - Duration in seconds
    */
   async handleTimerSelection(duration) {
-    const durationInMinutes = Math.round(duration / 60);
+    const seconds = Number(duration);
+    if (!Number.isFinite(seconds) || seconds < 30) return;
 
-    if (!this.timerService.setDuration(durationInMinutes)) {
-      alert('Session is already in progress');
+    if (!this.timerService.setDurationSeconds(seconds)) {
+      alert('Unable to set that timer length.');
       return;
     }
 
+    this.timerService.clearSession();
     this.updateTimerDisplay();
-
-    // Update UI to show selection
     document.querySelectorAll('.timer-option').forEach(option => {
-      option.classList.toggle('active', option.dataset.duration === duration);
+      option.classList.toggle('active', Number(option.dataset.duration) === seconds);
     });
 
-    // Prompt for PIN before starting the session
-    let waitingForValidPin = true;
-    while (waitingForValidPin) {
-      const pin = await this.requestPin();
-      if (pin === null) {
-        // User cancelled PIN entry — keep timer UI visible
-        return;
-      }
-      if (this.timerService.checkResetPin(pin)) {
-        // PIN correct — proceed to start session
-        this.closePinDialog();
-        await this.hideTimerUI();
-        await this.showLauncher();
-        waitingForValidPin = false;
-      } else {
-        alert('Incorrect PIN. Please try again.');
-      }
+    const pin = await this.requestPin();
+    if (pin === null) return;
+    if (!this.timerService.checkResetPin(pin)) {
+      alert('Incorrect PIN. Please try again.');
+      return;
     }
+
+    this.closePinDialog();
+    this.timerService.startSession();
+    await this.hideTimerUI();
+    await this.showLauncher();
+  }
+
+  async handleCustomDuration() {
+    const minutesInput = document.getElementById('customMinutesInput');
+    const minutes = Number(minutesInput?.value);
+    if (!Number.isFinite(minutes) || minutes < 0.5 || minutes > 1440) {
+      alert('Please enter a time between 0.5 and 1440 minutes.');
+      return;
+    }
+    const seconds = Math.round(minutes * 60);
+    await this.handleTimerSelection(seconds);
   }
 
   /**
@@ -240,8 +262,10 @@ class BabyGamesPlatform {
     const timerDisplay = document.getElementById('timerDisplay');
 
     if (timerSetup && timerDisplay) {
-      const durationInMinutes = Math.round(this.timerService.getDuration() / 60);
-      timerDisplay.textContent = `${durationInMinutes} minute${durationInMinutes === 1 ? '' : 's'}`;
+      const seconds = this.timerService.getDuration();
+      const minutes = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      timerDisplay.textContent = secs ? `${minutes}m ${secs}s` : `${minutes} minute${minutes === 1 ? '' : 's'}`;
     }
   }
 
@@ -325,22 +349,94 @@ class BabyGamesPlatform {
       this.launchGame(gameMetadata.id);
     });
 
-    card.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      card.classList.add('active');
-    });
-
-    card.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      card.classList.remove('active');
-      this.launchGame(gameMetadata.id);
-    });
-
-    card.addEventListener('touchcancel', () => {
-      card.classList.remove('active');
-    });
-
     return card;
+  }
+
+  setupGlobalFeedback() {
+    document.addEventListener('pointerdown', (event) => {
+      const target = event.target.closest('button, .timer-option, .game-card, .shape-target, .star-target, .fruit-target');
+      if (target) tapFeedback(this.audioManager, 'click');
+    }, { passive: true });
+
+    const secretAdToggle = async () => {
+      const pin = await this.requestPin();
+      if (pin === null) return;
+      if (this.timerService.checkResetPin(pin)) {
+        if (this.adManager.isDisabled()) this.adManager.enable();
+        else this.adManager.disable();
+        this.closePinDialog();
+      } else {
+        alert('Incorrect PIN.');
+      }
+    };
+
+    const adBanner = document.getElementById('adBanner');
+    if (adBanner) {
+      let taps = 0;
+      let resetTapTimer = null;
+      adBanner.addEventListener('click', () => {
+        taps += 1;
+        clearTimeout(resetTapTimer);
+        resetTapTimer = setTimeout(() => { taps = 0; }, 900);
+        if (taps >= 5) { taps = 0; secretAdToggle(); }
+      });
+    }
+
+    const timerTitle = document.querySelector('.timer-setup-title');
+    if (timerTitle) {
+      let taps = 0; let resetTapTimer = null;
+      timerTitle.addEventListener('click', () => {
+        taps += 1; clearTimeout(resetTapTimer);
+        resetTapTimer = setTimeout(() => { taps = 0; }, 1000);
+        if (taps >= 5) { taps = 0; secretAdToggle(); }
+      });
+    }
+  }
+
+  showGameNavigation() {
+    let nav = document.getElementById('gameNavOverlay');
+    if (!nav) {
+      nav = document.createElement('div');
+      nav.id = 'gameNavOverlay';
+      nav.className = 'game-nav-overlay';
+      nav.innerHTML = `
+        <button type="button" id="changeGameBtn" class="game-nav-button">🎮 Change Game</button>
+        <div class="game-nav-time">⏳ <span id="globalRemainingTime">0:00</span></div>`;
+      document.body.appendChild(nav);
+      nav.querySelector('#changeGameBtn').addEventListener('click', () => this.showLauncherPreservingSession());
+    }
+    nav.style.display = 'flex';
+    this.updateGlobalTime();
+    if (!this.globalTimeId) this.globalTimeId = setInterval(() => this.updateGlobalTime(), 1000);
+  }
+
+  hideGameNavigation() {
+    const nav = document.getElementById('gameNavOverlay');
+    if (nav) nav.style.display = 'none';
+    if (this.globalTimeId) { clearInterval(this.globalTimeId); this.globalTimeId = null; }
+  }
+
+  updateGlobalTime() {
+    const el = document.getElementById('globalRemainingTime');
+    if (!el) return;
+    const seconds = this.timerService.getRemainingSeconds();
+    const min = Math.floor(seconds / 60);
+    const sec = String(seconds % 60).padStart(2, '0');
+    el.textContent = `${min}:${sec}`;
+  }
+
+  async showLauncherPreservingSession() {
+    if (this.currentGame) {
+      this.currentGame.stop();
+      this.currentGame.cleanup();
+      this.currentGame = null;
+    }
+    const gameContainer = document.getElementById('gameContainer');
+    if (gameContainer) gameContainer.style.display = 'none';
+    const adBanner = document.getElementById('adBanner');
+    if (adBanner) adBanner.style.display = 'none';
+    await this.showLauncher();
+    this.showGameNavigation();
   }
 
   /**
@@ -354,6 +450,8 @@ class BabyGamesPlatform {
       if (this.currentGame) {
         this.currentGame.cleanup();
       }
+      if (!this.timerService.hasActiveSession()) this.timerService.startSession();
+      this.hideGameNavigation();
 
       const gameInstance = gameRegistry.instantiate(gameId, this);
       this.currentGame = gameInstance;
@@ -370,6 +468,7 @@ class BabyGamesPlatform {
         await this.animateEnter(gameContainer);
       }
 
+      this.showGameNavigation();
       console.log('[BabyGamesPlatform] Game launched successfully');
     } catch (err) {
       console.error('[BabyGamesPlatform] Failed to launch game:', err);

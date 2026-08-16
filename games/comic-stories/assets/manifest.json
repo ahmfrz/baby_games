@@ -2,6 +2,33 @@
   "version": "1.0.0",
   "stories": [
     {
+      "id": "star-story",
+      "title": "⭐ The Little Star",
+      "coverImage": "star-story/cover.svg",
+      "pages": [
+        {
+          "image": "star-story/page-1.svg",
+          "caption": "The sky was dark. A little star twinkled softly above the sleeping town."
+        },
+        {
+          "image": "star-story/page-2.svg",
+          "caption": "The little star wished it could make the world feel warm and happy."
+        },
+        {
+          "image": "star-story/page-3.svg",
+          "caption": "So the star stretched wide and shone as brightly as it could."
+        },
+        {
+          "image": "star-story/page-4.svg",
+          "caption": "Golden sparkles danced over trees, windows, and sleepy rooftops."
+        },
+        {
+          "image": "star-story/page-5.svg",
+          "caption": "The little star smiled. Small stars can make big happy feelings. The End."
+        }
+      ]
+    },
+    {
       "id": "demo-story",
       "title": "The Kind Little Star",
       "coverImage": "demo-story/cover.svg",

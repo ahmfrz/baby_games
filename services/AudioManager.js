@@ -1,100 +1,94 @@
 export class AudioManager {
   constructor() {
     this.context = null;
-    this.volume = 1.0;
+    this.volume = 0.18;
+    this.unlocked = false;
   }
 
   async initialize() {
     try {
       this.context = new (window.AudioContext || window.webkitAudioContext)();
-      console.log('[AudioManager] Initialized with AudioContext');
+      this.unlockOnGesture();
     } catch (error) {
       console.warn('[AudioManager] AudioContext not available:', error);
     }
   }
 
-  /**
-   * Play a sound using Web Audio API
-   * @param {string} type - Type of sound (success, click, error, etc.)
-   * @param {number} frequency - Frequency in Hz
-   * @param {number} duration - Duration in seconds
-   */
-  playSound(type, frequency = 440, duration = 0.3) {
-    if (!this.context) {
-      console.warn('[AudioManager] AudioContext not initialized');
-      return;
+  unlockOnGesture() {
+    const unlock = async () => {
+      try {
+        if (this.context?.state === 'suspended') await this.context.resume();
+        this.unlocked = true;
+      } catch (e) {}
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+    window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+    window.addEventListener('touchstart', unlock, { once: true, passive: true });
+    window.addEventListener('keydown', unlock, { once: true });
+  }
+
+  async ensureRunning() {
+    if (this.context?.state === 'suspended') {
+      try { await this.context.resume(); } catch (e) {}
     }
+  }
 
+  playSound(type = 'click', frequency = 440, duration = 0.1) {
+    if (!this.context) return;
     try {
-      const oscillator = this.context.createOscillator();
-      const gainNode = this.context.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(this.context.destination);
-
-      oscillator.frequency.value = frequency;
-      oscillator.type = type === 'success' ? 'sine' : 'square';
-
-      gainNode.gain.setValueAtTime(this.volume, this.context.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + duration);
-
-      oscillator.start(this.context.currentTime);
-      oscillator.stop(this.context.currentTime + duration);
-
-      console.log(`[AudioManager] Playing ${type} sound: ${frequency}Hz`);
+      const now = this.context.currentTime;
+      const osc = this.context.createOscillator();
+      const gain = this.context.createGain();
+      osc.connect(gain);
+      gain.connect(this.context.destination);
+      const presets = {
+        click: { wave: 'sine', freq: 520 },
+        success: { wave: 'sine', freq: 740 },
+        error: { wave: 'triangle', freq: 220 },
+        pop: { wave: 'sine', freq: 610 },
+        star: { wave: 'sine', freq: 880 },
+        slice: { wave: 'sawtooth', freq: 320 }
+      };
+      const preset = presets[type] || {};
+      osc.type = preset.wave || 'sine';
+      osc.frequency.setValueAtTime(preset.freq || frequency, now);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(this.volume, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      osc.start(now);
+      osc.stop(now + duration + 0.02);
     } catch (error) {
       console.warn('[AudioManager] Error playing sound:', error);
     }
   }
 
-  /**
-   * Play TTS speech
-   * @param {string} text - Text to speak
-   * @param {number} rate - Speech rate (0.1 - 10)
-   */
-  speak(text, rate = 1.0) {
-    if (!('speechSynthesis' in window)) {
-      console.warn('[AudioManager] Speech synthesis not supported');
-      return;
-    }
+  playSequence(notes = [660, 780, 920]) {
+    notes.forEach((freq, i) => setTimeout(() => this.playSound('success', freq, 0.12), i * 70));
+  }
 
+  speak(text, rate = 1.0) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = rate;
-    utterance.volume = 1.0;
-    utterance.pitch = 1.0;
-
+    utterance.volume = 1;
+    utterance.pitch = 1.05;
     window.speechSynthesis.speak(utterance);
-    console.log(`[AudioManager] Speaking: "${text}"`);
   }
 
-  /**
-   * Stop all current speech
-   */
   stopSpeaking() {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      console.log('[AudioManager] Stopped speaking');
-    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   }
 
-  /**
-   * Set volume level
-   * @param {number} volume - Volume level 0-1
-   */
   setVolume(volume) {
-    this.volume = Math.max(0, Math.min(1, volume));
-    console.log(`[AudioManager] Volume set to ${this.volume}`);
+    this.volume = Math.max(0, Math.min(1, Number(volume) || 0));
   }
 
-  /**
-   * Cleanup resources
-   */
   cleanup() {
-    if (this.context) {
-      this.context.close();
-      this.context = null;
-      console.log('[AudioManager] Cleanup complete');
-    }
     this.stopSpeaking();
+    if (this.context) this.context.close().catch(() => {});
+    this.context = null;
   }
 }

@@ -13,9 +13,12 @@
   <meta name="apple-mobile-web-app-title" content="Baby Games">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <script>
-  // Trap accidental back gestures/back-button presses so the app never
-  // navigates away by itself — exiting only happens through the
-  // in-app parent PIN controls.
+  // Optional live ad configuration. Leave blank for the built-in ad slot preview.
+  window.BABY_GAMES_AD_CLIENT = '';
+  window.BABY_GAMES_AD_SLOT = '';
+
+  // Keep accidental browser-back navigation inside the PWA; use the in-app
+  // Change Game button or Parent control instead.
   (function () {
     history.pushState({ trapped: true }, '', location.href);
     window.addEventListener('popstate', function () {
@@ -28,6 +31,7 @@
   <link rel="stylesheet" href="games/alphabet-learner/styles.css">
   <link rel="stylesheet" href="games/comic-stories/styles.css">
   <link rel="stylesheet" href="games/fruit-color/styles.css">
+  <link rel="stylesheet" href="styles/simple-games.css">
 </head>
 <body>
   <div id="app">
@@ -74,6 +78,18 @@
             <div class="timer-option-emoji">⏰</div>
             <div class="timer-option-text">10 minutes</div>
           </div>
+          <div class="timer-option" data-duration="1800">
+            <div class="timer-option-emoji">🌙</div>
+            <div class="timer-option-text">30 minutes</div>
+          </div>
+        </div>
+
+        <div class="custom-timer">
+          <label for="customMinutesInput">Custom time</label>
+          <div class="custom-timer-row">
+            <input id="customMinutesInput" type="number" min="0.5" max="1440" step="0.5" inputmode="decimal" placeholder="e.g. 7.5">
+            <button id="customTimerBtn" type="button">Set custom</button>
+          </div>
         </div>
 
         <div class="timer-setup-footer">
@@ -100,10 +116,8 @@
       </div>
     </div>
 
-    <!-- Ad banner placeholder (bottom-safe zone, doesn't interfere with game) -->
-    <div id="adBanner" class="ad-banner-container" style="display:none;">
-      <!-- Ads will be rendered here in Phase 2 -->
-    </div>
+    <!-- Advertisement safe zone -->
+    <div id="adBanner" class="ad-banner-container" aria-label="Advertisement"></div>
 
     <!-- Game container (replaces launcher when game starts) -->
     <div id="gameContainer" class="game-container" style="display:none;">
