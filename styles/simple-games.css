@@ -17,3 +17,164 @@
 .shape-target:nth-child(2n){color:#f59e0b}.shape-target:nth-child(3n){color:#10b981}.shape-target:nth-child(4n){color:#8b5cf6}.shape-target:active{transform:scale(.88)} .shape-target.shape-wrong{animation:shake .18s ease}
 @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 @media(max-width:700px){.shape-grid{grid-template-columns:repeat(2,1fr); gap:14px; padding:14px}.simple-game-header{padding:10px 12px;font-size:.95rem}.star-target,.fruit-target{width:64px;height:64px}.star-target{font-size:3.3rem}.fruit-target{font-size:3.8rem}}
+
+/* ============================================
+   Slow, large toddler targets
+   ============================================ */
+.simple-game-stage {
+  min-height: 0;
+}
+
+.star-stage,
+.fruit-stage {
+  overflow: hidden;
+  touch-action: none;
+  isolation: isolate;
+}
+
+.star-target,
+.fruit-target {
+  z-index: 2;
+  width: clamp(120px, 19vw, 180px);
+  height: clamp(120px, 19vw, 180px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: clamp(6rem, 11vw, 9rem);
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  animation: toddlerRise var(--rise-duration, 8.5s) linear forwards;
+  will-change: transform, bottom;
+  filter: drop-shadow(0 10px 12px rgba(15, 23, 42, .16));
+}
+
+.star-target:active,
+.fruit-target:active {
+  transform: scale(.9);
+}
+
+.star-target.star-caught {
+  animation: starCaught .22s ease-out forwards;
+}
+
+.fruit-target.sliced {
+  animation: fruitSliced .34s ease-out forwards;
+}
+
+@keyframes toddlerRise {
+  0% {
+    bottom: -190px;
+    transform: translateY(0) rotate(var(--star-tilt, 0deg)) scale(.9);
+    opacity: .98;
+  }
+  15% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-10px) rotate(calc(var(--star-tilt, 0deg) * -1)) scale(1);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    bottom: calc(100% + 190px);
+    transform: translateY(8px) rotate(var(--star-tilt, 0deg)) scale(.94);
+    opacity: .85;
+  }
+}
+
+@keyframes starCaught {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.55) rotate(12deg); opacity: 0; }
+}
+
+@keyframes fruitSliced {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.45) rotate(12deg); opacity: 0; }
+}
+
+/* The fruit game shows a friendly knife at the toddler's finger/stylus position. */
+.slice-knife {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 8;
+  font-size: clamp(3.5rem, 8vw, 5.5rem);
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: 18% 72%;
+  transition: opacity .12s ease;
+  filter: drop-shadow(0 8px 8px rgba(15,23,42,.22));
+}
+
+.slice-knife.knife-active {
+  opacity: 1;
+}
+
+.knife-slash {
+  position: absolute;
+  width: clamp(110px, 15vw, 190px);
+  height: 12px;
+  z-index: 7;
+  pointer-events: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #ffffff 15%, #f59e0b 50%, #ffffff 85%, transparent);
+  box-shadow: 0 0 12px rgba(255,255,255,.9);
+  animation: knifeSlash .34s ease-out forwards;
+}
+
+@keyframes knifeSlash {
+  0% { opacity: 0; transform: translate(-50%, -50%) scaleX(.2) rotate(0deg); }
+  35% { opacity: 1; transform: translate(-50%, -50%) scaleX(1.05) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scaleX(1.2) rotate(0deg); }
+}
+
+.fruit-stage .simple-game-hint,
+.star-stage .simple-game-hint {
+  z-index: 6;
+  top: 12px;
+  max-width: calc(100% - 24px);
+  text-align: center;
+  pointer-events: none;
+}
+
+.slice-line {
+  z-index: 6;
+  opacity: 0;
+  transition: opacity .08s ease;
+}
+
+@media (max-width: 700px) {
+  .star-target,
+  .fruit-target {
+    width: 140px;
+    height: 140px;
+    font-size: 7rem;
+  }
+
+  .simple-game-header {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 400px) {
+  .star-target,
+  .fruit-target {
+    width: 125px;
+    height: 125px;
+    font-size: 6.2rem;
+  }
+
+  .fruit-stage .simple-game-hint,
+  .star-stage .simple-game-hint {
+    font-size: .78rem;
+    padding: 7px 10px;
+  }
+}

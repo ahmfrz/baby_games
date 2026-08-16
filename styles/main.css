@@ -904,3 +904,40 @@ html, body {
   .custom-timer-row { flex-direction:column; }
   .custom-timer-row button { min-height:48px; }
 }
+
+/* ============================================
+   Toddler-friendly launcher scrolling
+   ============================================ */
+html, body, #app {
+  min-height: 100dvh;
+}
+
+#app {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.launcher-container {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-items: flex-start;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+}
+
+.launcher-content {
+  margin: auto;
+  padding: var(--space-2xl) 0;
+}
+
+@media (max-width: 768px) {
+  .launcher-container {
+    padding: 20px 14px 100px;
+  }
+
+  .launcher-content {
+    padding: 10px 0 30px;
+  }
+}
