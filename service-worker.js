@@ -1,5 +1,5 @@
 // Bump this whenever you deploy changes, to force clients to pick up fresh files.
-const CACHE_NAME = 'baby-games-cache-v2';
+const CACHE_NAME = 'baby-games-cache-v3';
 
 self.addEventListener('install', () => {
   self.skipWaiting();

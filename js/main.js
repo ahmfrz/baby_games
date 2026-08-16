@@ -29,6 +29,9 @@ class BabyGamesPlatform {
     this.currentGame = null;
     this.isInitialized = false;
     this.gameContainerEl = null;
+    this.timerWatchId = null;
+    this.timerExpiryHandled = false;
+    this.pinRequestActive = false;
   }
 
   /**
@@ -44,6 +47,7 @@ class BabyGamesPlatform {
 
       // Initialize timer service
       this.timerService.initialize();
+      this.startTimerWatchdog();
       console.log(`[BabyGamesPlatform] Timer duration: ${this.timerService.getDuration() / 60} minutes`);
 
       // Register games
@@ -181,6 +185,7 @@ class BabyGamesPlatform {
     }
 
     this.timerService.clearSession();
+    this.timerExpiryHandled = false;
     this.updateTimerDisplay();
     document.querySelectorAll('.timer-option').forEach(option => {
       option.classList.toggle('active', Number(option.dataset.duration) === seconds);
@@ -214,19 +219,38 @@ class BabyGamesPlatform {
    * Request PIN from the user. Returns the entered PIN string, or null if cancelled.
    * This sets up temporary listeners and resolves once submitted or cancelled.
    */
-  requestPin() {
+  requestPin(options = {}) {
+    const {
+      title = '🔐 PIN Required',
+      description = 'Enter PIN to reset timer settings',
+      cancelable = true
+    } = options;
+
+    if (this.pinRequestActive) return Promise.resolve(null);
+
     return new Promise((resolve) => {
       const pinDialog = document.getElementById('pinDialog');
       const pinInput = document.getElementById('pinInput');
       const pinSubmit = document.getElementById('pinSubmit');
       const pinCancel = document.getElementById('pinCancel');
+      const titleEl = pinDialog?.querySelector('.pin-dialog-title');
+      const descriptionEl = pinDialog?.querySelector('.pin-dialog-description');
 
       if (!pinDialog || !pinInput || !pinSubmit) return resolve(null);
+
+      this.pinRequestActive = true;
+      const previousTitle = titleEl?.textContent;
+      const previousDescription = descriptionEl?.textContent;
+      const previousCancelDisplay = pinCancel?.style.display || '';
 
       const cleanup = () => {
         pinSubmit.removeEventListener('click', onSubmit);
         pinCancel && pinCancel.removeEventListener('click', onCancel);
         pinInput.removeEventListener('keypress', onKey);
+        if (titleEl && previousTitle != null) titleEl.textContent = previousTitle;
+        if (descriptionEl && previousDescription != null) descriptionEl.textContent = previousDescription;
+        if (pinCancel) pinCancel.style.display = previousCancelDisplay;
+        this.pinRequestActive = false;
       };
 
       const onSubmit = () => {
@@ -236,6 +260,7 @@ class BabyGamesPlatform {
       };
 
       const onCancel = () => {
+        if (!cancelable) return;
         cleanup();
         resolve(null);
       };
@@ -244,14 +269,87 @@ class BabyGamesPlatform {
         if (e.key === 'Enter') onSubmit();
       };
 
+      if (titleEl) titleEl.textContent = title;
+      if (descriptionEl) descriptionEl.textContent = description;
+      if (pinCancel) pinCancel.style.display = cancelable ? '' : 'none';
+
       pinDialog.classList.remove('hidden');
       pinInput.value = '';
-      pinInput.focus();
+      setTimeout(() => pinInput.focus(), 0);
 
       pinSubmit.addEventListener('click', onSubmit);
       pinCancel && pinCancel.addEventListener('click', onCancel);
       pinInput.addEventListener('keypress', onKey);
     });
+  }
+
+  /**
+   * Continuously enforce the session deadline. The countdown is persisted, so
+   * simply navigating between games must never restart or bypass it.
+   */
+  startTimerWatchdog() {
+    if (this.timerWatchId) clearInterval(this.timerWatchId);
+
+    this.timerWatchId = setInterval(() => {
+      if (this.timerService.hasActiveSession()) {
+        this.timerExpiryHandled = false;
+        this.updateGlobalTime();
+        return;
+      }
+
+      // A session only needs enforcement after it has actually been started.
+      const hasStoredSession = Boolean(this.timerService.sessionEndAt);
+      if (hasStoredSession && !this.timerExpiryHandled) {
+        this.enforceTimerExpiry();
+      }
+    }, 250);
+
+    // Handle a session that expired while the page was backgrounded.
+    if (this.timerService.sessionEndAt && !this.timerService.hasActiveSession()) {
+      this.enforceTimerExpiry();
+    }
+  }
+
+  async enforceTimerExpiry() {
+    if (this.timerExpiryHandled || this.pinRequestActive) return;
+    this.timerExpiryHandled = true;
+
+    console.log('[BabyGamesPlatform] Session timer expired; locking gameplay.');
+
+    // Stop the current game immediately. Do not let a game continue underneath
+    // the PIN dialog.
+    if (this.currentGame) {
+      try { this.currentGame.stop(); } catch (e) { console.warn('[BabyGamesPlatform] Game stop failed:', e); }
+      try { this.currentGame.cleanup(); } catch (e) { console.warn('[BabyGamesPlatform] Game cleanup failed:', e); }
+      this.currentGame = null;
+    }
+
+    this.hideGameNavigation();
+
+    const pin = await this.requestPin({
+      title: '⏰ Time Is Up',
+      description: 'Enter the parent PIN to start another play session.',
+      cancelable: false
+    });
+
+    // The dialog is intentionally non-cancelable. Incorrect PINs leave the app
+    // locked, so there is no way for a child to continue after the timer ends.
+    if (pin !== null && this.timerService.checkResetPin(pin)) {
+      this.closePinDialog();
+      this.timerService.clearSession();
+      this.timerExpiryHandled = false;
+      await this.showTimerUI();
+      return;
+    }
+
+    // Keep the expired session represented as an expired session and show the
+    // PIN dialog again. This also handles an incorrect PIN without allowing
+    // gameplay to resume.
+    if (pin !== null) {
+      alert('Incorrect PIN. Please try again.');
+    }
+    this.timerExpiryHandled = false;
+    setTimeout(() => this.enforceTimerExpiry(), 0);
   }
 
   /**
@@ -418,11 +516,12 @@ class BabyGamesPlatform {
 
   updateGlobalTime() {
     const el = document.getElementById('globalRemainingTime');
-    if (!el) return;
     const seconds = this.timerService.getRemainingSeconds();
-    const min = Math.floor(seconds / 60);
-    const sec = String(seconds % 60).padStart(2, '0');
-    el.textContent = `${min}:${sec}`;
+    if (el) {
+      const min = Math.floor(seconds / 60);
+      const sec = String(seconds % 60).padStart(2, '0');
+      el.textContent = `${min}:${sec}`;
+    }
   }
 
   async showLauncherPreservingSession() {
@@ -447,10 +546,17 @@ class BabyGamesPlatform {
     console.log(`[BabyGamesPlatform] Launching game: ${gameId}`);
 
     try {
-      if (this.currentGame) {
-        this.currentGame.cleanup();
+      if (!this.timerService.hasActiveSession()) {
+        // Never allow a game to start without a valid session. The watchdog
+        // normally handles this, but this guard prevents a race/bypass.
+        await this.enforceTimerExpiry();
+        return;
       }
-      if (!this.timerService.hasActiveSession()) this.timerService.startSession();
+
+      if (this.currentGame) {
+        try { this.currentGame.stop(); } catch (e) {}
+        try { this.currentGame.cleanup(); } catch (e) {}
+      }
       this.hideGameNavigation();
 
       const gameInstance = gameRegistry.instantiate(gameId, this);
