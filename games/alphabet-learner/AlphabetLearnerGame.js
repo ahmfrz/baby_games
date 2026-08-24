@@ -1,4 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
+import { rewardFeedback } from '../../services/FeedbackService.js';
 
 const MODE_SEQUENCE = 'sequential';
 const MODE_RANDOM = 'random';
@@ -502,6 +503,8 @@ export class AlphabetLearnerGame extends GameModule {
     this.playCorrectSound();
     this.speak(`That is correct, ${this.answerPhrase(item)}!`);
     this.launchSparkles('correct');
+    rewardFeedback(this.platform, `Hello ${item.word}!`, '💖');
+    rewardFeedback(this.platform, `Yes! ${item.char}!`, '🌟');
 
     this.setManagedTimeout(() => {
       this.clearKeyStates();

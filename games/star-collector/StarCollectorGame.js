@@ -1,5 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
-import { tapFeedback, vibrate } from '../../services/FeedbackService.js';
+import { tapFeedback, vibrate, rewardFeedback } from '../../services/FeedbackService.js';
 
 export class StarCollectorGame extends GameModule {
   static metadata = {
@@ -119,6 +119,7 @@ export class StarCollectorGame extends GameModule {
       this.score += 1;
       this.updateScore();
       tapFeedback(this.platform?.audioManager, 'star');
+      rewardFeedback(this.platform, 'Star!', '⭐');
       vibrate([18, 24, 24]);
       star.classList.add('star-caught');
       setTimeout(removeStar, 220);

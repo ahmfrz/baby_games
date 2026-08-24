@@ -1,4 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
+import { rewardFeedback } from '../../services/FeedbackService.js';
 
 const CANVAS_SIZE = 400;
 const BRUSH_RADIUS = 24;
@@ -587,6 +588,7 @@ export class FruitColorGame extends GameModule {
     if (!this.elements.celebration.classList.contains('hidden')) return;
     this.endDrawing();
     this.elements.celebration.classList.remove('hidden');
+    rewardFeedback(this.platform, 'Beautiful coloring!', '🎨');
     this.speak(`Great job! You colored the ${this.currentFruit?.name || 'fruit'}!`);
   }
 

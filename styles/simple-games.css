@@ -10,13 +10,77 @@
 @keyframes fruitbob { 0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)} }
 @keyframes slicePop { to { transform:scale(1.55) rotate(20deg); opacity:0; } }
 .slice-line { position:absolute; height:6px; transform-origin:left center; background:linear-gradient(90deg,transparent,#fff,#f59e0b,transparent); border-radius:999px; opacity:.9; pointer-events:none; }
-.shape-prompt { text-align:center; padding:20px 14px 12px; font-size:1.35rem; font-weight:800; color:#475569; }
-.shape-prompt strong { display:inline-flex; align-items:center; justify-content:center; width:76px; height:76px; margin-left:8px; border-radius:22px; background:#fff; box-shadow:0 10px 22px rgba(15,23,42,.12); font-size:3rem; color:#f59e0b; }
-.shape-grid { flex:1; padding:20px; display:grid; grid-template-columns:repeat(5,minmax(80px,1fr)); gap:16px; align-items:center; justify-items:center; }
-.shape-target { width:min(17vw,130px); height:min(17vw,130px); min-width:76px; min-height:76px; border:0; border-radius:28px; background:#fff; box-shadow:0 12px 24px rgba(15,23,42,.12); font-size:clamp(2.6rem,7vw,4.5rem); cursor:pointer; color:#0ea5e9; transition:transform .14s ease; }
+.shape-prompt {
+  flex: 0 0 auto;
+  min-height: clamp(180px, 30vh, 300px);
+  padding: clamp(16px, 3vh, 28px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-align:center;
+  font-size:clamp(1.5rem, 4vw, 2.5rem);
+  font-weight:900;
+  color:#334155;
+  background:radial-gradient(circle at 50% 45%, #fff 0%, #fef3c7 55%, #e0f2fe 100%);
+  box-shadow:inset 0 -8px 25px rgba(15,23,42,.08);
+}
+.shape-prompt strong {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:clamp(120px, 22vw, 220px);
+  height:clamp(120px, 22vw, 220px);
+  margin:0;
+  border-radius:40px;
+  background:#fff;
+  box-shadow:0 14px 30px rgba(15,23,42,.16), 0 0 0 8px rgba(251,191,36,.16);
+  font-size:clamp(5rem, 14vw, 9rem);
+  color:#f59e0b;
+  animation:shapePromptPulse 1.6s ease-in-out infinite;
+}
+.shape-prompt::after {
+  content:'Look here!';
+  font-size:clamp(.9rem, 2.4vw, 1.25rem);
+  color:#64748b;
+}
+.shape-grid {
+  flex:1;
+  min-height:0;
+  padding:clamp(12px, 2vw, 24px);
+  display:grid;
+  grid-template-columns:repeat(5,minmax(90px,1fr));
+  gap:clamp(12px, 2vw, 20px);
+  align-items:center;
+  justify-items:center;
+}
+.shape-target {
+  width:min(16vw,150px);
+  height:min(16vw,150px);
+  min-width:88px;
+  min-height:88px;
+  border:0;
+  border-radius:32px;
+  background:#fff;
+  box-shadow:0 14px 28px rgba(15,23,42,.14);
+  font-size:clamp(3.5rem,8vw,5.5rem);
+  cursor:pointer;
+  color:#0ea5e9;
+  transition:transform .14s ease, box-shadow .18s ease;
+}
 .shape-target:nth-child(2n){color:#f59e0b}.shape-target:nth-child(3n){color:#10b981}.shape-target:nth-child(4n){color:#8b5cf6}.shape-target:active{transform:scale(.88)} .shape-target.shape-wrong{animation:shake .18s ease}
-@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-@media(max-width:700px){.shape-grid{grid-template-columns:repeat(2,1fr); gap:14px; padding:14px}.simple-game-header{padding:10px 12px;font-size:.95rem}.star-target,.fruit-target{width:64px;height:64px}.star-target{font-size:3.3rem}.fruit-target{font-size:3.8rem}}
+@keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+@keyframes shapePromptPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.shape-target:hover{box-shadow:0 18px 34px rgba(15,23,42,.2)}
+
+@media(max-width:700px){
+  .shape-prompt{min-height:210px;}
+  .shape-grid{grid-template-columns:repeat(2,1fr); gap:12px; padding:12px}
+  .shape-target{width:min(30vw,150px);height:min(30vw,150px);min-width:105px;min-height:105px}
+  .simple-game-header{padding:10px 12px;font-size:.95rem}
+  .star-target,.fruit-target{width:64px;height:64px}.star-target{font-size:3.3rem}.fruit-target{font-size:3.8rem}
+}
 
 /* ============================================
    Slow, large toddler targets
@@ -178,3 +242,53 @@
     padding: 7px 10px;
   }
 }
+
+/* Pinch Pop */
+.pinch-stage {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 20% 25%, rgba(14,165,233,.20), transparent 28%),
+    radial-gradient(circle at 80% 70%, rgba(244,114,182,.22), transparent 30%),
+    linear-gradient(135deg,#eff6ff,#fdf2f8);
+  touch-action:none;
+}
+.pinch-stage .simple-game-hint {
+  top:18px;
+  max-width:min(92%, 700px);
+  font-size:clamp(1rem,3vw,1.4rem);
+  text-align:center;
+}
+.pinch-bubble {
+  width:clamp(230px,42vw,390px);
+  height:clamp(230px,42vw,390px);
+  border-radius:50%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  background:radial-gradient(circle at 32% 25%, #fff 0 6%, #bfdbfe 7% 20%, #60a5fa 50%, #7c3aed 100%);
+  box-shadow:inset -22px -28px 45px rgba(49,46,129,.25), inset 18px 15px 28px rgba(255,255,255,.65), 0 24px 50px rgba(59,130,246,.28);
+  transform:scale(var(--pinch-scale,1));
+  transition:transform .08s ease;
+  user-select:none;
+  pointer-events:none;
+  animation:pinchFloat 2.4s ease-in-out infinite;
+}
+.pinch-bubble span { font-size:clamp(4rem,10vw,7rem); }
+.pinch-bubble b { color:#fff; font-size:clamp(1.2rem,3vw,2rem); text-shadow:0 3px 8px rgba(15,23,42,.25); }
+.pinch-bubble.pinch-active { box-shadow:inset -22px -28px 45px rgba(49,46,129,.3), inset 18px 15px 28px rgba(255,255,255,.7), 0 0 0 10px rgba(251,191,36,.22), 0 24px 60px rgba(59,130,246,.35); }
+.pinch-bubble.pinch-pop { animation:pinchPop .38s cubic-bezier(.34,1.56,.64,1) forwards; }
+.pinch-finger-hint {
+  position:absolute;
+  bottom:12%;
+  font-size:clamp(2rem,6vw,4rem);
+  opacity:.75;
+  animation:fingersMove 1.8s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes pinchFloat{0%,100%{transform:scale(var(--pinch-scale,1)) translateY(0)}50%{transform:scale(var(--pinch-scale,1)) translateY(-10px)}}
+@keyframes pinchPop{0%{transform:scale(var(--pinch-scale,1));opacity:1}45%{transform:scale(1.18);opacity:1}100%{transform:scale(.05);opacity:0}}
+@keyframes fingersMove{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(.82);opacity:1}}

@@ -1,4 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
+import { rewardFeedback } from '../../services/FeedbackService.js';
 
 const SWIPE_THRESHOLD_PX = 40;
 
@@ -365,6 +366,7 @@ export class ComicStoryGame extends GameModule {
     const lastIndex = this.currentStory.pages.length - 1;
     if (this.currentPageIndex >= lastIndex) return;
     this.currentPageIndex += 1;
+    rewardFeedback(this.platform, 'Next page!', '📖');
     this.renderPage();
   }
 

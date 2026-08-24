@@ -9,12 +9,6 @@ import { AudioManager } from '../services/AudioManager.js';
 import { InputManager } from '../services/InputManager.js';
 import { AdManager } from '../services/AdManager.js';
 import { tapFeedback } from '../services/FeedbackService.js';
-import { StarCollectorGame } from '../games/star-collector/StarCollectorGame.js';
-import { FruitSliceGame } from '../games/fruit-slice/FruitSliceGame.js';
-import { ShapePopGame } from '../games/shape-pop/ShapePopGame.js';
-import { AlphabetLearnerGame } from '../games/alphabet-learner/AlphabetLearnerGame.js';
-import { ComicStoryGame } from '../games/comic-stories/ComicStoryGame.js';
-import { FruitColorGame } from '../games/fruit-color/FruitColorGame.js';
 
 // ============================================
 // Platform Initialization
@@ -32,6 +26,7 @@ class BabyGamesPlatform {
     this.timerWatchId = null;
     this.timerExpiryHandled = false;
     this.pinRequestActive = false;
+    this.loadedGameStyles = new Set();
   }
 
   /**
@@ -54,6 +49,8 @@ class BabyGamesPlatform {
       await this.registerGames();
 
       this.adManager.initialize();
+      this.createRewardLayer();
+      window.addEventListener('babyGameReward', (event) => this.showReward(event.detail || {}));
       this.setupGlobalFeedback();
 
       // Setup UI event listeners
@@ -86,14 +83,138 @@ class BabyGamesPlatform {
    * Register all available games
    */
   async registerGames() {
-    gameRegistry.register(AlphabetLearnerGame);
-    gameRegistry.register(ComicStoryGame);
-    gameRegistry.register(FruitColorGame);
-    gameRegistry.register(StarCollectorGame);
-    gameRegistry.register(FruitSliceGame);
-    gameRegistry.register(ShapePopGame);
+    // Keep only lightweight metadata in the initial bundle. Each game module is
+    // fetched with a native dynamic import when the child actually launches it.
+    const games = [
+      {
+        id: 'alphabet-learner',
+        name: 'ABC 123 Learner',
+        description: 'Learn letters and numbers with pictures, speech, and gentle play.',
+        stylePath: 'games/alphabet-learner/styles.css',
+        loader: () => import('../games/alphabet-learner/AlphabetLearnerGame.js')
+      },
+      {
+        id: 'comic-stories',
+        name: '📖 Comic Stories',
+        description: 'Flip through comic-style storybooks, panel by panel.',
+        stylePath: 'games/comic-stories/styles.css',
+        loader: () => import('../games/comic-stories/ComicStoryGame.js')
+      },
+      {
+        id: 'fruit-color',
+        name: '🍎 Fruit Coloring',
+        description: 'Paint friendly fruits with big, easy strokes.',
+        stylePath: 'games/fruit-color/styles.css',
+        loader: () => import('../games/fruit-color/FruitColorGame.js')
+      },
+      {
+        id: 'star-collector',
+        name: '⭐ Star Catch',
+        description: 'Tap the big twinkling stars as they slowly float up into the sky.',
+        stylePath: 'styles/simple-games.css',
+        loader: () => import('../games/star-collector/StarCollectorGame.js')
+      },
+      {
+        id: 'fruit-slice',
+        name: '🍉 Fruit Slice',
+        description: 'Swipe through big floating fruit with your finger.',
+        stylePath: 'styles/simple-games.css',
+        loader: () => import('../games/fruit-slice/FruitSliceGame.js')
+      },
+      {
+        id: 'shape-pop',
+        name: '🔷 Shape Pop',
+        description: 'Find and tap the huge friendly shape shown at the top.',
+        stylePath: 'styles/simple-games.css',
+        loader: () => import('../games/shape-pop/ShapePopGame.js')
+      },
+      {
+        id: 'pinch-pop',
+        name: '🤏 Pinch Pop',
+        description: 'Use two fingers to pinch colorful bubbles and make them pop.',
+        stylePath: 'styles/simple-games.css',
+        loader: () => import('../games/pinch-pop/PinchPopGame.js')
+      }
+    ];
 
-    console.log(`[BabyGamesPlatform] Registered ${gameRegistry.getGameCount()} game(s)`);
+    games.forEach(({ loader, ...metadata }) => {
+      gameRegistry.registerLazy(metadata, loader);
+    });
+
+    console.log(`[BabyGamesPlatform] Registered ${gameRegistry.getGameCount()} lazy game(s)`);
+  }
+
+
+  async ensureGameStyles(gameMetadata) {
+    const href = gameMetadata?.stylePath;
+    if (!href || this.loadedGameStyles.has(href)) return;
+
+    const existing = document.querySelector(`link[data-game-style="${href}"]`);
+    if (existing) {
+      this.loadedGameStyles.add(href);
+      return;
+    }
+
+    await new Promise((resolve, reject) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.dataset.gameStyle = href;
+      link.onload = resolve;
+      link.onerror = () => reject(new Error(`Could not load game styles: ${href}`));
+      document.head.appendChild(link);
+    });
+
+    this.loadedGameStyles.add(href);
+  }
+
+  createRewardLayer() {
+    if (document.getElementById('rewardLayer')) return;
+    const layer = document.createElement('div');
+    layer.id = 'rewardLayer';
+    layer.className = 'reward-layer';
+    layer.setAttribute('aria-live', 'polite');
+    layer.innerHTML = '<div class="reward-message"><span class="reward-emoji">✨</span><span class="reward-text">Great!</span></div><div class="reward-particles" aria-hidden="true"></div>';
+    document.body.appendChild(layer);
+
+  }
+
+  showReward(detail = {}) {
+    const layer = document.getElementById('rewardLayer');
+    if (!layer) return;
+
+    const message = detail.message || 'Great!';
+    const emoji = detail.emoji || '✨';
+    const count = Math.min(22, Math.max(8, Number(detail.particles) || 14));
+    const messageEl = layer.querySelector('.reward-message');
+    const emojiEl = layer.querySelector('.reward-emoji');
+    const textEl = layer.querySelector('.reward-text');
+    const particles = layer.querySelector('.reward-particles');
+
+    emojiEl.textContent = emoji;
+    textEl.textContent = message;
+    particles.innerHTML = '';
+
+    for (let i = 0; i < count; i += 1) {
+      const particle = document.createElement('span');
+      particle.className = 'reward-particle';
+      particle.textContent = ['✨', '⭐', '💖', '🎈', '🌟'][i % 5];
+      particle.style.setProperty('--x', `${-45 + Math.random() * 90}vw`);
+      particle.style.setProperty('--y', `${-30 - Math.random() * 55}vh`);
+      particle.style.setProperty('--delay', `${Math.random() * 0.12}s`);
+      particle.style.setProperty('--spin', `${-180 + Math.random() * 360}deg`);
+      particles.appendChild(particle);
+    }
+
+    layer.classList.remove('reward-show');
+    messageEl.classList.remove('reward-message-pop');
+    void layer.offsetWidth;
+    void messageEl.offsetWidth;
+    layer.classList.add('reward-show');
+    messageEl.classList.add('reward-message-pop');
+
+    clearTimeout(this.rewardHideId);
+    this.rewardHideId = setTimeout(() => layer.classList.remove('reward-show'), 1150);
   }
 
   /**
@@ -251,6 +372,7 @@ class BabyGamesPlatform {
         if (descriptionEl && previousDescription != null) descriptionEl.textContent = previousDescription;
         if (pinCancel) pinCancel.style.display = previousCancelDisplay;
         this.pinRequestActive = false;
+    this.loadedGameStyles = new Set();
       };
 
       const onSubmit = () => {
@@ -559,7 +681,9 @@ class BabyGamesPlatform {
       }
       this.hideGameNavigation();
 
-      const gameInstance = gameRegistry.instantiate(gameId, this);
+      const gameMetadata = gameRegistry.listGames().find((game) => game.id === gameId);
+      await this.ensureGameStyles(gameMetadata);
+      const gameInstance = await gameRegistry.instantiate(gameId, this);
       this.currentGame = gameInstance;
 
       await this.currentGame.initialize();

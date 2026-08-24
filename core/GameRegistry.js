@@ -5,6 +5,7 @@
 export class GameRegistry {
   constructor() {
     this.games = new Map();
+    this.lazyGames = new Map();
   }
 
   /**
@@ -22,14 +23,45 @@ export class GameRegistry {
   }
 
   /**
+   * Register a game whose module is loaded only when the game is launched.
+   * @param {Object} metadata - Lightweight launcher metadata
+   * @param {Function} loader - Async function returning the game module
+   */
+  registerLazy(metadata, loader) {
+    if (!metadata?.id || typeof loader !== 'function') {
+      throw new Error('Lazy game requires metadata.id and a loader function');
+    }
+    this.lazyGames.set(metadata.id, { metadata, loader });
+    console.log(`[GameRegistry] Registered lazy game: ${metadata.name} (${metadata.id})`);
+  }
+
+  /**
    * Get a game class by ID
    * @param {string} gameId - Game ID
    * @returns {Function} Game class
    * @throws {Error} if game not found
    */
+  async loadGame(gameId) {
+    if (this.games.has(gameId)) return this.games.get(gameId);
+
+    const lazy = this.lazyGames.get(gameId);
+    if (!lazy) throw new Error(`Game not found: ${gameId}`);
+
+    const module = await lazy.loader();
+    const GameClass = module?.default || module?.[Object.keys(module || {}).find((key) => key !== 'default')];
+    if (!GameClass) throw new Error(`Lazy game module did not export a game class: ${gameId}`);
+
+    if (!GameClass.metadata?.id) {
+      throw new Error(`Lazy game class has no metadata.id: ${gameId}`);
+    }
+
+    this.games.set(gameId, GameClass);
+    return GameClass;
+  }
+
   getGame(gameId) {
     if (!this.games.has(gameId)) {
-      throw new Error(`Game not found: ${gameId}`);
+      throw new Error(`Game "${gameId}" has not been loaded yet. Use loadGame() first.`);
     }
     return this.games.get(gameId);
   }
@@ -41,8 +73,8 @@ export class GameRegistry {
    * @param {Object} [options] - Optional additional services
    * @returns {GameModule} Game instance
    */
-  instantiate(gameId, platform, options = {}) {
-    const GameClass = this.getGame(gameId);
+  async instantiate(gameId, platform, options = {}) {
+    const GameClass = await this.loadGame(gameId);
     const gameInstance = new GameClass(platform, options);
     return gameInstance;
   }
@@ -52,7 +84,11 @@ export class GameRegistry {
    * @returns {Array<Object>} Array of game metadata objects
    */
   listGames() {
-    return Array.from(this.games.values()).map(GameClass => GameClass.metadata);
+    const loaded = Array.from(this.games.values()).map(GameClass => GameClass.metadata);
+    const lazy = Array.from(this.lazyGames.values())
+      .filter(({ metadata }) => !this.games.has(metadata.id))
+      .map(({ metadata }) => metadata);
+    return [...loaded, ...lazy];
   }
 
   /**
@@ -61,7 +97,7 @@ export class GameRegistry {
    * @returns {boolean}
    */
   hasGame(gameId) {
-    return this.games.has(gameId);
+    return this.games.has(gameId) || this.lazyGames.has(gameId);
   }
 
   /**
@@ -69,7 +105,7 @@ export class GameRegistry {
    * @returns {number}
    */
   getGameCount() {
-    return this.games.size;
+    return this.games.size + Array.from(this.lazyGames.keys()).filter((id) => !this.games.has(id)).length;
   }
 }
 
