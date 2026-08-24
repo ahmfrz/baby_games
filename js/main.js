@@ -91,54 +91,61 @@ class BabyGamesPlatform {
         name: 'ABC 123 Learner',
         description: 'Learn letters and numbers with pictures, speech, and gentle play.',
         stylePath: 'games/alphabet-learner/styles.css',
-        loader: () => import('../games/alphabet-learner/AlphabetLearnerGame.js')
+        loader: () => import('../games/alphabet-learner/AlphabetLearnerGame.js'),
+        exportName: 'AlphabetLearnerGame'
       },
       {
         id: 'comic-stories',
         name: '📖 Comic Stories',
         description: 'Flip through comic-style storybooks, panel by panel.',
         stylePath: 'games/comic-stories/styles.css',
-        loader: () => import('../games/comic-stories/ComicStoryGame.js')
+        loader: () => import('../games/comic-stories/ComicStoryGame.js'),
+        exportName: 'ComicStoryGame'
       },
       {
         id: 'fruit-color',
         name: '🍎 Fruit Coloring',
         description: 'Paint friendly fruits with big, easy strokes.',
         stylePath: 'games/fruit-color/styles.css',
-        loader: () => import('../games/fruit-color/FruitColorGame.js')
+        loader: () => import('../games/fruit-color/FruitColorGame.js'),
+        exportName: 'FruitColorGame'
       },
       {
         id: 'star-collector',
         name: '⭐ Star Catch',
         description: 'Tap the big twinkling stars as they slowly float up into the sky.',
         stylePath: 'styles/simple-games.css',
-        loader: () => import('../games/star-collector/StarCollectorGame.js')
+        loader: () => import('../games/star-collector/StarCollectorGame.js'),
+        exportName: 'StarCollectorGame'
       },
       {
         id: 'fruit-slice',
         name: '🍉 Fruit Slice',
         description: 'Swipe through big floating fruit with your finger.',
         stylePath: 'styles/simple-games.css',
-        loader: () => import('../games/fruit-slice/FruitSliceGame.js')
+        loader: () => import('../games/fruit-slice/FruitSliceGame.js'),
+        exportName: 'FruitSliceGame'
       },
       {
         id: 'shape-pop',
         name: '🔷 Shape Pop',
         description: 'Find and tap the huge friendly shape shown at the top.',
         stylePath: 'styles/simple-games.css',
-        loader: () => import('../games/shape-pop/ShapePopGame.js')
+        loader: () => import('../games/shape-pop/ShapePopGame.js'),
+        exportName: 'ShapePopGame'
       },
       {
         id: 'pinch-pop',
         name: '🤏 Pinch Pop',
         description: 'Use two fingers to pinch colorful bubbles and make them pop.',
         stylePath: 'styles/simple-games.css',
-        loader: () => import('../games/pinch-pop/PinchPopGame.js')
+        loader: () => import('../games/pinch-pop/PinchPopGame.js'),
+        exportName: 'PinchPopGame'
       }
     ];
 
-    games.forEach(({ loader, ...metadata }) => {
-      gameRegistry.registerLazy(metadata, loader);
+    games.forEach(({ loader, exportName, ...metadata }) => {
+      gameRegistry.registerLazy(metadata, loader, exportName);
     });
 
     console.log(`[BabyGamesPlatform] Registered ${gameRegistry.getGameCount()} lazy game(s)`);
@@ -678,12 +685,24 @@ class BabyGamesPlatform {
       if (this.currentGame) {
         try { this.currentGame.stop(); } catch (e) {}
         try { this.currentGame.cleanup(); } catch (e) {}
+        this.currentGame = null;
       }
       this.hideGameNavigation();
 
       const gameMetadata = gameRegistry.listGames().find((game) => game.id === gameId);
+      if (!gameMetadata) throw new Error(`Unknown game: ${gameId}`);
+
+      const gameHost = document.getElementById('gameContainer');
+      if (gameHost) {
+        gameHost.replaceChildren();
+        gameHost.style.display = 'none';
+      }
+
       await this.ensureGameStyles(gameMetadata);
       const gameInstance = await gameRegistry.instantiate(gameId, this);
+      if (gameInstance?.constructor?.metadata?.id !== gameId) {
+        throw new Error(`Loaded game does not match requested game: ${gameId}`);
+      }
       this.currentGame = gameInstance;
 
       await this.currentGame.initialize();
@@ -703,10 +722,15 @@ class BabyGamesPlatform {
     } catch (err) {
       console.error('[BabyGamesPlatform] Failed to launch game:', err);
 
-      // Show error message
-      alert(`Failed to launch ${gameId}: ${err.message || err}`);
+      if (this.currentGame) {
+        try { this.currentGame.stop(); } catch (e) {}
+        try { this.currentGame.cleanup(); } catch (e) {}
+        this.currentGame = null;
+      }
+      const gameContainer = document.getElementById('gameContainer');
+      if (gameContainer) gameContainer.replaceChildren();
 
-      // Go back to launcher
+      alert(`Failed to launch ${gameId}: ${err.message || err}`);
       await this.showLauncher();
     }
   }

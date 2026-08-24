@@ -27,11 +27,11 @@ export class GameRegistry {
    * @param {Object} metadata - Lightweight launcher metadata
    * @param {Function} loader - Async function returning the game module
    */
-  registerLazy(metadata, loader) {
+  registerLazy(metadata, loader, exportName = null) {
     if (!metadata?.id || typeof loader !== 'function') {
       throw new Error('Lazy game requires metadata.id and a loader function');
     }
-    this.lazyGames.set(metadata.id, { metadata, loader });
+    this.lazyGames.set(metadata.id, { metadata, loader, exportName });
     console.log(`[GameRegistry] Registered lazy game: ${metadata.name} (${metadata.id})`);
   }
 
@@ -48,11 +48,20 @@ export class GameRegistry {
     if (!lazy) throw new Error(`Game not found: ${gameId}`);
 
     const module = await lazy.loader();
-    const GameClass = module?.default || module?.[Object.keys(module || {}).find((key) => key !== 'default')];
-    if (!GameClass) throw new Error(`Lazy game module did not export a game class: ${gameId}`);
+    const GameClass = lazy.exportName
+      ? module?.[lazy.exportName]
+      : module?.default || module?.[Object.keys(module || {}).find((key) => key !== 'default')];
+
+    if (!GameClass) {
+      throw new Error(`Lazy game module did not export ${lazy.exportName || 'a game class'}: ${gameId}`);
+    }
 
     if (!GameClass.metadata?.id) {
       throw new Error(`Lazy game class has no metadata.id: ${gameId}`);
+    }
+
+    if (GameClass.metadata.id !== gameId) {
+      throw new Error(`Lazy game ID mismatch: requested ${gameId}, loaded ${GameClass.metadata.id}`);
     }
 
     this.games.set(gameId, GameClass);
