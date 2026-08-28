@@ -81,9 +81,9 @@
 .run-hit { animation:goalPulse .5s ease both; }
 .toddler-pointing-small { width:clamp(155px,18vw,225px); left:8%; bottom:8%; }
 .choice-object { position:absolute; width:clamp(105px,13vw,170px); height:clamp(105px,14vw,175px); border:0; border-radius:30px; background-color:rgba(255,255,255,.82); background-repeat:no-repeat; background-size:contain; background-position:center; box-shadow:0 12px 24px rgba(15,23,42,.14); cursor:pointer; z-index:5; color:#475569; font-size:0; }
-.choice-object:nth-of-type(1), .choice-ball-good, .food-choice-0, .drink-choice:nth-of-type(1) { left:41%; top:28%; }
-.choice-ball-wrong:nth-of-type(2), .food-choice-1, .drink-choice:nth-of-type(2) { left:62%; top:50%; }
-.choice-ball-wrong:nth-of-type(3), .food-choice-2, .drink-choice:nth-of-type(3) { left:27%; top:57%; }
+.choice-object:nth-of-type(1), .choice-ball-good, .food-choice-0 { left:41%; top:28%; }
+.choice-ball-wrong:nth-of-type(2), .food-choice-1 { left:62%; top:50%; }
+.choice-ball-wrong:nth-of-type(3), .food-choice-2 { left:27%; top:57%; }
 .success-hit { animation:successBounce .55s ease; }
 .wrong-hit { animation:wrongShake .28s ease; }
 .hidden-ball { opacity:0 !important; transform:scale(.4); }
@@ -174,9 +174,9 @@
   .sleepy-target { width:58vw; height:31vw; top:57%; }
   .toddler-pointing-small { width:145px; left:2%; }
   .choice-object { width:105px; height:105px; border-radius:25px; }
-  .choice-ball-good, .food-choice-0, .drink-choice:nth-of-type(1) { left:39%; top:24%; }
-  .choice-ball-wrong:nth-of-type(2), .food-choice-1, .drink-choice:nth-of-type(2) { left:58%; top:51%; }
-  .choice-ball-wrong:nth-of-type(3), .food-choice-2, .drink-choice:nth-of-type(3) { left:20%; top:55%; }
+  .choice-ball-good, .food-choice-0 { left:39%; top:24%; }
+  .choice-ball-wrong:nth-of-type(2), .food-choice-1 { left:58%; top:51%; }
+  .choice-ball-wrong:nth-of-type(3), .food-choice-2 { left:20%; top:55%; }
   .object-ball { width:90px; }
   .drag-toddler { width:145px; left:2%; bottom:6%; }
   .drag-target { width:145px; height:115px; font-size:1rem; }
@@ -262,6 +262,48 @@
   width: clamp(125px, 15vw, 185px);
   left: 4%;
   bottom: 2%;
+}
+/* Park slide scene: keep the toddler small and move the camera framing so the
+   actual slide in the background remains clearly visible and tappable. */
+.language-stage[data-step-type="destination-slide"] {
+  background-position: 60% center;
+}
+.language-stage[data-step-type="destination-slide"] .toddler-destination {
+  width: clamp(118px, 14vw, 175px);
+  left: 4%;
+  bottom: 3%;
+  z-index: 3;
+}
+.language-stage[data-step-type="destination-slide"] .slide-destination {
+  position: absolute;
+  right: 13%;
+  top: 12%;
+  width: clamp(135px, 18vw, 235px);
+  height: clamp(155px, 27vh, 255px);
+  border: 0;
+  border-radius: 38px;
+  background: rgba(255,255,255,.10);
+  box-shadow: 0 0 0 8px rgba(255,255,255,.08);
+  cursor: pointer;
+  z-index: 6;
+  color: transparent;
+}
+.language-stage[data-step-type="destination-slide"] .slide-destination::after {
+  content: '🛝';
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,.92);
+  font-size: 1.45rem;
+  box-shadow: 0 5px 12px rgba(15,23,42,.14);
+}
+.language-stage[data-step-type="destination-slide"] .slide-destination.destination-hit {
+  animation: goalPulse .5s ease both;
 }
 .language-stage[data-step-type="come-here"] .mumma-waiting {
   width: clamp(130px, 15vw, 185px);
@@ -400,6 +442,26 @@
   .language-stage[data-step-type="door"] .toddler-door,
   .language-stage[data-step-type="going"] .toddler-moving,
   .language-stage[data-step-type="running"] .toddler-runner,
+  .language-stage[data-step-type="destination-slide"] {
+    background-position: 62% center;
+  }
+  .language-stage[data-step-type="destination-slide"] .toddler-destination {
+    width: 122px;
+    left: 3%;
+    bottom: 3%;
+  }
+  .language-stage[data-step-type="destination-slide"] .slide-destination {
+    right: 4%;
+    top: 11%;
+    width: 142px;
+    height: 190px;
+    border-radius: 30px;
+  }
+  .language-stage[data-step-type="destination-slide"] .slide-destination::after {
+    width: 34px;
+    height: 34px;
+    font-size: 1.2rem;
+  }
   .language-stage[data-step-type="destination-path"] .toddler-path {
     width: 120px;
     left: 2%;

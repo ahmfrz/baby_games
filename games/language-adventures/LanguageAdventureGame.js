@@ -416,7 +416,7 @@ export class LanguageAdventureGame extends GameModule {
           ['juice.png', 'Juice', false],
           ['sippy-cup.png', 'Sippy cup', false]
         ];
-        drinks.forEach(([src, label, correct]) => {
+        drinks.forEach(([src, label, correct], i) => {
           const b = button(`choice-object drink-choice drink-choice-${i}`, label, () => correct
             ? this.completeStep(step.success, b)
             : this.wrongTry(b, 'Tap the water!'));
