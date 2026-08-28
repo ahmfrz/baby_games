@@ -705,14 +705,16 @@ class BabyGamesPlatform {
       }
       this.currentGame = gameInstance;
 
+      const gameContainer = document.getElementById('gameContainer');
+      // Make the host measurable before game initialization/start. Some games
+      // calculate touch targets from the stage dimensions during start().
+      if (gameContainer) gameContainer.style.display = 'flex';
+      await this.hideLauncher();
+
       await this.currentGame.initialize();
       this.currentGame.start();
 
-      await this.hideLauncher();
-
-      const gameContainer = document.getElementById('gameContainer');
       if (gameContainer) {
-        gameContainer.style.display = 'flex';
         // Don't clear innerHTML — the game manages its own content via initialize/createGameUI/showGameUI
         await this.animateEnter(gameContainer);
       }

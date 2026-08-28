@@ -6,6 +6,8 @@ export class GameRegistry {
   constructor() {
     this.games = new Map();
     this.lazyGames = new Map();
+    // Preserve the launcher order even after lazy-loaded games move into `games`.
+    this.registrationOrder = [];
   }
 
   /**
@@ -19,6 +21,7 @@ export class GameRegistry {
     }
     const { id } = GameClass.metadata;
     this.games.set(id, GameClass);
+    if (!this.registrationOrder.includes(id)) this.registrationOrder.push(id);
     console.log(`[GameRegistry] Registered game: ${GameClass.metadata.name} (${id})`);
   }
 
@@ -32,6 +35,7 @@ export class GameRegistry {
       throw new Error('Lazy game requires metadata.id and a loader function');
     }
     this.lazyGames.set(metadata.id, { metadata, loader, exportName });
+    if (!this.registrationOrder.includes(metadata.id)) this.registrationOrder.push(metadata.id);
     console.log(`[GameRegistry] Registered lazy game: ${metadata.name} (${metadata.id})`);
   }
 
@@ -93,11 +97,12 @@ export class GameRegistry {
    * @returns {Array<Object>} Array of game metadata objects
    */
   listGames() {
-    const loaded = Array.from(this.games.values()).map(GameClass => GameClass.metadata);
-    const lazy = Array.from(this.lazyGames.values())
-      .filter(({ metadata }) => !this.games.has(metadata.id))
-      .map(({ metadata }) => metadata);
-    return [...loaded, ...lazy];
+    return this.registrationOrder
+      .map((id) => {
+        if (this.games.has(id)) return this.games.get(id).metadata;
+        return this.lazyGames.get(id)?.metadata || null;
+      })
+      .filter(Boolean);
   }
 
   /**

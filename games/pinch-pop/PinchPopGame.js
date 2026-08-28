@@ -14,7 +14,7 @@ export class PinchPopGame extends GameModule {
   static metadata = {
     id: 'pinch-pop',
     name: '🤏 Nest & Move',
-    description: 'Pinch an egg or ball with two fingers and carry it to the other nest.',
+    description: 'Pinch shiny eggs and colorful treasures, then carry them to the other nest.',
     version: '2.0.0',
     author: 'Baby Games',
     assetPath: 'games/pinch-pop/assets/'
@@ -56,7 +56,7 @@ export class PinchPopGame extends GameModule {
     this.updateTimer();
     this.buildLevel();
     this.timerId = setInterval(() => this.tick(), 250);
-    this.platform?.audioManager?.speak?.('Pinch an egg with two fingers, then move it to the other nest.');
+    this.platform?.audioManager?.speak?.('Pinch the shiny treasure with two fingers, then carry it to the other nest.');
   }
 
   tick() {
@@ -146,24 +146,32 @@ export class PinchPopGame extends GameModule {
     this.itemLayer.replaceChildren();
 
     const stageRect = this.stage.getBoundingClientRect();
-    const sideMargin = Math.min(100, stageRect.width * 0.12);
-    const leftX = sideMargin + 80;
-    const rightX = Math.max(leftX + 180, stageRect.width - sideMargin - 80);
-    const baseY = stageRect.height * 0.62;
-    const rightY = clamp(baseY - config.heightDelta, 90, stageRect.height - 130);
+    const width = Math.max(stageRect.width, 320);
+    const height = Math.max(stageRect.height, 320);
+    // Keep the two nests comfortably inside the visible play area. The source
+    // nest and its items are deliberately centered vertically rather than
+    // anchored near the top-left corner.
+    const centerY = height * 0.58;
+    const horizontalSpread = Math.min(190, Math.max(120, width * 0.22));
+    const leftX = width / 2 - horizontalSpread;
+    const rightX = width / 2 + horizontalSpread;
+    const baseY = clamp(centerY, 165, height - 120);
+    const rightY = clamp(baseY - config.heightDelta, 155, height - 120);
 
     this.placeNest(this.sourceNest, leftX, baseY);
     this.placeNest(this.targetNest, rightX, rightY);
 
+    const shinyObjects = ['🥚', '🫐', '🍓', '🟡', '🔵', '🩷', '🟣'];
     for (let i = 0; i < config.eggs; i += 1) {
       const item = document.createElement('button');
       item.type = 'button';
       item.className = 'nest-item';
       item.dataset.itemId = String(i);
-      item.textContent = i % 2 === 0 ? '🥚' : '🟠';
-      const angle = (i - (config.eggs - 1) / 2) * 18;
-      const x = leftX + Math.sin(angle * Math.PI / 180) * Math.min(72, config.eggs * 9);
-      const y = baseY - 12 - Math.abs(i - (config.eggs - 1) / 2) * 7;
+      item.textContent = shinyObjects[(i + this.levelIndex) % shinyObjects.length];
+      const angle = (i - (config.eggs - 1) / 2) * 20;
+      const radius = Math.min(78, 28 + config.eggs * 8);
+      const x = leftX + Math.sin(angle * Math.PI / 180) * radius;
+      const y = baseY - 16 - Math.abs(i - (config.eggs - 1) / 2) * 9;
       item.style.left = `${x}px`;
       item.style.top = `${y}px`;
       item.setAttribute('aria-label', 'Pinch me and move me');
@@ -172,7 +180,7 @@ export class PinchPopGame extends GameModule {
     }
 
     this.instructionEl.textContent = `Level ${this.levelIndex + 1}: pinch an egg, carry it to the other nest!`;
-    this.platform?.audioManager?.speak?.(`${config.label}. Pinch an egg and move it to the other nest.`);
+    this.platform?.audioManager?.speak?.(`${config.label}. Pinch a shiny treasure and carry it to the other nest.`);
   }
 
   placeNest(nest, x, y) {
