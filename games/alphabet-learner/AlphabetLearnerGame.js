@@ -503,7 +503,8 @@ export class AlphabetLearnerGame extends GameModule {
     this.playCorrectSound();
     this.speak(`That is correct, ${this.answerPhrase(item)}!`);
     this.launchSparkles('correct');
-    rewardFeedback(this.platform, `Yes! ${item.char} for ${item.word}!`, '🌟');
+    rewardFeedback(this.platform, `Hello ${item.word}!`, '💖');
+    rewardFeedback(this.platform, `Yes! ${item.char}!`, '🌟');
 
     this.setManagedTimeout(() => {
       this.clearKeyStates();
@@ -609,7 +610,8 @@ export class AlphabetLearnerGame extends GameModule {
       this.remainingSeconds = this.timerService?.getRemainingSeconds?.() ?? Math.max(0, this.remainingSeconds - 1);
       this.updateTimer();
       if (this.remainingSeconds <= 0) {
-          this.endSession();
+        this.timerService?.endSession?.();
+        this.endSession();
       }
     }, 250);
   }
@@ -629,6 +631,7 @@ export class AlphabetLearnerGame extends GameModule {
     this.stopSpeech();
     this.stopBackgroundAudio();
     this.clearKeyStates();
+    this.showPinBlocker('sessionEnd');
   }
 
   showPinBlocker(mode) {

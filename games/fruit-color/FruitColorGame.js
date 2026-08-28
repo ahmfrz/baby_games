@@ -112,12 +112,6 @@ export class FruitColorGame extends GameModule {
     return `${FruitColorGame.metadata.assetPath}${relativePath}`;
   }
 
-  createFallbackFruitThumb(name) {
-    const safe = String(name).replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&apos;' }[char]));
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect width="400" height="400" rx="50" fill="#f0fdf4"/><circle cx="200" cy="175" r="105" fill="#86efac"/><path d="M200 85c25-45 65-45 82-30-30 48-58 55-82 30Z" fill="#4ade80"/><text x="200" y="340" text-anchor="middle" font-family="Arial" font-size="30" font-weight="800" fill="#166534">${safe}</text></svg>`;
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-  }
-
   // ============================================
   // UI construction
   // ============================================
@@ -210,9 +204,6 @@ export class FruitColorGame extends GameModule {
       thumb.alt = fruit.name || 'Fruit';
       thumb.loading = 'lazy';
       thumb.src = this.resolveAsset(fruit.outline);
-      thumb.addEventListener('error', () => {
-        thumb.src = this.createFallbackFruitThumb(fruit.name || 'Fruit');
-      }, { once: true });
 
       const label = document.createElement('span');
       label.className = 'fruit-label';
@@ -491,21 +482,13 @@ export class FruitColorGame extends GameModule {
     if (this.lastDabPoint) {
       const dist = Math.hypot(x - this.lastDabPoint.x, y - this.lastDabPoint.y);
       if (dist < MIN_DAB_SPACING) return;
-
-      // Fill gaps when a fast finger move produces sparse pointer events.
-      const steps = Math.min(12, Math.max(1, Math.ceil(dist / (BRUSH_RADIUS * 0.55))));
-      for (let i = 1; i <= steps; i += 1) {
-        const t = i / steps;
-        const ix = this.lastDabPoint.x + (x - this.lastDabPoint.x) * t;
-        const iy = this.lastDabPoint.y + (y - this.lastDabPoint.y) * t;
-        const regionId = this.regionIdAt(ix, iy);
-        if (regionId) this.paintDab(regionId, ix, iy);
-      }
-    } else {
-      const regionId = this.regionIdAt(x, y);
-      if (regionId) this.paintDab(regionId, x, y);
     }
     this.lastDabPoint = { x, y };
+
+    const regionId = this.regionIdAt(x, y);
+    if (!regionId) return;
+
+    this.paintDab(regionId, x, y);
 
     this.dabsSinceCheck += 1;
     if (this.dabsSinceCheck >= COVERAGE_CHECK_EVERY) {
@@ -644,7 +627,8 @@ export class FruitColorGame extends GameModule {
       this.remainingSeconds = this.timerService?.getRemainingSeconds?.() ?? Math.max(0, this.remainingSeconds - 1);
       this.updateTimer();
       if (this.remainingSeconds <= 0) {
-          this.endSession();
+        this.timerService?.endSession?.();
+        this.endSession();
       }
     }, 250);
   }
@@ -662,6 +646,7 @@ export class FruitColorGame extends GameModule {
     this.clearTimer();
     this.clearPendingTimeouts();
     this.endDrawing();
+    this.showPinBlocker('sessionEnd');
   }
 
   showPinBlocker(mode) {

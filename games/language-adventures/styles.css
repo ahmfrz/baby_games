@@ -213,3 +213,271 @@
 .ball-trick { animation:ballTrick .9s ease-in-out both; }
 @keyframes ballTrick { 0%{transform:translate(0,0) rotate(0)} 45%{transform:translate(18px,-90px) rotate(220deg) scale(1.08)} 100%{transform:translate(-8px,0) rotate(360deg)} }
 @media (max-width:700px){ .trick-ball{width:72px;left:56%;bottom:25%;} }
+
+/* -------------------------------------------------------------------------
+   Language Adventure layout hardening
+   Keep characters and interactive objects in separate visual lanes.
+   This is intentionally step-specific so a tall transparent PNG cannot
+   drift underneath/over a toddler-sized target on small screens.
+   ------------------------------------------------------------------------- */
+.language-stage[data-step-type] .character,
+.language-stage[data-step-type] .eating-card {
+  pointer-events: none;
+}
+
+/* Find Mumma / Find Teddy: character lane at the bottom, search objects above. */
+.language-stage[data-step-type="find-mumma"] .toddler-searching,
+.language-stage[data-step-type="find-teddy"] .teddy-searcher {
+  width: clamp(120px, 14vw, 175px);
+  left: 3%;
+  bottom: 2%;
+  z-index: 3;
+}
+.language-stage[data-step-type="find-mumma"] .mumma-hidden {
+  width: clamp(125px, 14vw, 175px);
+  right: 3%;
+  bottom: 2%;
+  z-index: 3;
+}
+.language-stage[data-step-type="find-mumma"] .hide-spot,
+.language-stage[data-step-type="find-teddy"] .hide-spot {
+  width: clamp(105px, 13vw, 155px);
+  height: clamp(95px, 15vh, 145px);
+  top: 23%;
+  z-index: 5;
+}
+.language-stage[data-step-type="find-mumma"] .cover-left,
+.language-stage[data-step-type="find-teddy"] .cover-left { left: 8%; }
+.language-stage[data-step-type="find-mumma"] .cover-center,
+.language-stage[data-step-type="find-teddy"] .cover-center { left: 39%; }
+.language-stage[data-step-type="find-mumma"] .cover-right,
+.language-stage[data-step-type="find-teddy"] .cover-right { right: 8%; left: auto; }
+
+/* Walking scenes. */
+.language-stage[data-step-type="come-here"] .toddler-come,
+.language-stage[data-step-type="door"] .toddler-door,
+.language-stage[data-step-type="going"] .toddler-moving,
+.language-stage[data-step-type="running"] .toddler-runner,
+.language-stage[data-step-type="destination-path"] .toddler-path {
+  width: clamp(125px, 15vw, 185px);
+  left: 4%;
+  bottom: 2%;
+}
+.language-stage[data-step-type="come-here"] .mumma-waiting {
+  width: clamp(130px, 15vw, 185px);
+  right: 4%;
+  bottom: 2%;
+}
+.language-stage[data-step-type="come-here"] .mumma-zone {
+  width: clamp(125px, 15vw, 180px);
+  height: clamp(125px, 22vh, 180px);
+  right: 3%;
+  bottom: 3%;
+}
+.language-stage[data-step-type="door"] .door-target {
+  width: clamp(105px, 13vw, 175px);
+  height: clamp(180px, 38vh, 285px);
+  right: 5%;
+  bottom: 2%;
+}
+.language-stage[data-step-type="going"] .walk-path,
+.language-stage[data-step-type="destination-path"] .walk-path {
+  right: 6%;
+  bottom: 5%;
+  width: clamp(140px, 19vw, 240px);
+}
+
+/* Single-character action scenes. */
+.language-stage[data-step-type="sleeping"] .sleeping-scene {
+  width: min(48vw, 500px);
+  max-width: 65%;
+  top: 54%;
+}
+.language-stage[data-step-type="running"] .run-target {
+  left: 4%;
+  bottom: 2%;
+  width: clamp(145px, 18vw, 230px);
+  height: clamp(125px, 22vh, 190px);
+}
+
+/* Choice scenes: reserve the left/bottom lane for the toddler. */
+.language-stage[data-step-type="choice-ball"] .toddler-pointing-small,
+.language-stage[data-step-type="drink-choice"] .drink-pointer,
+.language-stage[data-step-type="teddy-choice"] .teddy-pointer {
+  width: clamp(120px, 14vw, 175px);
+  left: 3%;
+  bottom: 2%;
+}
+.language-stage[data-step-type="choice-ball"] .choice-object,
+.language-stage[data-step-type="food-choice"] .choice-object,
+.language-stage[data-step-type="drink-choice"] .choice-object {
+  width: clamp(92px, 11vw, 145px);
+  height: clamp(92px, 12vw, 150px);
+}
+.language-stage[data-step-type="choice-ball"] .choice-ball-good,
+.language-stage[data-step-type="food-choice"] .food-choice-0,
+.language-stage[data-step-type="drink-choice"] .drink-choice-0 {
+  left: 38%; top: 19%;
+}
+.language-stage[data-step-type="choice-ball"] .choice-ball-wrong:nth-of-type(2),
+.language-stage[data-step-type="food-choice"] .food-choice-1,
+.language-stage[data-step-type="drink-choice"] .drink-choice-1 {
+  left: 63%; top: 35%;
+}
+.language-stage[data-step-type="choice-ball"] .choice-ball-wrong:nth-of-type(3),
+.language-stage[data-step-type="food-choice"] .food-choice-2,
+.language-stage[data-step-type="drink-choice"] .drink-choice-2 {
+  left: 39%; top: 52%;
+}
+
+/* Food scenes: food buttons stay above the character's head/shoulders. */
+.language-stage[data-step-type="eating"] .eating-card,
+.language-stage[data-step-type="food-choice"] .eating-card {
+  width: clamp(120px, 15vw, 185px);
+  max-width: none;
+  left: 3%;
+  bottom: 2%;
+  z-index: 3;
+}
+.language-stage[data-step-type="eating"] .food-float {
+  width: clamp(78px, 10vw, 125px);
+  height: clamp(78px, 10vw, 125px);
+  z-index: 5;
+}
+.language-stage[data-step-type="eating"] .food-0 { left: 42%; top: 18%; }
+.language-stage[data-step-type="eating"] .food-1 { left: 65%; top: 32%; }
+.language-stage[data-step-type="eating"] .food-2 { left: 45%; top: 50%; }
+
+/* Toy-room character lane. */
+.language-stage[data-step-type="teddy-trick"] .teddy-trick,
+.language-stage[data-step-type="teddy-mischief"] .teddy-mischief,
+.language-stage[data-step-type="how-are-you"] .tiny-teddy {
+  width: clamp(125px, 15vw, 185px);
+  right: 5%;
+  bottom: 3%;
+  top: auto;
+}
+.language-stage[data-step-type="teddy-trick"] .teddy-trick-target {
+  right: 7%;
+  top: 22%;
+}
+.language-stage[data-step-type="how-are-you"] .face-choice {
+  width: clamp(82px, 10vw, 120px);
+  height: clamp(82px, 10vw, 120px);
+}
+
+/* Prevent helper text from becoming a visual collision target. */
+.language-stage .language-helper {
+  z-index: 10;
+}
+
+@media (max-width: 700px) {
+  .language-stage[data-step-type="find-mumma"] .toddler-searching,
+  .language-stage[data-step-type="find-teddy"] .teddy-searcher {
+    width: 118px;
+    left: 2%;
+    bottom: 2%;
+  }
+  .language-stage[data-step-type="find-mumma"] .mumma-hidden {
+    width: 122px;
+    right: 2%;
+    bottom: 2%;
+  }
+  .language-stage[data-step-type="find-mumma"] .hide-spot,
+  .language-stage[data-step-type="find-teddy"] .hide-spot {
+    width: 92px;
+    height: 88px;
+    top: 21%;
+  }
+  .language-stage[data-step-type="find-mumma"] .cover-left,
+  .language-stage[data-step-type="find-teddy"] .cover-left { left: 6%; }
+  .language-stage[data-step-type="find-mumma"] .cover-center,
+  .language-stage[data-step-type="find-teddy"] .cover-center { left: 38%; }
+  .language-stage[data-step-type="find-mumma"] .cover-right,
+  .language-stage[data-step-type="find-teddy"] .cover-right { right: 6%; }
+
+  .language-stage[data-step-type="come-here"] .toddler-come,
+  .language-stage[data-step-type="door"] .toddler-door,
+  .language-stage[data-step-type="going"] .toddler-moving,
+  .language-stage[data-step-type="running"] .toddler-runner,
+  .language-stage[data-step-type="destination-path"] .toddler-path {
+    width: 120px;
+    left: 2%;
+    bottom: 2%;
+  }
+  .language-stage[data-step-type="come-here"] .mumma-waiting {
+    width: 122px;
+    right: 2%;
+    bottom: 2%;
+  }
+  .language-stage[data-step-type="come-here"] .mumma-zone {
+    width: 122px;
+    height: 122px;
+    right: 2%;
+    bottom: 2%;
+  }
+  .language-stage[data-step-type="door"] .door-target {
+    width: 98px;
+    height: 205px;
+    right: 2%;
+    bottom: 2%;
+  }
+  .language-stage[data-step-type="going"] .walk-path,
+  .language-stage[data-step-type="destination-path"] .walk-path {
+    width: 138px;
+    right: 3%;
+    bottom: 4%;
+  }
+
+  .language-stage[data-step-type="choice-ball"] .toddler-pointing-small,
+  .language-stage[data-step-type="drink-choice"] .drink-pointer,
+  .language-stage[data-step-type="teddy-choice"] .teddy-pointer {
+    width: 118px;
+    left: 2%;
+    bottom: 2%;
+  }
+  .language-stage[data-step-type="choice-ball"] .choice-object,
+  .language-stage[data-step-type="food-choice"] .choice-object,
+  .language-stage[data-step-type="drink-choice"] .choice-object {
+    width: 88px;
+    height: 88px;
+    border-radius: 22px;
+  }
+  .language-stage[data-step-type="choice-ball"] .choice-ball-good,
+  .language-stage[data-step-type="food-choice"] .food-choice-0,
+  .language-stage[data-step-type="drink-choice"] .drink-choice-0 {
+    left: 36%; top: 18%;
+  }
+  .language-stage[data-step-type="choice-ball"] .choice-ball-wrong:nth-of-type(2),
+  .language-stage[data-step-type="food-choice"] .food-choice-1,
+  .language-stage[data-step-type="drink-choice"] .drink-choice-1 {
+    left: 65%; top: 34%;
+  }
+  .language-stage[data-step-type="choice-ball"] .choice-ball-wrong:nth-of-type(3),
+  .language-stage[data-step-type="food-choice"] .food-choice-2,
+  .language-stage[data-step-type="drink-choice"] .drink-choice-2 {
+    left: 38%; top: 51%;
+  }
+
+  .language-stage[data-step-type="eating"] .eating-card,
+  .language-stage[data-step-type="food-choice"] .eating-card {
+    width: 122px;
+    left: 2%;
+    bottom: 2%;
+  }
+  .language-stage[data-step-type="eating"] .food-float {
+    width: 78px;
+    height: 78px;
+  }
+  .language-stage[data-step-type="eating"] .food-0 { left: 42%; top: 18%; }
+  .language-stage[data-step-type="eating"] .food-1 { left: auto; right: 4%; top: 33%; }
+  .language-stage[data-step-type="eating"] .food-2 { left: 42%; top: 51%; }
+
+  .language-stage[data-step-type="teddy-trick"] .teddy-trick,
+  .language-stage[data-step-type="teddy-mischief"] .teddy-mischief,
+  .language-stage[data-step-type="how-are-you"] .tiny-teddy {
+    width: 120px;
+    right: 3%;
+    bottom: 2%;
+  }
+}

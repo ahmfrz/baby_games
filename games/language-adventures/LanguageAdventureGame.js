@@ -92,6 +92,7 @@ export class LanguageAdventureGame extends GameModule {
     this.timerId = null;
     this.clearStepTimers();
     this.clearPointerListeners();
+    this.timerService?.endSession?.();
     this.platform?.audioManager?.speak?.(`Great playing! You learned ${this.score} phrases.`, 0.84);
   }
 
@@ -189,6 +190,7 @@ export class LanguageAdventureGame extends GameModule {
     this.instructionEl.textContent = step.instruction;
     this.progressEl.innerHTML = this.scenario.steps.map((_, i) => `<span class="${i <= this.stepIndex ? 'done' : ''}"></span>`).join('');
     this.stage.dataset.scene = this.scenario.scene;
+    this.stage.dataset.stepType = step.type;
     this.stage.innerHTML = '';
     this.renderStep(step);
     this.schedule(() => this.speakCurrent(), 260);
@@ -197,10 +199,14 @@ export class LanguageAdventureGame extends GameModule {
   renderStep(step) {
     const addImg = (src, className, alt = '') => {
       const img = document.createElement('img');
-      img.src = `${ASSET_ROOT}${src}`;
+      img.src = new URL(src, ASSET_ROOT).href;
       img.alt = alt;
       img.className = className;
       img.draggable = false;
+      img.addEventListener('error', () => {
+        img.hidden = true;
+        img.setAttribute('aria-hidden', 'true');
+      }, { once: true });
       this.stage.appendChild(img);
       return img;
     };
@@ -246,13 +252,13 @@ export class LanguageAdventureGame extends GameModule {
               this.wrongTry(b, 'Not there. Keep looking!');
             }
           });
-          b.style.backgroundImage = `url("${ASSET_ROOT}objects/${src}")`;
+          b.style.backgroundImage = `url("${new URL(`objects/${src}`, ASSET_ROOT).href}")`;
         });
         makeBubble('Can you find Mumma?', 'bubble-bottom');
         break;
       }
       case 'come-here': {
-        addImg('characters/poses/toddler-walking.png', 'character toddler toddler-come', 'Toddler walking');
+        addImg('characters/toddler-walking.png', 'character toddler toddler-come', 'Toddler walking');
         addImg('characters/mumma-open-arms.png', 'character mumma mumma-waiting', 'Mumma');
         const zone = button('action-zone mumma-zone', 'Come here Mumma', () => {
           zone.classList.add('zone-hit');
@@ -265,19 +271,19 @@ export class LanguageAdventureGame extends GameModule {
         break;
       }
       case 'door': {
-        addImg('characters/poses/toddler-walking.png', 'character toddler toddler-door', 'Toddler walking');
+        addImg('characters/toddler-walking.png', 'character toddler toddler-door', 'Toddler walking');
         const door = button('object-button door-target', 'Door', () => {
           door.classList.add('door-open');
           this.stage.querySelector('.toddler-door')?.classList.add('walk-out');
           rewardFeedback(this.platform, step.success, '🚪');
           this.schedule(() => this.completeStep(step.success), 800);
         });
-        door.style.backgroundImage = `url("${ASSET_ROOT}objects/door.png")`;
+        door.style.backgroundImage = `url("${new URL('objects/door.png', ASSET_ROOT).href}")`;
         makeBubble('Open the door!', 'bubble-bottom');
         break;
       }
       case 'going': {
-        addImg('characters/poses/toddler-walking.png', 'character toddler toddler-moving', 'Toddler walking');
+        addImg('characters/toddler-walking.png', 'character toddler toddler-moving', 'Toddler walking');
         const path = button('walk-path', 'Watch me walk', () => {
           path.classList.add('path-hit');
           this.stage.querySelector('.toddler-moving')?.classList.add('walk-across');
@@ -300,7 +306,7 @@ export class LanguageAdventureGame extends GameModule {
         break;
       }
       case 'running': {
-        addImg('characters/poses/toddler-running.png', 'character toddler toddler-runner', 'Toddler running');
+        addImg('characters/toddler-running.png', 'character toddler toddler-runner', 'Toddler running');
         const run = button('run-target', 'Running girl', () => {
           run.classList.add('run-hit');
           this.stage.querySelector('.toddler-runner')?.classList.add('extra-run');
@@ -312,7 +318,7 @@ export class LanguageAdventureGame extends GameModule {
         break;
       }
       case 'choice-ball': {
-        addImg('characters/poses/toddler-pointing.png', 'character toddler toddler-pointing-small', 'Toddler pointing');
+        addImg('characters/toddler-pointing.png', 'character toddler toddler-pointing-small', 'Toddler pointing');
         const choices = [
           ['ball.png', 'Ball', true, 'choice-ball-good'],
           ['plant.png', 'Plant', false, 'choice-ball-wrong'],
@@ -322,14 +328,14 @@ export class LanguageAdventureGame extends GameModule {
           const b = button(`choice-object ${cls}`, label, () => correct
             ? this.completeStep(step.success, b)
             : this.wrongTry(b, 'Look at the ball!'));
-          b.style.backgroundImage = `url("${ASSET_ROOT}objects/${src}")`;
+          b.style.backgroundImage = `url("${new URL(`objects/${src}`, ASSET_ROOT).href}")`;
           b.style.setProperty('--choice-index', i);
         });
         makeBubble('What is that?', 'bubble-bottom');
         break;
       }
       case 'find-ball': {
-        addImg('characters/poses/toddler-searching.png', 'character toddler toddler-searching-ball', 'Toddler searching');
+        addImg('characters/toddler-searching.png', 'character toddler toddler-searching-ball', 'Toddler searching');
         const ball = addImg('objects/ball.png', 'object-ball hidden-ball', 'Ball');
         ball.style.left = '50%'; ball.style.top = '39%';
         const spots = [
@@ -346,13 +352,13 @@ export class LanguageAdventureGame extends GameModule {
               this.schedule(() => this.completeStep(step.success), 650);
             } else this.wrongTry(b, 'Not there. Try another spot!');
           });
-          b.style.backgroundImage = `url("${ASSET_ROOT}objects/${src}")`;
+          b.style.backgroundImage = `url("${new URL(`objects/${src}`, ASSET_ROOT).href}")`;
         });
         makeBubble('Where did it go?', 'bubble-bottom');
         break;
       }
       case 'destination-slide': {
-        addImg('characters/poses/toddler-pointing.png', 'character toddler toddler-destination', 'Toddler pointing');
+        addImg('characters/toddler-pointing.png', 'character toddler toddler-destination', 'Toddler pointing');
         const target = button('destination slide-destination', 'Slide', () => {
           target.classList.add('destination-hit');
           this.stage.querySelector('.toddler-destination')?.classList.add('walk-to-slide');
@@ -364,7 +370,7 @@ export class LanguageAdventureGame extends GameModule {
         break;
       }
       case 'destination-path': {
-        addImg('characters/poses/toddler-walking.png', 'character toddler toddler-path', 'Toddler walking');
+        addImg('characters/toddler-walking.png', 'character toddler toddler-path', 'Toddler walking');
         const target = button('destination path-destination', 'Path', () => {
           target.classList.add('destination-hit');
           this.stage.querySelector('.toddler-path')?.classList.add('walk-path-out');
@@ -376,20 +382,20 @@ export class LanguageAdventureGame extends GameModule {
         break;
       }
       case 'eating': {
-        addImg('characters/poses/toddler-eating.png', 'eating-card', 'Toddler eating');
+        addImg('characters/toddler-eating.png', 'eating-card', 'Toddler eating');
         ['apple.png', 'banana.png', 'strawberry.png'].forEach((src, i) => {
           const b = button(`food-float food-${i}`, src.split('.')[0], () => {
             b.classList.add('food-caught');
             rewardFeedback(this.platform, 'Yummy!', '🍎');
             this.schedule(() => this.completeStep(step.success), 500);
           });
-          b.style.backgroundImage = `url("${ASSET_ROOT}objects/${src}")`;
+          b.style.backgroundImage = `url("${new URL(`objects/${src}`, ASSET_ROOT).href}")`;
         });
         makeBubble('Mmm… I am eating!', 'bubble-bottom');
         break;
       }
       case 'food-choice': {
-        addImg('characters/poses/toddler-eating.png', 'eating-card small-eating-card', 'Toddler eating');
+        addImg('characters/toddler-eating.png', 'eating-card small-eating-card', 'Toddler eating');
         const foods = [
           ['apple.png', 'Apple', true],
           ['banana.png', 'Banana', false],
@@ -399,22 +405,22 @@ export class LanguageAdventureGame extends GameModule {
           const b = button(`choice-object food-choice-${i}`, label, () => correct
             ? this.completeStep(step.success, b)
             : this.wrongTry(b, 'Think about the apple!'));
-          b.style.backgroundImage = `url("${ASSET_ROOT}objects/${src}")`;
+          b.style.backgroundImage = `url("${new URL(`objects/${src}`, ASSET_ROOT).href}")`;
         });
         break;
       }
       case 'drink-choice': {
-        addImg('characters/poses/toddler-pointing.png', 'character toddler drink-pointer', 'Toddler pointing');
+        addImg('characters/toddler-pointing.png', 'character toddler drink-pointer', 'Toddler pointing');
         const drinks = [
           ['water-glass.png', 'Water', true],
           ['juice.png', 'Juice', false],
           ['sippy-cup.png', 'Sippy cup', false]
         ];
         drinks.forEach(([src, label, correct]) => {
-          const b = button(`choice-object drink-choice`, label, () => correct
+          const b = button(`choice-object drink-choice drink-choice-${i}`, label, () => correct
             ? this.completeStep(step.success, b)
             : this.wrongTry(b, 'Tap the water!'));
-          b.style.backgroundImage = `url("${ASSET_ROOT}objects/${src}")`;
+          b.style.backgroundImage = `url("${new URL(`objects/${src}`, ASSET_ROOT).href}")`;
         });
         makeBubble('I am drinking!', 'bubble-bottom');
         break;
@@ -426,7 +432,7 @@ export class LanguageAdventureGame extends GameModule {
         this.makeDragScene('cookie.png', 'Drag the cookie to Mumma.', 'mumma-target', 'Mumma', step.success, '💗');
         break;
       case 'teddy-choice': {
-        addImg('characters/poses/toddler-pointing.png', 'character toddler teddy-pointer', 'Toddler pointing');
+        addImg('characters/toddler-pointing.png', 'character toddler teddy-pointer', 'Toddler pointing');
         const teddy = button('teddy-choice', 'Teddy', () => {
           teddy.classList.add('teddy-happy');
           addImg('characters/teddy-wave.png', 'character teddy teddy-pop', 'Teddy');
@@ -478,7 +484,7 @@ export class LanguageAdventureGame extends GameModule {
         break;
       }
       case 'find-teddy': {
-        addImg('characters/poses/toddler-searching.png', 'character toddler teddy-searcher', 'Toddler searching');
+        addImg('characters/toddler-searching.png', 'character toddler teddy-searcher', 'Toddler searching');
         const teddy = addImg('characters/teddy-sleeping.png', 'character teddy hidden-teddy', 'Teddy');
         teddy.style.opacity = '0';
         const spots = [
@@ -496,7 +502,7 @@ export class LanguageAdventureGame extends GameModule {
               this.schedule(() => this.completeStep(step.success), 650);
             } else this.wrongTry(b, 'Keep looking!');
           });
-          b.style.backgroundImage = `url("${ASSET_ROOT}objects/${src}")`;
+          b.style.backgroundImage = `url("${new URL(`objects/${src}`, ASSET_ROOT).href}")`;
         });
         makeBubble('Where is Teddy?', 'bubble-bottom');
         break;
@@ -509,10 +515,11 @@ export class LanguageAdventureGame extends GameModule {
 
   makeDragScene(objectFile, instruction, targetClass, targetLabel, success, emoji) {
     const toddler = document.createElement('img');
-    toddler.src = `${ASSET_ROOT}characters/poses/toddler-pointing.png`;
+    toddler.src = new URL('characters/toddler-pointing.png', ASSET_ROOT).href;
     toddler.alt = 'Toddler';
     toddler.className = 'character toddler drag-toddler';
     toddler.draggable = false;
+    toddler.addEventListener('error', () => { toddler.hidden = true; }, { once: true });
     this.stage.appendChild(toddler);
 
     const target = document.createElement('div');
@@ -524,7 +531,7 @@ export class LanguageAdventureGame extends GameModule {
     item.type = 'button';
     item.className = `drag-item drag-${objectFile.replace('.png','')}`;
     item.setAttribute('aria-label', objectFile.replace('.png',''));
-    item.style.backgroundImage = `url("${ASSET_ROOT}objects/${objectFile}")`;
+    item.style.backgroundImage = `url("${new URL(`objects/${objectFile}`, ASSET_ROOT).href}")`;
     this.stage.appendChild(item);
 
     let dragging = false;
@@ -612,7 +619,7 @@ export class LanguageAdventureGame extends GameModule {
     this.clearPointerListeners();
     this.stage.innerHTML = `
       <div class="scenario-complete">
-        <img src="${ASSET_ROOT}effects/success-badge.png" alt="Success" class="success-badge">
+        <img src="${new URL('effects/success-badge.png', ASSET_ROOT).href}" alt="Success" class="success-badge">
         <h2>${this.scenario.shortName} complete!</h2>
         <p>⭐ ${this.scenario.steps.length} little phrases played</p>
         <div class="scenario-complete-actions">

@@ -174,12 +174,8 @@ export class PinchPopGame extends GameModule {
       const y = baseY - 16 - Math.abs(i - (config.eggs - 1) / 2) * 9;
       item.style.left = `${x}px`;
       item.style.top = `${y}px`;
-      item.setAttribute('aria-label', 'Tap or pinch me and move me');
-      item.addEventListener('click', (event) => {
-        event.preventDefault();
-        if (!this.isRunning || this.grab || item.classList.contains('nest-item-placed')) return;
-        this.moveItemByTap(item);
-      });
+      item.setAttribute('aria-label', 'Pinch me and move me');
+      item.addEventListener('click', (event) => event.preventDefault());
       this.itemLayer.appendChild(item);
     }
 
@@ -286,17 +282,6 @@ export class PinchPopGame extends GameModule {
       this.instructionEl.textContent = 'Nice try! Pinch again and take it to the other nest.';
       this.platform?.audioManager?.playSound?.('error');
     }
-  }
-
-
-  moveItemByTap(item) {
-    const targetRect = this.targetNest.getBoundingClientRect();
-    const stageRect = this.stage.getBoundingClientRect();
-    const targetX = targetRect.left - stageRect.left + targetRect.width / 2;
-    const targetY = targetRect.top - stageRect.top + targetRect.height * 0.55;
-    item.style.left = `${targetX}px`;
-    item.style.top = `${targetY}px`;
-    this.completeItem(item);
   }
 
   completeItem(item) {

@@ -177,4 +177,4 @@ export const SCENARIOS = [
   }
 ];
 
-export const ASSET_ROOT = 'games/language-adventures/assets/';
+export const ASSET_ROOT = new URL('./assets/', import.meta.url).href;

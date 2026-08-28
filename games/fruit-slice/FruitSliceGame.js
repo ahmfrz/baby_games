@@ -10,7 +10,7 @@ export class FruitSliceGame extends GameModule {
   static metadata = {
     id: 'fruit-slice',
     name: '🍉 Fruit Slice',
-    description: 'Gently swipe across the big fruit with a magic swish.',
+    description: 'Gently swipe across the big fruits with the friendly butter knife.',
     version: '1.1.0',
     author: 'Baby Games',
     assetPath: 'games/fruit-slice/assets/'
@@ -38,7 +38,7 @@ export class FruitSliceGame extends GameModule {
     this.updateTimer();
     this.startSpawning();
     this.timerId = setInterval(() => this.tick(), 250);
-    this.platform?.audioManager?.speak?.('Swipe the magic swish across the fruit!');
+    this.platform?.audioManager?.speak?.('Swipe the butter knife across the fruit!');
   }
 
   tick() {
@@ -51,6 +51,7 @@ export class FruitSliceGame extends GameModule {
     if (!this.isRunning) return;
     this.isRunning = false;
     this.clearIntervals();
+    this.timerService?.endSession?.();
     this.platform?.audioManager?.speak?.('Fruit time is finished!');
   }
 
@@ -87,9 +88,9 @@ export class FruitSliceGame extends GameModule {
     this.root.innerHTML = `
       <header class="simple-game-header"><div>🍉 Fruit Slice</div><div>⏱ <span data-role="timer">0:00</span></div></header>
       <div class="simple-game-stage fruit-stage" data-role="stage">
-        <div class="simple-game-hint">Swipe the magic swish across a fruit!</div>
+        <div class="simple-game-hint">Hold the butter knife and swipe across a fruit!</div>
         <div class="slice-line" aria-hidden="true"></div>
-        <div class="slice-knife" data-role="knife" aria-hidden="true">✨</div>
+        <div class="slice-knife" data-role="knife" aria-hidden="true">🔪</div>
       </div>`;
     host?.appendChild(this.root);
 

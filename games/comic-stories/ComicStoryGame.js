@@ -106,12 +106,6 @@ export class ComicStoryGame extends GameModule {
     return `${ComicStoryGame.metadata.assetPath}images/${relativePath}`;
   }
 
-  createFallbackCover(title) {
-    const safe = String(title).replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&apos;' }[char]));
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#dbeafe"/><stop offset=".5" stop-color="#fef3c7"/><stop offset="1" stop-color="#dcfce7"/></linearGradient></defs><rect width="800" height="600" rx="40" fill="url(#g)"/><circle cx="400" cy="230" r="90" fill="#fff" opacity=".75"/><text x="400" y="255" text-anchor="middle" font-family="Arial" font-size="90">📖</text><text x="400" y="400" text-anchor="middle" font-family="Arial" font-size="42" font-weight="800" fill="#334155">${safe}</text></svg>`;
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-  }
-
   // ============================================
   // UI construction
   // ============================================
@@ -206,9 +200,6 @@ export class ComicStoryGame extends GameModule {
       cover.alt = story.title || 'Story cover';
       cover.loading = 'lazy';
       cover.src = this.resolveImage(story.coverImage || story.pages[0].image);
-      cover.addEventListener('error', () => {
-        cover.src = this.createFallbackCover(story.title || 'Story');
-      }, { once: true });
 
       const title = document.createElement('span');
       title.className = 'story-title';
@@ -350,10 +341,6 @@ export class ComicStoryGame extends GameModule {
     const pages = this.currentStory.pages;
     const page = pages[this.currentPageIndex];
 
-    this.elements.panelImage.onerror = () => {
-      this.elements.panelImage.onerror = null;
-      this.elements.panelImage.src = this.createFallbackCover(this.currentStory.title || 'Story');
-    };
     this.elements.panelImage.src = this.resolveImage(page.image);
     this.elements.panelImage.alt = page.caption || this.currentStory.title || 'Comic panel';
     this.elements.panelCaption.textContent = page.caption || '';
@@ -475,7 +462,8 @@ export class ComicStoryGame extends GameModule {
       this.remainingSeconds = this.timerService?.getRemainingSeconds?.() ?? Math.max(0, this.remainingSeconds - 1);
       this.updateTimer();
       if (this.remainingSeconds <= 0) {
-          this.endSession();
+        this.timerService?.endSession?.();
+        this.endSession();
       }
     }, 250);
   }
@@ -493,6 +481,7 @@ export class ComicStoryGame extends GameModule {
     this.clearTimer();
     this.clearPendingTimeouts();
     this.stopSpeech();
+    this.showPinBlocker('sessionEnd');
   }
 
   showPinBlocker(mode) {

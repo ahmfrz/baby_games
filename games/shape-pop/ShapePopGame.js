@@ -15,25 +15,23 @@ export class ShapePopGame extends GameModule {
     assetPath: 'games/shape-pop/assets/'
   };
 
-  constructor(platform){ super(platform); this.root=null; this.isRunning=false; this.remainingSeconds=0; this.timerId=null; this.score=0; this.target=null; this.roundLocked=false; this.advanceId=null; }
+  constructor(platform){ super(platform); this.root=null; this.isRunning=false; this.remainingSeconds=0; this.timerId=null; this.score=0; this.target=null; }
   async initialize(){ this.mountUI(); }
   start(){
     this.timerService?.startSession?.();
     this.remainingSeconds=this.timerService?.getRemainingSeconds?.()??120;
     this.score=0;
     this.isRunning=true;
-    this.roundLocked=false;
     this.nextRound();
     this.timerId=setInterval(()=>this.tick(),250);
     this.platform?.audioManager?.speak?.('Find the big shape!');
   }
   tick(){this.remainingSeconds=this.timerService?.getRemainingSeconds?.()??Math.max(0,this.remainingSeconds-1);this.updateTimer();if(this.remainingSeconds<=0)this.endSession();}
-  endSession(){if(!this.isRunning)return;this.isRunning=false;clearInterval(this.timerId);this.timerId=null;this.platform?.audioManager?.stopSpeaking?.();}
-  stop(){this.isRunning=false;clearInterval(this.timerId);clearTimeout(this.advanceId);this.timerId=null;this.advanceId=null;this.roundLocked=false;} pause(){this.stop();} resume(){if(this.remainingSeconds>0){this.isRunning=true;this.timerId=setInterval(()=>this.tick(),250);this.nextRound();}} reset(){this.stop();this.start();} cleanup(){this.stop();this.root?.remove();this.root=null;}
+  endSession(){if(!this.isRunning)return;this.isRunning=false;clearInterval(this.timerId);this.timerService?.endSession?.();this.platform?.audioManager?.speak?.(`Great playing! You found ${this.score} shapes.`);}
+  stop(){this.isRunning=false;clearInterval(this.timerId);} pause(){this.stop();} resume(){if(this.remainingSeconds>0){this.isRunning=true;this.timerId=setInterval(()=>this.tick(),250);this.nextRound();}} reset(){this.stop();this.start();} cleanup(){this.stop();this.root?.remove();this.root=null;}
   mountUI(){const host=this.getGameContainerEl();this.root=document.createElement('section');this.root.className='simple-game shape-game';this.root.innerHTML=`<header class="simple-game-header"><div>🔷 Shape Pop</div><div>⏱ <span data-role="timer">0:00</span> · ⭐ <span data-role="score">0</span></div></header><div class="shape-prompt">Find <strong data-role="prompt">●</strong></div><div class="shape-grid" data-role="grid"></div>`;host?.appendChild(this.root);this.timerEl=this.root.querySelector('[data-role="timer"]');this.scoreEl=this.root.querySelector('[data-role="score"]');this.prompt=this.root.querySelector('[data-role="prompt"]');this.grid=this.root.querySelector('[data-role="grid"]');}
   nextRound(){
     if(!this.isRunning)return;
-    this.roundLocked=false;
     this.grid.innerHTML='';
     this.target=SHAPES[Math.floor(Math.random()*SHAPES.length)];
     this.prompt.textContent=this.target[0];
@@ -48,16 +46,14 @@ export class ShapePopGame extends GameModule {
       b.dataset.name=name;
       b.setAttribute('aria-label',name);
       b.addEventListener('click',()=>{
-        if(!this.isRunning || this.roundLocked)return;
+        if(!this.isRunning)return;
         if(name===this.target[1]){
-          this.roundLocked=true;
           this.score++;
           b.classList.add('game-success-burst');
           tapFeedback(this.platform?.audioManager,'success');
           rewardFeedback(this.platform, `You found the ${name}!`, '⭐');
           vibrate([15,20,30]);
-          clearTimeout(this.advanceId);
-          this.advanceId=setTimeout(()=>{this.advanceId=null;this.nextRound();},260);
+          setTimeout(()=>this.nextRound(),180);
         }else{
           tapFeedback(this.platform?.audioManager,'error');
           vibrate(10);
