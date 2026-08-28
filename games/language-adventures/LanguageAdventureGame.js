@@ -92,7 +92,6 @@ export class LanguageAdventureGame extends GameModule {
     this.timerId = null;
     this.clearStepTimers();
     this.clearPointerListeners();
-    this.timerService?.endSession?.();
     this.platform?.audioManager?.speak?.(`Great playing! You learned ${this.score} phrases.`, 0.84);
   }
 

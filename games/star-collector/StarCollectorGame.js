@@ -49,7 +49,6 @@ export class StarCollectorGame extends GameModule {
     clearInterval(this.spawnId);
     this.timerId = null;
     this.spawnId = null;
-    this.timerService?.endSession?.();
     this.platform?.audioManager?.playSequence?.();
     this.platform?.audioManager?.speak?.(`Wonderful! You caught ${this.score} stars.`);
   }

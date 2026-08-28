@@ -16,8 +16,11 @@ export class TimerService {
       const saved = this.storage.getItem('babyGamesTimerSettings');
       if (saved) {
         const settings = JSON.parse(saved);
-        this.timerDuration = Number(settings.duration) || 120;
-        this.isLocked = settings.isLocked || false;
+        const savedDuration = Number(settings.duration);
+        this.timerDuration = Number.isFinite(savedDuration) && savedDuration >= 30 && savedDuration <= 24 * 60 * 60
+          ? Math.round(savedDuration)
+          : 120;
+        this.isLocked = Boolean(settings.isLocked);
       }
       const sessionEnd = Number(this.storage.getItem('babyGamesTimerSessionEnd') || 0);
       if (sessionEnd > Date.now()) this.sessionEndAt = sessionEnd;
@@ -101,7 +104,13 @@ export class TimerService {
     return String(pin) === this.resetPin;
   }
 
-  resetPin() { this.resetPin = '0000'; this.saveSettings(); }
+  setResetPin(pin) {
+    const value = String(pin ?? '');
+    if (!/^\d{4}$/.test(value)) return false;
+    this.resetPin = value;
+    this.saveSettings();
+    return true;
+  }
 
   resetToDefault() {
     this.timerDuration = 120;

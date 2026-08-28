@@ -89,6 +89,8 @@ class BabyGamesPlatform {
       {
         id: 'alphabet-learner',
         name: 'ABC 123 Learner',
+        icon: 'games/alphabet-learner/assets/images/A-apple.png',
+        iconEmoji: '🍎',
         description: 'Learn letters and numbers with pictures, speech, and gentle play.',
         stylePath: 'games/alphabet-learner/styles.css',
         loader: () => import('../games/alphabet-learner/AlphabetLearnerGame.js'),
@@ -97,6 +99,8 @@ class BabyGamesPlatform {
       {
         id: 'comic-stories',
         name: '📖 Comic Stories',
+        icon: 'games/comic-stories/assets/images/star-story/cover.svg',
+        iconEmoji: '📖',
         description: 'Flip through comic-style storybooks, panel by panel.',
         stylePath: 'games/comic-stories/styles.css',
         loader: () => import('../games/comic-stories/ComicStoryGame.js'),
@@ -105,6 +109,8 @@ class BabyGamesPlatform {
       {
         id: 'fruit-color',
         name: '🍎 Fruit Coloring',
+        icon: 'games/fruit-color/assets/outlines/apple-outline.png',
+        iconEmoji: '🍎',
         description: 'Paint friendly fruits with big, easy strokes.',
         stylePath: 'games/fruit-color/styles.css',
         loader: () => import('../games/fruit-color/FruitColorGame.js'),
@@ -113,6 +119,7 @@ class BabyGamesPlatform {
       {
         id: 'star-collector',
         name: '⭐ Star Catch',
+        iconEmoji: '⭐',
         description: 'Tap the big twinkling stars as they slowly float up into the sky.',
         stylePath: 'styles/simple-games.css',
         loader: () => import('../games/star-collector/StarCollectorGame.js'),
@@ -121,6 +128,7 @@ class BabyGamesPlatform {
       {
         id: 'fruit-slice',
         name: '🍉 Fruit Slice',
+        iconEmoji: '🍉',
         description: 'Swipe through big floating fruit with your finger.',
         stylePath: 'styles/simple-games.css',
         loader: () => import('../games/fruit-slice/FruitSliceGame.js'),
@@ -129,6 +137,7 @@ class BabyGamesPlatform {
       {
         id: 'shape-pop',
         name: '🔷 Shape Pop',
+        iconEmoji: '🔷',
         description: 'Find and tap the huge friendly shape shown at the top.',
         stylePath: 'styles/simple-games.css',
         loader: () => import('../games/shape-pop/ShapePopGame.js'),
@@ -136,8 +145,9 @@ class BabyGamesPlatform {
       },
       {
         id: 'pinch-pop',
-        name: '🤏 Pinch Pop',
-        description: 'Use two fingers to pinch colorful bubbles and make them pop.',
+        name: '🤏 Nest & Move',
+        iconEmoji: '🤏',
+        description: 'Move shiny treasures between cozy nests. Tap or pinch to play.',
         stylePath: 'styles/simple-games.css',
         loader: () => import('../games/pinch-pop/PinchPopGame.js'),
         exportName: 'PinchPopGame'
@@ -145,6 +155,7 @@ class BabyGamesPlatform {
       ,{
         id: 'language-adventures',
         name: '🗣️ Little Adventures',
+        icon: 'games/language-adventures/assets/scenes/park.png',
         description: 'Play little stories while learning easy English phrases.',
         stylePath: 'games/language-adventures/styles.css',
         loader: () => import('../games/language-adventures/LanguageAdventureGame.js'),
@@ -315,6 +326,13 @@ class BabyGamesPlatform {
     const seconds = Number(duration);
     if (!Number.isFinite(seconds) || seconds < 30) return;
 
+    const pin = await this.requestPin();
+    if (pin === null) return;
+    if (!this.timerService.checkResetPin(pin)) {
+      alert('Incorrect PIN. Please try again.');
+      return;
+    }
+
     if (!this.timerService.setDurationSeconds(seconds)) {
       alert('Unable to set that timer length.');
       return;
@@ -326,13 +344,6 @@ class BabyGamesPlatform {
     document.querySelectorAll('.timer-option').forEach(option => {
       option.classList.toggle('active', Number(option.dataset.duration) === seconds);
     });
-
-    const pin = await this.requestPin();
-    if (pin === null) return;
-    if (!this.timerService.checkResetPin(pin)) {
-      alert('Incorrect PIN. Please try again.');
-      return;
-    }
 
     this.closePinDialog();
     this.timerService.startSession();
@@ -387,7 +398,6 @@ class BabyGamesPlatform {
         if (descriptionEl && previousDescription != null) descriptionEl.textContent = previousDescription;
         if (pinCancel) pinCancel.style.display = previousCancelDisplay;
         this.pinRequestActive = false;
-    this.loadedGameStyles = new Set();
       };
 
       const onSubmit = () => {
@@ -539,6 +549,7 @@ class BabyGamesPlatform {
 
     if (launcher) {
       launcher.style.display = 'flex';
+      this.adManager?.render?.();
       await this.animateEnter(launcher);
 
       // Populate games list
@@ -566,24 +577,49 @@ class BabyGamesPlatform {
    * @returns {HTMLElement}
    */
   createGameCard(gameMetadata) {
-    const card = document.createElement('div');
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'game-card';
+    card.dataset.gameId = gameMetadata.id;
+    card.setAttribute('aria-label', `Play ${gameMetadata.name.replace(/^[^\p{L}\p{N}]+/u, '').trim()}`);
 
-    const emoji = gameMetadata.name.split(' ')[0] || '🎮';
+    const icon = document.createElement('div');
+    icon.className = 'game-card-icon';
+    icon.setAttribute('aria-hidden', 'true');
 
-    card.innerHTML = `
-      <div class="game-card-emoji">${emoji}</div>
-      <h3 class="game-card-title">${gameMetadata.name}</h3>
-      <p class="game-card-description">${gameMetadata.description}</p>
-    `;
+    if (gameMetadata.icon) {
+      const image = document.createElement('img');
+      image.src = gameMetadata.icon;
+      image.alt = '';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.addEventListener('error', () => {
+        icon.classList.add('emoji-fallback');
+        icon.textContent = gameMetadata.iconEmoji || gameMetadata.name.split(' ')[0] || '🎮';
+      }, { once: true });
+      icon.appendChild(image);
+    } else {
+      icon.textContent = gameMetadata.iconEmoji || gameMetadata.name.split(' ')[0] || '🎮';
+    }
 
+    const title = document.createElement('h3');
+    title.className = 'game-card-title';
+    title.textContent = gameMetadata.name.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+
+    const description = document.createElement('p');
+    description.className = 'game-card-description';
+    description.textContent = gameMetadata.description;
+
+    const play = document.createElement('span');
+    play.className = 'game-card-play';
+    play.textContent = 'Play';
+    play.setAttribute('aria-hidden', 'true');
+
+    card.append(icon, title, description, play);
     card.style.opacity = '0';
     card.style.transform = 'translateY(30px)';
 
-    card.addEventListener('click', () => {
-      this.launchGame(gameMetadata.id);
-    });
-
+    card.addEventListener('click', () => this.launchGame(gameMetadata.id));
     return card;
   }
 
@@ -699,6 +735,9 @@ class BabyGamesPlatform {
 
       const gameMetadata = gameRegistry.listGames().find((game) => game.id === gameId);
       if (!gameMetadata) throw new Error(`Unknown game: ${gameId}`);
+
+      const adBanner = document.getElementById('adBanner');
+      if (adBanner) { adBanner.style.display = 'none'; adBanner.innerHTML = ''; }
 
       const gameHost = document.getElementById('gameContainer');
       if (gameHost) {
