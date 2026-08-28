@@ -142,6 +142,14 @@ class BabyGamesPlatform {
         loader: () => import('../games/pinch-pop/PinchPopGame.js'),
         exportName: 'PinchPopGame'
       }
+      ,{
+        id: 'language-adventures',
+        name: '🗣️ Little Adventures',
+        description: 'Play little stories while learning easy English phrases.',
+        stylePath: 'games/language-adventures/styles.css',
+        loader: () => import('../games/language-adventures/LanguageAdventureGame.js'),
+        exportName: 'LanguageAdventureGame'
+      }
     ];
 
     games.forEach(({ loader, exportName, ...metadata }) => {
