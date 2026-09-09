@@ -30,6 +30,8 @@ export class LanguageAdventureGame extends GameModule {
     this.isRunning = false;
     this.remainingSeconds = 0;
     this.timerId = null;
+    this.stepLocked = false;
+    this.stepState = {};
   }
 
   async initialize() {
@@ -171,6 +173,8 @@ export class LanguageAdventureGame extends GameModule {
     this.clearPointerListeners();
     this.scenario = SCENARIOS.find((scenario) => scenario.id === id) || null;
     this.stepIndex = 0;
+    this.stepLocked = false;
+    this.stepState = {};
     if (!this.scenario) return;
     this.picker.hidden = true;
     this.adventure.hidden = false;
@@ -191,6 +195,7 @@ export class LanguageAdventureGame extends GameModule {
     this.progressEl.innerHTML = this.scenario.steps.map((_, i) => `<span class="${i <= this.stepIndex ? 'done' : ''}"></span>`).join('');
     this.stage.dataset.scene = this.scenario.scene;
     this.stage.dataset.stepType = step.type;
+    this.stepLocked = false;
     this.stage.innerHTML = '';
     this.renderStep(step);
     this.schedule(() => this.speakCurrent(), 260);
@@ -233,13 +238,16 @@ export class LanguageAdventureGame extends GameModule {
     switch (step.type) {
       case 'find-mumma': {
         addImg('characters/toddler-searching.png', 'character toddler toddler-searching', 'Toddler looking around');
+        // Mumma is physically placed behind the middle hiding object instead of
+        // being hidden elsewhere on the stage. This makes the reveal read as a
+        // real hide-and-seek interaction.
+        const mumma = addImg('characters/mumma-wave.png', 'character mumma mumma-hidden', 'Mumma');
+        mumma.style.opacity = '0';
         const spots = [
           ['cushion.png', 'language-cover cover-left', false],
           ['toy-box.png', 'language-cover cover-center', true],
           ['chair.png', 'language-cover cover-right', false]
         ];
-        const mumma = addImg('characters/mumma-wave.png', 'character mumma mumma-hidden', 'Mumma');
-        mumma.style.opacity = '0';
         spots.forEach(([src, className, correct]) => {
           const b = button(`hide-spot ${className}`, 'look here', () => {
             if (correct) {
@@ -262,9 +270,10 @@ export class LanguageAdventureGame extends GameModule {
         addImg('characters/mumma-open-arms.png', 'character mumma mumma-waiting', 'Mumma');
         const zone = button('action-zone mumma-zone', 'Come here Mumma', () => {
           zone.classList.add('zone-hit');
-          this.stage.querySelector('.toddler-come')?.classList.add('walk-to-mumma');
+          const toddler = this.stage.querySelector('.toddler-come');
+          toddler?.classList.add('walk-to-mumma');
           rewardFeedback(this.platform, 'Come here!', '💗');
-          this.schedule(() => this.completeStep(step.success), 850);
+          this.schedule(() => this.completeStep(step.success), 1050);
         });
         zone.textContent = '💗';
         makeBubble('Mumma says: “Come here!”', 'bubble-bottom');
@@ -283,37 +292,36 @@ export class LanguageAdventureGame extends GameModule {
         break;
       }
       case 'going': {
-        addImg('characters/toddler-walking.png', 'character toddler toddler-moving', 'Toddler walking');
         const path = button('walk-path', 'Watch me walk', () => {
           path.classList.add('path-hit');
-          this.stage.querySelector('.toddler-moving')?.classList.add('walk-across');
+          const toddler = this.stage.querySelector('.toddler-moving');
+          toddler?.classList.add('walk-across');
           rewardFeedback(this.platform, 'I am going!', '👣');
-          this.schedule(() => this.completeStep(step.success), 1000);
+          this.schedule(() => this.completeStep(step.success, path), 1000);
         });
-        path.textContent = '👣 Tap me!';
+        path.style.backgroundImage = `url("${new URL('characters/toddler-walking.png', ASSET_ROOT).href}")`;
+        path.textContent = '';
         makeBubble('I am going!', 'bubble-bottom');
         break;
       }
       case 'sleeping': {
-        addImg('characters/toddler-sleeping.png', 'sleeping-scene', 'Toddler sleeping');
         const tap = button('sleepy-target', 'Sleeping girl', () => {
           tap.classList.add('sleepy-burst');
           rewardFeedback(this.platform, 'Sweet dreams!', '🌙');
-          this.schedule(() => this.completeStep(step.success), 500);
+          this.schedule(() => this.completeStep(step.success, tap), 500);
         });
-        tap.textContent = '🌙';
+        tap.style.backgroundImage = `url("${new URL('characters/toddler-sleeping.png', ASSET_ROOT).href}")`;
         makeBubble('Shhh…', 'bubble-bottom');
         break;
       }
       case 'running': {
-        addImg('characters/toddler-running.png', 'character toddler toddler-runner', 'Toddler running');
         const run = button('run-target', 'Running girl', () => {
           run.classList.add('run-hit');
-          this.stage.querySelector('.toddler-runner')?.classList.add('extra-run');
+          run.classList.add('extra-run');
           rewardFeedback(this.platform, 'Run, run, run!', '🏃');
-          this.schedule(() => this.completeStep(step.success), 700);
+          this.schedule(() => this.completeStep(step.success, run), 700);
         });
-        run.textContent = '🏃';
+        run.style.backgroundImage = `url("${new URL('characters/toddler-running.png', ASSET_ROOT).href}")`;
         makeBubble('Watch me run!', 'bubble-bottom');
         break;
       }
@@ -363,7 +371,7 @@ export class LanguageAdventureGame extends GameModule {
           target.classList.add('destination-hit');
           this.stage.querySelector('.toddler-destination')?.classList.add('walk-to-slide');
           rewardFeedback(this.platform, 'Go there!', '🛝');
-          this.schedule(() => this.completeStep(step.success), 850);
+          this.schedule(() => this.completeStep(step.success), 1050);
         });
         target.textContent = '🛝';
         makeBubble('Go there!', 'bubble-bottom');
@@ -375,7 +383,7 @@ export class LanguageAdventureGame extends GameModule {
           target.classList.add('destination-hit');
           this.stage.querySelector('.toddler-path')?.classList.add('walk-path-out');
           rewardFeedback(this.platform, "Let's go!", '👣');
-          this.schedule(() => this.completeStep(step.success), 850);
+          this.schedule(() => this.completeStep(step.success), 1050);
         });
         target.textContent = '👉';
         makeBubble("Let’s go!", 'bubble-bottom');
@@ -383,10 +391,16 @@ export class LanguageAdventureGame extends GameModule {
       }
       case 'eating': {
         addImg('characters/toddler-eating.png', 'eating-card', 'Toddler eating');
-        ['apple.png', 'banana.png', 'strawberry.png'].forEach((src, i) => {
-          const b = button(`food-float food-${i}`, src.split('.')[0], () => {
+        const foods = [
+          ['apple.png', 'Apple', '🍎'],
+          ['banana.png', 'Banana', '🍌'],
+          ['strawberry.png', 'Strawberry', '🍓']
+        ];
+        foods.forEach(([src, label, emoji], i) => {
+          const b = button(`food-float food-${i}`, label, () => {
+            this.stepState.selectedFood = { src, label, emoji };
             b.classList.add('food-caught');
-            rewardFeedback(this.platform, 'Yummy!', '🍎');
+            rewardFeedback(this.platform, `Yummy ${label}!`, emoji);
             this.schedule(() => this.completeStep(step.success), 500);
           });
           b.style.backgroundImage = `url("${new URL(`objects/${src}`, ASSET_ROOT).href}")`;
@@ -396,15 +410,18 @@ export class LanguageAdventureGame extends GameModule {
       }
       case 'food-choice': {
         addImg('characters/toddler-eating.png', 'eating-card small-eating-card', 'Toddler eating');
+        const selected = this.stepState.selectedFood || { src: 'apple.png', label: 'Apple', emoji: '🍎' };
         const foods = [
-          ['apple.png', 'Apple', true],
-          ['banana.png', 'Banana', false],
-          ['strawberry.png', 'Strawberry', false]
-        ];
+          ['apple.png', 'Apple'],
+          ['banana.png', 'Banana'],
+          ['strawberry.png', 'Strawberry']
+        ].map(([src, label]) => [src, label, src === selected.src]);
+        this.phraseEl.textContent = 'What did you eat?';
+        this.instructionEl.textContent = `Tap the ${selected.label.toLowerCase()}.`;
         foods.forEach(([src, label, correct], i) => {
           const b = button(`choice-object food-choice-${i}`, label, () => correct
-            ? this.completeStep(step.success, b)
-            : this.wrongTry(b, 'Think about the apple!'));
+            ? this.completeStep(`I ate ${selected.label.toLowerCase()}.`, b)
+            : this.wrongTry(b, `Remember, you ate ${selected.label.toLowerCase()}.`));
           b.style.backgroundImage = `url("${new URL(`objects/${src}`, ASSET_ROOT).href}")`;
         });
         break;
@@ -435,25 +452,28 @@ export class LanguageAdventureGame extends GameModule {
         addImg('characters/toddler-pointing.png', 'character toddler teddy-pointer', 'Toddler pointing');
         const teddy = button('teddy-choice', 'Teddy', () => {
           teddy.classList.add('teddy-happy');
-          addImg('characters/teddy-wave.png', 'character teddy teddy-pop', 'Teddy');
+          teddy.style.backgroundImage = `url("${new URL('characters/teddy-wave.png', ASSET_ROOT).href}")`;
           rewardFeedback(this.platform, 'That is Teddy!', '🧸');
-          this.schedule(() => this.completeStep(step.success), 650);
+          this.schedule(() => this.completeStep(step.success, teddy), 650);
         });
-        teddy.textContent = '🧸';
+        teddy.style.backgroundImage = `url("${new URL('characters/teddy-standing.png', ASSET_ROOT).href}")`;
         makeBubble('What is that?', 'bubble-bottom');
         break;
       }
       case 'teddy-trick': {
-        addImg('characters/teddy-standing.png', 'character teddy teddy-trick', 'Teddy');
-        const ball = addImg('objects/ball.png', 'trick-ball', 'Ball');
-        const trick = button('teddy-trick-target', 'Teddy trick', () => {
-          trick.classList.add('trick-hit');
-          this.stage.querySelector('.teddy-trick')?.classList.add('teddy-spin');
+        const teddy = button('teddy-trick interactive-character', 'Teddy', () => {
+          teddy.classList.add('teddy-playing');
+          teddy.style.backgroundImage = `url("${new URL('characters/teddy-running.png', ASSET_ROOT).href}")`;
           ball.classList.add('ball-trick');
           rewardFeedback(this.platform, 'Amazing Teddy!', '⭐');
           this.schedule(() => this.completeStep(step.success), 900);
         });
-        trick.textContent = '✨';
+        teddy.style.backgroundImage = `url("${new URL('characters/teddy-standing.png', ASSET_ROOT).href}")`;
+        const ball = addImg('objects/ball.png', 'trick-ball', 'Ball');
+        const spark = document.createElement('div');
+        spark.className = 'teddy-trick-spark';
+        spark.textContent = '✨';
+        this.stage.appendChild(spark);
         makeBubble('How do you do that?', 'bubble-bottom');
         break;
       }
@@ -472,14 +492,13 @@ export class LanguageAdventureGame extends GameModule {
         break;
       }
       case 'teddy-mischief': {
-        addImg('characters/teddy-surprised.png', 'character teddy teddy-mischief', 'Teddy');
-        const b = button('mischief-target', 'Teddy', () => {
-          b.classList.add('mischief-hit');
-          this.stage.querySelector('.teddy-mischief')?.classList.add('hide-and-peek');
+        const teddy = button('teddy-mischief', 'Teddy', () => {
+          teddy.classList.add('mischief-hit');
+          teddy.classList.add('hide-and-peek');
           rewardFeedback(this.platform, 'Silly Teddy!', '😄');
-          this.schedule(() => this.completeStep(step.success), 950);
+          this.schedule(() => this.completeStep(step.success, teddy), 950);
         });
-        b.textContent = '👀';
+        teddy.style.backgroundImage = `url("${new URL('characters/teddy-surprised.png', ASSET_ROOT).href}")`;
         makeBubble('Teddy did something silly!', 'bubble-bottom');
         break;
       }
@@ -524,7 +543,23 @@ export class LanguageAdventureGame extends GameModule {
 
     const target = document.createElement('div');
     target.className = `drag-target ${targetClass}`;
-    target.textContent = `${emoji} ${targetLabel}`;
+    if (targetClass === 'mumma-target') {
+      const mumma = document.createElement('img');
+      mumma.src = new URL('characters/mumma-open-arms.png', ASSET_ROOT).href;
+      mumma.alt = 'Mumma';
+      mumma.className = 'drag-target-character';
+      mumma.draggable = false;
+      target.appendChild(mumma);
+    } else {
+      const targetIcon = document.createElement('span');
+      targetIcon.className = 'drag-target-icon';
+      targetIcon.textContent = emoji;
+      target.appendChild(targetIcon);
+      const targetText = document.createElement('span');
+      targetText.className = 'drag-target-label';
+      targetText.textContent = targetLabel;
+      target.appendChild(targetText);
+    }
     this.stage.appendChild(target);
 
     const item = document.createElement('button');
@@ -590,11 +625,15 @@ export class LanguageAdventureGame extends GameModule {
       item.removeEventListener('pointerup', up);
       item.removeEventListener('pointercancel', up);
     });
-    makeBubble(instruction, 'bubble-bottom');
+    const helper = document.createElement('div');
+    helper.className = 'language-helper bubble-bottom';
+    helper.textContent = instruction;
+    this.stage.appendChild(helper);
   }
 
   completeStep(message = 'Great!', sourceButton = null) {
-    if (!this.isRunning) return;
+    if (!this.isRunning || this.stepLocked) return;
+    this.stepLocked = true;
     if (sourceButton) sourceButton.classList.add('success-hit');
     this.score += 1;
     this.updateScore();

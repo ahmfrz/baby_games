@@ -60,23 +60,25 @@
 .mumma-reveal { opacity:1 !important; animation:revealPop .45s ease-out both; }
 .toddler-come { width:clamp(150px,17vw,220px); left:11%; bottom:10%; transition:transform .85s ease-in-out; }
 .mumma-waiting { width:clamp(170px,19vw,245px); right:11%; bottom:10%; }
-.walk-to-mumma { transform:translateX(72%); }
+.walk-to-mumma { animation:walkToMumma 1.05s ease-in-out both; }
 .action-zone { position:absolute; border:0; border-radius:999px; cursor:pointer; z-index:5; }
 .mumma-zone { right:11%; bottom:10%; width:clamp(150px,18vw,225px); height:clamp(140px,24vh,215px); background:rgba(244,114,182,.20); box-shadow:0 0 0 9px rgba(244,114,182,.10); font-size:3rem; }
 .zone-hit { animation:goalPulse .5s ease both; }
 .toddler-door { width:clamp(150px,17vw,220px); left:14%; bottom:9%; transition:transform .8s ease; }
 .door-target { position:absolute; width:clamp(130px,16vw,205px); height:clamp(190px,43vh,330px); right:11%; bottom:9%; border:0; border-radius:20px; background-repeat:no-repeat; background-position:center; background-size:contain; background-color:rgba(255,255,255,.26); box-shadow:0 14px 25px rgba(15,23,42,.14); cursor:pointer; z-index:4; color:transparent; }
-.walk-out { transform:translateX(85%); }
+.walk-out { animation:walkOut .8s ease-in-out both; }
 .door-open { animation:doorNudge .5s ease; }
-.walk-path { position:absolute; bottom:12%; right:13%; width:clamp(150px,22vw,280px); height:clamp(75px,16vh,125px); border:0; border-radius:40px; background:rgba(255,255,255,.82); color:#2563eb; font-weight:950; font-size:1.2rem; box-shadow:0 12px 24px rgba(15,23,42,.13); cursor:pointer; z-index:5; }
+.walk-path { position:absolute; bottom:12%; right:13%; width:clamp(155px,18vw,225px); height:clamp(190px,30vh,270px); border:0; border-radius:36px; background-color:transparent; background-repeat:no-repeat; background-size:contain; background-position:center bottom; cursor:pointer; z-index:5; filter:drop-shadow(0 10px 16px rgba(15,23,42,.16)); }
 .toddler-moving { width:clamp(150px,18vw,230px); left:12%; bottom:8%; }
 .walk-across { animation:walkAcross 1s ease-in-out both; }
+.walk-to-slide { animation:walkToSlide 1.05s ease-in-out both; }
+.walk-path-out { animation:walkPathOut 1.05s ease-in-out both; }
 .path-hit { animation:goalPulse .5s ease both; }
 .sleeping-scene { position:absolute; width:min(58vw,580px); max-width:78%; left:50%; top:52%; transform:translate(-50%,-45%); z-index:2; filter:drop-shadow(0 16px 24px rgba(15,23,42,.16)); }
-.sleepy-target { position:absolute; left:50%; top:55%; width:min(36vw,300px); height:min(30vw,230px); transform:translate(-50%,-50%); border:0; border-radius:32px; background:rgba(255,255,255,.12); cursor:pointer; z-index:5; font-size:3rem; }
+.sleepy-target { position:absolute; left:50%; top:55%; width:clamp(165px,20vw,260px); height:clamp(190px,30vh,265px); transform:translate(-50%,-50%); border:0; border-radius:36px; background-color:transparent; background-repeat:no-repeat; background-size:contain; background-position:center bottom; cursor:pointer; z-index:5; filter:drop-shadow(0 10px 16px rgba(15,23,42,.16)); }
 .sleepy-burst { animation:goalPulse .5s ease both; }
 .toddler-runner { width:clamp(165px,19vw,240px); left:18%; bottom:9%; }
-.run-target { position:absolute; left:17%; bottom:7%; width:clamp(180px,22vw,280px); height:clamp(150px,25vh,220px); border:0; border-radius:42px; background:rgba(255,255,255,.12); cursor:pointer; z-index:5; color:transparent; }
+.run-target { position:absolute; left:9%; bottom:6%; width:clamp(170px,20vw,250px); height:clamp(205px,31vh,280px); border:0; border-radius:38px; background-color:transparent; background-repeat:no-repeat; background-size:contain; background-position:center bottom; cursor:pointer; z-index:5; filter:drop-shadow(0 10px 16px rgba(15,23,42,.16)); }
 .extra-run { animation:runBounce .8s ease-in-out 1; }
 .run-hit { animation:goalPulse .5s ease both; }
 .toddler-pointing-small { width:clamp(155px,18vw,225px); left:8%; bottom:8%; }
@@ -97,28 +99,35 @@
 .toddler-searching-ball { width:clamp(150px,17vw,220px); left:7%; bottom:8%; }
 .mumma-target, .toddler-target, .drag-target { position:absolute; width:clamp(160px,20vw,260px); height:clamp(140px,22vh,220px); border-radius:40px; background:rgba(255,255,255,.75); box-shadow:0 13px 26px rgba(15,23,42,.12); display:flex; align-items:center; justify-content:center; font-weight:950; font-size:clamp(1.2rem,3vw,1.8rem); color:#475569; z-index:3; }
 .mumma-target { right:9%; bottom:12%; }
+.drag-target-character { height:100%; width:auto; max-width:100%; object-fit:contain; pointer-events:none; filter:drop-shadow(0 8px 14px rgba(15,23,42,.16)); }
+.mumma-target { background:transparent; box-shadow:none; }
+.drag-target-icon, .drag-target-label { position:absolute; }
+.drag-target-icon { top:8px; right:10px; font-size:1.6rem; }
+.drag-target-label { left:14px; bottom:12px; background:rgba(255,255,255,.88); border-radius:999px; padding:5px 10px; }
 .toddler-target { right:10%; top:18%; }
 .drag-toddler { width:clamp(160px,18vw,230px); left:7%; bottom:10%; }
 .drag-item { position:absolute; width:clamp(105px,13vw,165px); height:clamp(105px,13vw,165px); border:0; border-radius:34px; background-color:rgba(255,255,255,.92); background-repeat:no-repeat; background-size:contain; background-position:center; box-shadow:0 14px 26px rgba(15,23,42,.16); cursor:grab; z-index:6; touch-action:none; }
 .drag-banana { left:45%; top:45%; }
 .drag-cookie { left:46%; top:40%; }
+.target-hit { animation:goalPulse .5s ease both; }
 .target-near { transform:scale(1.04); box-shadow:0 0 0 10px rgba(34,197,94,.16), 0 16px 28px rgba(15,23,42,.14); }
 .drag-success { animation:successBounce .55s ease; }
 .drag-return { transition:left .25s ease, top .25s ease; }
-.teddy-choice { position:absolute; width:clamp(160px,20vw,250px); height:clamp(150px,23vh,220px); right:21%; top:29%; border:0; border-radius:42px; background:rgba(255,255,255,.78); color:#8b5cf6; font-size:4.8rem; cursor:pointer; z-index:5; box-shadow:0 14px 28px rgba(15,23,42,.13); }
+.teddy-choice { position:absolute; width:clamp(160px,20vw,250px); height:clamp(180px,26vh,250px); right:21%; top:25%; border:0; border-radius:42px; background-color:transparent; background-repeat:no-repeat; background-size:contain; background-position:center bottom; cursor:pointer; z-index:5; filter:drop-shadow(0 12px 18px rgba(15,23,42,.16)); }
 .teddy-pointer { width:clamp(160px,18vw,225px); left:9%; bottom:9%; }
 .teddy-pop { width:clamp(150px,19vw,230px); right:22%; bottom:11%; animation:revealPop .5s ease; }
 .teddy-happy, .teddy-choice:active { transform:scale(.92); }
-.teddy-trick { width:clamp(180px,21vw,260px); left:38%; bottom:10%; }
-.teddy-trick-target { position:absolute; right:12%; top:24%; width:clamp(130px,17vw,210px); height:clamp(120px,19vh,190px); border:0; border-radius:40px; background:rgba(255,255,255,.78); color:#8b5cf6; font-size:3rem; cursor:pointer; z-index:5; }
-.teddy-spin { animation:teddySpin .9s ease-in-out both; }
+.teddy-trick { position:absolute; width:clamp(180px,21vw,260px); height:clamp(260px,34vh,360px); left:38%; bottom:10%; border:0; border-radius:40px; background-repeat:no-repeat; background-size:contain; background-position:center bottom; background-color:transparent; cursor:pointer; z-index:6; }
+.teddy-trick.interactive-character { appearance:none; -webkit-appearance:none; }
+.teddy-playing { animation:teddyPlay .9s ease-in-out both; }
+.teddy-trick-spark { position:absolute; right:16%; top:20%; z-index:7; font-size:clamp(2rem,4vw,3rem); animation:sparkFloat 1.2s ease-in-out infinite; pointer-events:none; }
 .trick-hit { animation:goalPulse .5s ease both; }
 .tiny-teddy-sheet { position:absolute; width:min(42vw,420px); right:9%; top:10%; z-index:3; opacity:.96; }
 .face-choice { position:absolute; width:clamp(90px,11vw,135px); height:clamp(90px,11vw,135px); border:0; border-radius:32px; background:rgba(255,255,255,.88); font-size:clamp(3.2rem,7vw,5rem); box-shadow:0 12px 23px rgba(15,23,42,.13); cursor:pointer; z-index:5; }
 .face-0 { left:22%; bottom:13%; }.face-1 { left:44%; bottom:25%; }.face-2 { left:66%; bottom:13%; }
-.mischief-target { position:absolute; width:clamp(150px,19vw,230px); height:clamp(150px,22vh,230px); right:19%; bottom:9%; border:0; border-radius:36px; background:rgba(255,255,255,.2); color:#fff; font-size:4rem; cursor:pointer; z-index:5; }
-.teddy-mischief { width:clamp(155px,18vw,225px); right:20%; bottom:10%; }
+.teddy-mischief { position:absolute; width:clamp(155px,18vw,225px); height:clamp(215px,29vh,300px); right:20%; bottom:5%; border:0; border-radius:36px; background-color:transparent; background-repeat:no-repeat; background-size:contain; background-position:center bottom; cursor:pointer; z-index:6; filter:drop-shadow(0 10px 15px rgba(15,23,42,.16)); }
 .hide-and-peek { animation:peek .95s ease-in-out both; }
+.mischief-hit { animation:goalPulse .5s ease both; }
 .teddy-searcher { width:clamp(150px,18vw,225px); left:10%; bottom:9%; }
 .hidden-teddy { width:clamp(145px,17vw,220px); right:19%; bottom:12%; transition:opacity .35s ease, transform .5s ease; }
 .teddy-reveal { animation:revealPop .5s ease both; }
@@ -139,11 +148,16 @@
 @keyframes wrongShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
 @keyframes revealPop { 0%{opacity:0;transform:scale(.7) translateY(15px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
 @keyframes coverReveal { 100%{transform:translateY(-130%) rotate(-4deg);opacity:.18} }
+@keyframes walkToMumma { 0%{transform:translateX(0) translateY(0) rotate(0)} 25%{transform:translateX(14vw) translateY(-5px) rotate(1deg)} 50%{transform:translateX(29vw) translateY(0) rotate(-1deg)} 75%{transform:translateX(43vw) translateY(-5px) rotate(1deg)} 100%{transform:translateX(58vw) translateY(0) rotate(0)} }
 @keyframes walkAcross { 0%{transform:translateX(0)} 100%{transform:translateX(75vw)} }
 @keyframes walkOut { 0%{transform:translateX(0)} 100%{transform:translateX(80vw)} }
+@keyframes walkToSlide { 0%{transform:translateX(0) translateY(0)} 45%{transform:translateX(26vw) translateY(-4px)} 100%{transform:translateX(53vw) translateY(0)} }
+@keyframes walkPathOut { 0%{transform:translateX(0) translateY(0)} 50%{transform:translateX(30vw) translateY(-4px)} 100%{transform:translateX(76vw) translateY(0)} }
 @keyframes doorNudge { 0%,100%{transform:rotate(0)} 35%{transform:rotate(4deg)} 65%{transform:rotate(-3deg)} }
 @keyframes runBounce { 0%,100%{transform:translateY(0)} 45%{transform:translateY(-24px)} }
 @keyframes teddySpin { 0%{transform:rotate(0) scale(1)} 60%{transform:rotate(10deg) scale(1.08)} 100%{transform:rotate(-8deg) scale(1)} }
+@keyframes teddyPlay { 0%{transform:translateY(0) rotate(0) scale(1)} 35%{transform:translateY(-14px) rotate(-5deg) scale(1.03)} 65%{transform:translateY(-4px) rotate(6deg) scale(1.06)} 100%{transform:translateY(0) rotate(0) scale(1)} }
+@keyframes sparkFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-10px) scale(1.08)} }
 @keyframes peek { 0%{transform:translateX(0) rotate(0)} 35%{transform:translateX(70px) rotate(7deg)} 60%{transform:translateX(55px) rotate(-5deg)} 100%{transform:translateX(0) rotate(0)} }
 @keyframes badgeFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 
@@ -167,13 +181,14 @@
   .character.toddler-door, .character.toddler-moving, .character.toddler-runner, .character.toddler-path { width:155px; left:4%; }
   .door-target { width:120px; height:225px; right:2%; bottom:6%; }
   .walk-across { animation-duration:.85s; }
-  .walk-to-mumma { transform:translateX(58vw); }
-  .walk-out { transform:translateX(58vw); }
-  .walk-path { width:160px; right:3%; bottom:7%; }
+  .walk-to-mumma { animation-duration:1.05s; }
+  .walk-out { animation-duration:.8s; }
+  .walk-path { width:145px; height:185px; right:3%; bottom:7%; }
   .sleeping-scene { width:70vw; max-width:84%; top:53%; }
-  .sleepy-target { width:58vw; height:31vw; top:57%; }
+  .sleepy-target { width:145px; height:185px; top:57%; }
   .toddler-pointing-small { width:145px; left:2%; }
   .choice-object { width:105px; height:105px; border-radius:25px; }
+  .run-target { width:145px; height:185px; left:3%; bottom:5%; }
   .choice-ball-good, .food-choice-0 { left:39%; top:24%; }
   .choice-ball-wrong:nth-of-type(2), .food-choice-1 { left:58%; top:51%; }
   .choice-ball-wrong:nth-of-type(3), .food-choice-2 { left:20%; top:55%; }
@@ -182,16 +197,15 @@
   .drag-target { width:145px; height:115px; font-size:1rem; }
   .drag-item { width:105px; height:105px; }
   .drag-banana, .drag-cookie { left:43%; top:42%; }
-  .teddy-choice { right:10%; top:28%; width:155px; height:145px; }
+  .teddy-choice { right:10%; top:25%; width:155px; height:190px; }
   .teddy-pop { right:9%; width:155px; bottom:8%; }
-  .teddy-trick { width:155px; left:35%; bottom:9%; }
-  .teddy-trick-target { right:4%; top:23%; width:125px; height:120px; }
+  .teddy-trick { width:155px; height:205px; left:35%; bottom:9%; }
+  .teddy-trick-spark { right:4%; top:19%; }
   .teddy-pointer { width:145px; left:2%; bottom:5%; }
   .tiny-teddy-sheet { width:55vw; right:0; top:7%; }
   .face-choice { width:92px; height:92px; }
   .face-0 { left:14%; bottom:10%; }.face-1 { left:42%; bottom:23%; }.face-2 { right:10%; left:auto; bottom:10%; }
-  .teddy-mischief { width:145px; right:10%; bottom:8%; }
-  .mischief-target { right:8%; bottom:6%; width:155px; height:145px; }
+  .teddy-mischief { right:8%; bottom:4%; width:145px; height:195px; }
   .eating-card { width:47vw; left:3%; bottom:4%; max-height:52%; }
   .small-eating-card { width:42vw; }
   .food-float { width:98px; height:98px; }
@@ -234,10 +248,18 @@
   z-index: 3;
 }
 .language-stage[data-step-type="find-mumma"] .mumma-hidden {
-  width: clamp(125px, 14vw, 175px);
-  right: 3%;
-  bottom: 2%;
-  z-index: 3;
+  width: clamp(118px, 14vw, 175px);
+  left: 40%;
+  right: auto;
+  bottom: 7%;
+  z-index: 4;
+}
+.language-stage[data-step-type="find-teddy"] .hidden-teddy {
+  width: clamp(118px, 14vw, 175px);
+  left: 40%;
+  right: auto;
+  bottom: 7%;
+  z-index: 4;
 }
 .language-stage[data-step-type="find-mumma"] .hide-spot,
 .language-stage[data-step-type="find-teddy"] .hide-spot {
@@ -399,10 +421,6 @@
   bottom: 3%;
   top: auto;
 }
-.language-stage[data-step-type="teddy-trick"] .teddy-trick-target {
-  right: 7%;
-  top: 22%;
-}
 .language-stage[data-step-type="how-are-you"] .face-choice {
   width: clamp(82px, 10vw, 120px);
   height: clamp(82px, 10vw, 120px);
@@ -431,6 +449,8 @@
     height: 88px;
     top: 21%;
   }
+  .language-stage[data-step-type="find-mumma"] .mumma-hidden { width:118px; left:40%; right:auto; bottom:5%; }
+  .language-stage[data-step-type="find-teddy"] .hidden-teddy { width:118px; left:40%; right:auto; bottom:5%; }
   .language-stage[data-step-type="find-mumma"] .cover-left,
   .language-stage[data-step-type="find-teddy"] .cover-left { left: 6%; }
   .language-stage[data-step-type="find-mumma"] .cover-center,

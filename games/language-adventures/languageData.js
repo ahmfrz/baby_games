@@ -104,9 +104,9 @@ export const SCENARIOS = [
       {
         id: 'what-did-you-eat',
         phrase: 'What did you eat?',
-        instruction: 'Tap the apple.',
+        instruction: 'Tap the food you ate.',
         type: 'food-choice',
-        success: 'I ate an apple!'
+        success: 'I remember what I ate!'
       },
       {
         id: 'i-am-drinking',
