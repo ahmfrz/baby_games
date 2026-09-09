@@ -24,6 +24,21 @@
   </script>
   <title>Baby Games - Learning & Fun</title>
   <link rel="stylesheet" href="styles/main.css">
+  <!-- Game CSS is linked statically so games also work when GitHub Pages serves source files directly. -->
+  <link rel="stylesheet" href="games/alphabet-learner/styles.css">
+  <link rel="stylesheet" href="games/comic-stories/styles.css">
+  <link rel="stylesheet" href="games/fruit-color/styles.css">
+  <link rel="stylesheet" href="games/language-adventures/styles.css">
+  <link rel="stylesheet" href="games/little-scribbles/styles.css">
+  <link rel="stylesheet" href="games/strawberry-garden/styles.css">
+  <!-- Fallback for direct/source deployments; Vite bundles Phaser when using the production build. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "phaser": "https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.esm.js"
+      }
+    }
+  </script>
 </head>
 <body>
   <div id="app">

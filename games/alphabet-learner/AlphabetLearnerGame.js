@@ -1,4 +1,3 @@
-import './styles.css';
 import { GameModule } from '../../core/GameModule.js';
 import { rewardFeedback } from '../../services/FeedbackService.js';
 

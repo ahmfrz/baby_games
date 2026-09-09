@@ -1,4 +1,3 @@
-import './styles.css';
 import { GameModule } from '../../core/GameModule.js';
 import { rewardFeedback, tapFeedback } from '../../services/FeedbackService.js';
 import { PhaserGameRuntime } from '../../engine/phaser/PhaserGameRuntime.js';

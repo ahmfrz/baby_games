@@ -1,17 +1,11 @@
-import strawberry from './art/strawberry.svg?url';
-import butterfly from './art/butterfly.svg?url';
-import basket from './art/basket.svg?url';
-import sink from './art/sink.svg?url';
-import blender from './art/blender.svg?url';
-import cake from './art/cake.svg?url';
-import garden from './art/garden-bg.svg?url';
+const asset = (name) => new URL(`./art/${name}`, import.meta.url).href;
 
 export const strawberryAssets = {
-  character: strawberry,
-  butterfly,
-  basket,
-  sink,
-  blender,
-  cake,
-  garden,
+  character: asset('strawberry.svg'),
+  butterfly: asset('butterfly.svg'),
+  basket: asset('basket.svg'),
+  sink: asset('sink.svg'),
+  blender: asset('blender.svg'),
+  cake: asset('cake.svg'),
+  garden: asset('garden-bg.svg'),
 };
