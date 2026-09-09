@@ -1,4 +1,3 @@
-import '../../styles/simple-games.css';
 import { GameModule } from '../../core/GameModule.js';
 import { tapFeedback, vibrate, rewardFeedback } from '../../services/FeedbackService.js';
 

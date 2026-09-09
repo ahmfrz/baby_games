@@ -19,7 +19,8 @@ export class PhaserGameRuntime {
   async start() {
     if (!this.parent) throw new Error('Phaser runtime requires a parent element.');
     const module = await import('phaser');
-    this.Phaser = module.default || module.Phaser || module;
+    // The browser ESM build of Phaser exposes named exports rather than a default.
+    this.Phaser = module.Phaser || module;
 
     this.game = new this.Phaser.Game({
       type: this.Phaser.AUTO,

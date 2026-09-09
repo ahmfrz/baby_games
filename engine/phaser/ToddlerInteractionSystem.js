@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { vibrate } from '../../services/FeedbackService.js';
 
 /** Phaser interaction primitives designed for imprecise toddler touch. */
