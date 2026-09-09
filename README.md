@@ -20,12 +20,8 @@ A modular, extensible game platform for toddlers built with vanilla JavaScript, 
 - **Extensible Architecture**
   - Plugin-based game system (GameModule base class)
   - Centralized GameRegistry for game management
-  - Shared services: AudioManager, InputManager, StorageManager, AssetManager, DeviceDetector, AdManager
+  - Shared services: AudioManager, InputManager, StorageManager, AssetManager, DeviceDetector
 
-- **Ready for Monetization**
-  - AdManager abstraction layer (disabled in Phase 1)
-  - Support for multiple ad networks (Google AdSense, AdMob, etc.)
-  - Ad-safe UI zones (ads don't interfere with game UI)
 
 - **Mobile & Desktop Support**
   - Responsive design (works on phones, tablets, desktops)
@@ -88,7 +84,6 @@ baby_games/
 │   ├── StorageManager.js               # localStorage wrapper
 │   ├── AssetManager.js                 # Image/asset loading
 │   ├── DeviceDetector.js               # Mobile/desktop detection
-│   └── AdManager.js                    # Ad network integration
 ├── styles/
 │   └── main.css                        # Global styles
 ├── games/
@@ -256,33 +251,6 @@ gameRegistry.register(MyNewGame);
 3. Deploy with one click
 4. Get free HTTPS domain
 
-## 💰 Monetization (Phase 2)
-
-Ad integration is built into the platform but **disabled by default** (Phase 1).
-
-### To Enable Ads (Phase 2):
-
-1. Edit `config/ads.json`:
-   ```json
-   {
-     "enabled": true,
-     "networks": {
-       "google-adsense": {
-         "enabled": true,
-         "clientId": "ca-pub-YOUR-CLIENT-ID"
-       }
-     }
-   }
-   ```
-
-2. Set up ad network account:
-   - [Google AdSense](https://adsense.google.com) (web)
-   - [Google AdMob](https://admob.google.com) (mobile)
-
-3. Ad placements:
-   - **Banner ads**: Bottom of screen (safe zone, doesn't block game UI)
-   - **Interstitial ads**: Between game rounds
-   - **Rewarded ads**: Optional, for future features
 
 ## 📊 Local Data
 
@@ -402,14 +370,13 @@ Built with love for toddlers and young learners. Simple, colorful, and fun!
 - Responsive timer setup now fits small mobile screens and supports custom durations.
 - The session timer is shared across games, so changing games does not restart the countdown.
 - A persistent Change Game control lets parents switch games without the PIN.
-- Timer-page ad slot with a secret five-tap PIN gesture (tap the timer title five times) to disable/enable ads.
 - Added ⭐ The Little Star story, ⭐ Star Catch, 🍉 Fruit Slice, and 🔷 Shape Pop.
 - Added shared sound/haptic feedback helpers.
 
 ### Live ads
 
-The project includes a Google AdSense-compatible safe zone. To enable live ads, set `window.BABY_GAMES_AD_CLIENT` and `window.BABY_GAMES_AD_SLOT` in `index.html` to values from your ad provider. Without those values, the UI shows a clearly labelled test ad space and makes no external ad-network request.
+
 
 ### Parent PIN
 
-The existing parent PIN is `1234`. Tap the timer title five times to open the ad toggle PIN prompt. The same PIN can re-enable ads later.
+The parent PIN is used only for protected timer settings.

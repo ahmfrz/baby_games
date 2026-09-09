@@ -7,7 +7,6 @@ import { gameRegistry } from '../core/GameRegistry.js';
 import { TimerService } from '../services/TimerService.js';
 import { AudioManager } from '../services/AudioManager.js';
 import { InputManager } from '../services/InputManager.js';
-import { AdManager } from '../services/AdManager.js';
 import { tapFeedback } from '../services/FeedbackService.js';
 
 // ============================================
@@ -19,7 +18,6 @@ class BabyGamesPlatform {
     this.timerService = new TimerService();
     this.audioManager = new AudioManager();
     this.inputManager = new InputManager();
-    this.adManager = new AdManager();
     this.currentGame = null;
     this.isInitialized = false;
     this.gameContainerEl = null;
@@ -48,7 +46,6 @@ class BabyGamesPlatform {
       // Register games
       await this.registerGames();
 
-      this.adManager.initialize();
       this.createRewardLayer();
       window.addEventListener('babyGameReward', (event) => this.showReward(event.detail || {}));
       this.setupGlobalFeedback();
@@ -149,6 +146,14 @@ class BabyGamesPlatform {
         stylePath: 'games/language-adventures/styles.css',
         loader: () => import('../games/language-adventures/LanguageAdventureGame.js'),
         exportName: 'LanguageAdventureGame'
+      },
+      {
+        id: 'strawberry-garden',
+        name: '🍓 Strawberry Garden',
+        description: 'Find, pick, wash, mix, decorate, and play with a friendly strawberry.',
+        stylePath: 'games/strawberry-garden/styles.css',
+        loader: () => import('../games/strawberry-garden/StrawberryGardenGame.js'),
+        exportName: 'StrawberryGardenGame'
       },
       {
         id: 'little-scribbles',
@@ -302,7 +307,6 @@ class BabyGamesPlatform {
     const gameContainer = document.getElementById('gameContainer');
 
     this.hideGameNavigation();
-    if (this.adManager) this.adManager.render();
 
     // Hide everything first
     if (gameContainer) gameContainer.style.display = 'none';
@@ -601,39 +605,7 @@ class BabyGamesPlatform {
       if (target) tapFeedback(this.audioManager, 'click');
     }, { passive: true });
 
-    const secretAdToggle = async () => {
-      const pin = await this.requestPin();
-      if (pin === null) return;
-      if (this.timerService.checkResetPin(pin)) {
-        if (this.adManager.isDisabled()) this.adManager.enable();
-        else this.adManager.disable();
-        this.closePinDialog();
-      } else {
-        alert('Incorrect PIN.');
-      }
-    };
 
-    const adBanner = document.getElementById('adBanner');
-    if (adBanner) {
-      let taps = 0;
-      let resetTapTimer = null;
-      adBanner.addEventListener('click', () => {
-        taps += 1;
-        clearTimeout(resetTapTimer);
-        resetTapTimer = setTimeout(() => { taps = 0; }, 900);
-        if (taps >= 5) { taps = 0; secretAdToggle(); }
-      });
-    }
-
-    const timerTitle = document.querySelector('.timer-setup-title');
-    if (timerTitle) {
-      let taps = 0; let resetTapTimer = null;
-      timerTitle.addEventListener('click', () => {
-        taps += 1; clearTimeout(resetTapTimer);
-        resetTapTimer = setTimeout(() => { taps = 0; }, 1000);
-        if (taps >= 5) { taps = 0; secretAdToggle(); }
-      });
-    }
   }
 
   showGameNavigation() {
@@ -677,8 +649,6 @@ class BabyGamesPlatform {
     }
     const gameContainer = document.getElementById('gameContainer');
     if (gameContainer) gameContainer.style.display = 'none';
-    const adBanner = document.getElementById('adBanner');
-    if (adBanner) adBanner.style.display = 'none';
     await this.showLauncher();
     this.showGameNavigation();
   }
