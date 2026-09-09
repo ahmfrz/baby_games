@@ -2,403 +2,128 @@ import { GameModule } from '../../core/GameModule.js';
 import { rewardFeedback, tapFeedback } from '../../services/FeedbackService.js';
 
 export const STRAWBERRY_SCENES = [
-  { id: 'find', title: 'Find the strawberry', prompt: 'Where is the strawberry?', kind: 'find' },
+  { id: 'find', title: 'Find the strawberry', prompt: 'Can you find the strawberry?', kind: 'find' },
   { id: 'pick', title: 'Pick the strawberry', prompt: 'Pick the strawberry!', kind: 'pick' },
   { id: 'basket', title: 'Fill the basket', prompt: 'Put the strawberries in the basket.', kind: 'basket' },
-  { id: 'wash', title: 'Wash the strawberry', prompt: 'Wash the strawberry!', kind: 'wash' },
+  { id: 'wash', title: 'Wash the strawberry', prompt: 'Give the strawberry a wash!', kind: 'wash' },
   { id: 'shake', title: 'Make a strawberry shake', prompt: "Let's make a strawberry shake!", kind: 'shake' },
-  { id: 'decorate', title: 'Decorate', prompt: 'Put strawberries on the treat!', kind: 'decorate' },
-  { id: 'free', title: 'Free play', prompt: 'Play in the strawberry garden!', kind: 'free' }
+  { id: 'decorate', title: 'Decorate the treat', prompt: 'Make it pretty with strawberries!', kind: 'decorate' },
+  { id: 'free', title: 'Strawberry garden', prompt: 'Now you can play!', kind: 'free' }
 ];
 
 export const STRAWBERRY_COLORS = [
-  { name: 'Strawberry', value: '#F53D55' },
-  { name: 'Sunshine', value: '#FFD447' },
-  { name: 'Berry', value: '#A855F7' },
-  { name: 'Ocean', value: '#23A8F2' },
-  { name: 'Mint', value: '#2DD4BF' },
-  { name: 'Orange', value: '#FF8A3D' },
-  { name: 'Leaf', value: '#54C84C' }
+  { name: 'Berry Red', value: '#FF416C' }, { name: 'Sunshine', value: '#FFD84D' },
+  { name: 'Grape', value: '#A855F7' }, { name: 'Sky', value: '#2FB7FF' },
+  { name: 'Mint', value: '#35D6A4' }, { name: 'Tangerine', value: '#FF8A3D' },
+  { name: 'Leaf', value: '#58C84D' }
 ];
-
 export const TARGET_COUNTS = [1, 2, 3];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-
-function strawberrySvg({ face = 'happy', size = 120, className = '', interactive = false } = {}) {
+function berrySvg({ face = 'happy', size = 150, className = '' } = {}) {
   const eyes = face === 'surprised'
-    ? '<circle cx="64" cy="67" r="5" fill="#4b2b31"/><circle cx="96" cy="67" r="5" fill="#4b2b31"/>'
-    : '<path d="M58 67 Q64 73 70 67" fill="none" stroke="#4b2b31" stroke-width="4" stroke-linecap="round"/><path d="M90 67 Q96 73 102 67" fill="none" stroke="#4b2b31" stroke-width="4" stroke-linecap="round"/>';
-  const mouth = face === 'sleepy'
-    ? '<path d="M76 83 Q82 87 88 83" fill="none" stroke="#4b2b31" stroke-width="4" stroke-linecap="round"/>'
-    : face === 'surprised'
-      ? '<circle cx="80" cy="85" r="6" fill="#4b2b31"/>'
-      : '<path d="M72 83 Q80 93 88 83" fill="none" stroke="#4b2b31" stroke-width="4" stroke-linecap="round"/>';
-  return `
-    <svg class="sg-strawberry ${className}" width="${size}" height="${size}" viewBox="0 0 160 160" role="img" aria-label="Strawberry" ${interactive ? 'data-strawberry-interactive="true"' : ''}>
-      <defs>
-        <linearGradient id="sgBerry" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#ff6676"/><stop offset="1" stop-color="#e51f40"/>
-        </linearGradient>
-        <filter id="sgGlow"><feGaussianBlur stdDeviation="2.5"/></filter>
-      </defs>
-      <g class="sg-strawberry-body">
-        <path d="M80 34 C53 24 27 44 31 75 C35 108 59 135 80 144 C101 135 125 108 129 75 C133 44 107 24 80 34Z" fill="url(#sgBerry)"/>
-        <path d="M54 35 C63 20 72 16 80 26 C88 16 97 20 106 35 C96 31 89 34 80 42 C71 34 64 31 54 35Z" fill="#54c84c"/>
-        <g fill="#ffe8b3">
-          <ellipse cx="54" cy="57" rx="3.3" ry="6"/><ellipse cx="80" cy="51" rx="3.3" ry="6"/><ellipse cx="106" cy="57" rx="3.3" ry="6"/>
-          <ellipse cx="46" cy="81" rx="3.3" ry="6"/><ellipse cx="68" cy="77" rx="3.3" ry="6"/><ellipse cx="92" cy="77" rx="3.3" ry="6"/><ellipse cx="114" cy="81" rx="3.3" ry="6"/>
-          <ellipse cx="57" cy="105" rx="3.3" ry="6"/><ellipse cx="80" cy="101" rx="3.3" ry="6"/><ellipse cx="103" cy="105" rx="3.3" ry="6"/>
-        </g>
-        ${eyes}${mouth}
-      </g>
-    </svg>`;
+    ? '<circle cx="64" cy="68" r="5.5" fill="#402B32"/><circle cx="96" cy="68" r="5.5" fill="#402B32"/>'
+    : '<path d="M58 68 Q64 74 70 68 M90 68 Q96 74 102 68" fill="none" stroke="#402B32" stroke-width="4.5" stroke-linecap="round"/>';
+  const mouth = face === 'surprised' ? '<ellipse cx="80" cy="87" rx="6" ry="8" fill="#402B32"/>' : '<path d="M70 84 Q80 96 90 84" fill="none" stroke="#402B32" stroke-width="4.5" stroke-linecap="round"/>';
+  return `<svg class="sg-berry ${className}" width="${size}" height="${size}" viewBox="0 0 160 160" aria-label="Strawberry">
+    <defs><linearGradient id="berryGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B7D"/><stop offset=".5" stop-color="#FF3155"/><stop offset="1" stop-color="#D8173C"/></linearGradient></defs>
+    <ellipse cx="80" cy="145" rx="43" ry="7" fill="#7E334033"/>
+    <path d="M80 34 C52 23 25 45 31 79 C36 111 61 137 80 145 C99 137 124 111 129 79 C135 45 108 23 80 34Z" fill="url(#berryGrad)" stroke="#C91439" stroke-width="2"/>
+    <path d="M52 37 C61 19 72 15 80 27 C88 15 99 19 108 37 C97 32 89 35 80 44 C71 35 63 32 52 37Z" fill="#5CCB52" stroke="#3EA33A" stroke-width="2"/>
+    <g fill="#FFE9A8">${[[54,57],[80,52],[106,57],[46,82],[68,78],[92,78],[114,82],[57,106],[80,102],[103,106]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="3.2" ry="6"/>`).join('')}</g>
+    ${eyes}${mouth}<circle cx="57" cy="82" r="8" fill="#FF9DA8" opacity=".45"/><circle cx="103" cy="82" r="8" fill="#FF9DA8" opacity=".45"/>
+  </svg>`;
 }
 
 export class StrawberryGardenGame extends GameModule {
-  static metadata = {
-    id: 'strawberry-garden',
-    name: '🍓 Strawberry Garden',
-    description: 'Find, pick, wash, mix, decorate, and play with a friendly strawberry.',
-    version: '1.0.0',
-    author: 'Baby Games',
-    assetPath: 'games/strawberry-garden/'
-  };
+  static metadata = { id: 'strawberry-garden', name: '🍓 Strawberry Garden', description: 'A colorful strawberry adventure for little hands.', version: '2.0.0', author: 'Baby Games', assetPath: 'games/strawberry-garden/' };
 
   constructor(platform) {
-    super(platform);
-    this.root = null;
-    this.sessionRunning = false;
-    this.sceneIndex = 0;
-    this.targetCount = 1;
-    this.placedCount = 0;
-    this.washProgress = 0;
-    this.shakeMixed = false;
-    this.decorationCount = 0;
-    this.usedBasketItems = new Set();
-    this.usedDecorItems = new Set();
-    this.drag = null;
-    this.pendingTimeouts = new Set();
-    this.bound = {};
-    this.color = STRAWBERRY_COLORS[0].value;
+    super(platform); this.root = null; this.sessionRunning = false; this.sceneIndex = 0; this.targetCount = 1;
+    this.placedCount = 0; this.washProgress = 0; this.shakeReady = false; this.decorationCount = 0;
+    this.usedBasket = new Set(); this.usedDecor = new Set(); this.drag = null; this.completing = false;
+    this.pending = new Set(); this.color = STRAWBERRY_COLORS[0].value; this.washLast = 0;
   }
 
-  async initialize() {
-    await this.audioManager?.initialize?.();
-    this.mountUI();
-  }
-
-  start() {
-    this.sessionRunning = true;
-    this.resetState();
-    this.renderScene();
-    this.announceCurrent();
-  }
-
-  pause() {
-    this.sessionRunning = false;
-    this.cancelDrag();
-  }
-
-  resume() {
-    if (this.platform?.timerService?.hasActiveSession?.() === false) return;
-    this.sessionRunning = true;
-  }
-
-  stop() {
-    this.sessionRunning = false;
-    this.cancelDrag();
-    this.pendingTimeouts.forEach((id) => clearTimeout(id));
-    this.pendingTimeouts.clear();
-    this.audioManager?.stopSpeaking?.();
-  }
-
-  reset() {
-    this.stop();
-    this.start();
-  }
-
-  cleanup() {
-    this.stop();
-    this.root?.remove();
-    this.root = null;
-  }
-
-  resetState() {
-    this.sceneIndex = 0;
-    this.targetCount = TARGET_COUNTS[Math.floor(Math.random() * TARGET_COUNTS.length)];
-    this.placedCount = 0;
-    this.washProgress = 0;
-    this.shakeMixed = false;
-    this.decorationCount = 0;
-  }
-
-  get scene() {
-    return STRAWBERRY_SCENES[this.sceneIndex];
-  }
+  async initialize() { await this.audioManager?.initialize?.(); this.mountUI(); }
+  start() { this.sessionRunning = true; this.resetState(); this.renderScene(); this.announceCurrent(); }
+  pause() { this.sessionRunning = false; this.cancelDrag(); }
+  resume() { this.sessionRunning = true; }
+  stop() { this.sessionRunning = false; this.cancelDrag(); this.pending.forEach(clearTimeout); this.pending.clear(); this.audioManager?.stopSpeaking?.(); }
+  reset() { this.stop(); this.start(); }
+  cleanup() { this.stop(); this.root?.remove(); this.root = null; }
+  resetState() { this.sceneIndex = 0; this.targetCount = TARGET_COUNTS[Math.floor(Math.random()*3)]; this.placedCount = 0; this.washProgress = 0; this.shakeReady = false; this.decorationCount = 0; this.usedBasket.clear(); this.usedDecor.clear(); this.completing = false; }
+  get scene() { return STRAWBERRY_SCENES[this.sceneIndex]; }
 
   mountUI() {
     if (this.root?.isConnected) return;
-    const host = this.getGameContainerEl();
-    if (!host) throw new Error('Strawberry Garden game container is unavailable.');
-
-    const root = document.createElement('section');
-    root.id = 'strawberry-garden-game';
-    root.className = 'strawberry-game';
-    root.innerHTML = `
-      <header class="sg-header">
-        <div class="sg-brand"><span class="sg-brand-icon">🍓</span><div><div class="sg-kicker">PLAY & LEARN</div><h1>Strawberry Garden</h1></div></div>
-        <div class="sg-progress" data-sg-progress>1 / ${STRAWBERRY_SCENES.length - 1}</div>
-      </header>
-      <main class="sg-main">
-        <section class="sg-card sg-scene" data-sg-scene aria-live="polite"></section>
-        <div class="sg-prompt" data-sg-prompt></div>
-      </main>
-    `;
-    host.appendChild(root);
-    this.root = root;
-    root.addEventListener('click', (event) => this.onClick(event));
-    root.addEventListener('pointerdown', (event) => this.onPointerDown(event), { passive: false });
-    root.addEventListener('pointermove', (event) => this.onPointerMove(event), { passive: false });
-    root.addEventListener('pointerup', (event) => this.onPointerUp(event));
-    root.addEventListener('pointercancel', () => this.cancelDrag());
+    const host = this.getGameContainerEl(); if (!host) throw new Error('Strawberry Garden container unavailable.');
+    const root = document.createElement('section'); root.id = 'strawberry-garden-game'; root.className = 'strawberry-game';
+    root.innerHTML = `<header class="sg-topbar"><div class="sg-logo"><span>🍓</span><div><small>PLAY • DISCOVER • CREATE</small><strong>Strawberry Garden</strong></div></div><div class="sg-step" data-sg-progress></div></header><main class="sg-stage" data-sg-scene></main><div class="sg-prompt" data-sg-prompt></div>`;
+    host.appendChild(root); this.root = root;
+    root.addEventListener('click', e => this.onClick(e));
+    root.addEventListener('pointerdown', e => this.onPointerDown(e), { passive:false }); root.addEventListener('pointermove', e => this.onPointerMove(e), { passive:false });
+    root.addEventListener('pointerup', () => this.onPointerUp()); root.addEventListener('pointercancel', () => this.cancelDrag());
   }
 
   renderScene() {
-    if (!this.root) return;
-    const sceneEl = this.root.querySelector('[data-sg-scene]');
-    const promptEl = this.root.querySelector('[data-sg-prompt]');
-    sceneEl.innerHTML = this.sceneMarkup();
-    promptEl.textContent = this.scene.prompt;
-    const progress = this.root.querySelector('[data-sg-progress]');
-    progress.textContent = this.scene.kind === 'free' ? 'FREE PLAY' : `${this.sceneIndex + 1} / ${STRAWBERRY_SCENES.length - 1}`;
+    if (!this.root) return; this.cancelDrag(); this.completing = false;
+    this.root.querySelector('[data-sg-scene]').innerHTML = this.sceneMarkup();
+    this.root.querySelector('[data-sg-prompt]').textContent = this.scene.prompt;
+    this.root.querySelector('[data-sg-progress]').textContent = this.scene.kind === 'free' ? 'FREE PLAY' : `${this.sceneIndex + 1} / 6`;
   }
 
   sceneMarkup() {
-    switch (this.scene.kind) {
-      case 'find': return `
-        <div class="sg-garden-scene">
-          <div class="sg-sun">☀️</div><div class="sg-cloud c1">☁️</div><div class="sg-cloud c2">☁️</div>
-          <div class="sg-plant p1">🌿</div><div class="sg-plant p2">🌿</div><div class="sg-flower">🌼</div>
-          <button type="button" class="sg-hidden-strawberry" data-action="find-strawberry" aria-label="Find strawberry">${strawberrySvg({ face: 'surprised', size: 128, interactive: true })}</button>
-          <button type="button" class="sg-dummy-object flower-btn" aria-label="Flower">🌻</button>
-          <button type="button" class="sg-dummy-object apple-btn" aria-label="Apple">🍎</button>
-        </div>`;
-      case 'pick': return `
-        <div class="sg-plant-scene">
-          <div class="sg-big-plant">🌿</div>
-          <button type="button" class="sg-hanging-strawberry" data-action="pick-strawberry" aria-label="Pick strawberry">${strawberrySvg({ face: 'happy', size: 160, interactive: true })}</button>
-          <div class="sg-basket empty" data-sg-basket>🧺</div>
-        </div>`;
-      case 'basket': return `
-        <div class="sg-basket-scene">
-          <div class="sg-counter">${Array.from({ length: this.targetCount }, (_, i) => this.usedBasketItems.has(i) ? '' : `<div class="sg-drag-strawberry" data-item-index="${i}" data-drag-kind="basket" aria-label="Strawberry ${i + 1}">${strawberrySvg({ face: 'happy', size: 110, interactive: true })}</div>`).join('')}</div>
-          <div class="sg-basket-target" data-drop-target="basket" aria-label="Basket">🧺<span>${this.placedCount}/${this.targetCount}</span></div>
-        </div>`;
-      case 'wash': return `
-        <div class="sg-wash-scene">
-          <div class="sg-tap">🚰</div><div class="sg-water-stream"></div>
-          <div class="sg-wash-pad" data-wash-target>${strawberrySvg({ face: this.washProgress > 55 ? 'happy' : 'surprised', size: 190, interactive: true })}</div>
-          <div class="sg-bubbles">${this.washProgress > 20 ? '🫧 🫧 🫧' : ''}</div>
-          <div class="sg-wash-meter"><span style="width:${clamp(this.washProgress, 0, 100)}%"></span></div>
-        </div>`;
-      case 'shake': return `
-        <div class="sg-shake-scene">
-          <div class="sg-ingredient" data-drag-kind="shake">${strawberrySvg({ face: 'happy', size: 125, interactive: true })}<span>strawberry</span></div>
-          <div class="sg-ingredient milk">🥛<span>milk</span></div>
-          <div class="sg-blender" data-drop-target="blender"><div class="sg-blender-lid">🥤</div><div class="sg-blender-fill"></div></div>
-          <button type="button" class="sg-big-button" data-action="blend">${this.shakeMixed ? 'Made it! 🍓' : 'BLEND!'}</button>
-        </div>`;
-      case 'decorate': return `
-        <div class="sg-decorate-scene">
-          <div class="sg-treat">🍰<div class="sg-toppings" data-drop-target="treat"></div></div>
-          <div class="sg-decor-items">
-            ${Array.from({ length: 3 }, (_, i) => this.usedDecorItems.has(i) ? '' : `<div class="sg-decor-strawberry" data-drag-kind="decorate" data-item-index="${i}">${strawberrySvg({ face: 'happy', size: 86, interactive: true })}</div>`).join('')}
-          </div>
-          <div class="sg-decor-count">🍓 ${this.decorationCount}</div>
-          ${this.decorationCount >= 3 ? '<div class="sg-celebrate">You did it! 🎉</div>' : ''}
-        </div>`;
-      case 'free': return `
-        <div class="sg-free-scene">
-          <div class="sg-free-sky">☀️ ☁️</div>
-          <div class="sg-free-garden"><span class="free-flower">🌼</span><span class="free-flower f2">🌷</span><span class="free-butterfly">🦋</span></div>
-          <div class="sg-free-strawberries" data-free-area>
-            <button class="sg-free-strawberry f1" data-free-strawberry>${strawberrySvg({ face: 'happy', size: 110, interactive: true })}</button>
-            <button class="sg-free-strawberry f2" data-free-strawberry>${strawberrySvg({ face: 'happy', size: 96, interactive: true })}</button>
-            <button class="sg-free-strawberry f3" data-free-strawberry>${strawberrySvg({ face: 'happy', size: 86, interactive: true })}</button>
-          </div>
-          <div class="sg-free-palette">${STRAWBERRY_COLORS.map((c) => `<button type="button" class="sg-color" data-color="${c.value}" style="--sg-color:${c.value}" aria-label="${c.name}"></button>`).join('')}</div>
-          <button type="button" class="sg-play-again" data-action="restart">🍓 Play again</button>
-        </div>`;
+    switch(this.scene.kind) {
+      case 'find': return `<div class="sg-world garden"><div class="sg-sky"><i class="sun"></i><i class="cloud one"></i><i class="cloud two"></i></div><div class="hills"></div><div class="garden-bed"><span class="leaf l1">🍃</span><span class="leaf l2">🌱</span><span class="leaf l3">🍃</span><button class="berry-button hidden-berry" data-action="find">${berrySvg({face:'surprised',size:170})}</button><button class="garden-object flower">🌼</button><button class="garden-object apple">🍎</button><button class="garden-object butterfly">🦋</button></div><div class="sg-fireflies">✦　·　✦</div></div>`;
+      case 'pick': return `<div class="sg-world orchard"><div class="orchard-sun">☀</div><div class="orchard-tree"><span>🍃</span><span>🌿</span><span>🍃</span></div><button class="berry-button hanging" data-action="pick">${berrySvg({size:190})}<span class="tap-ring"></span></button><div class="wooden-basket">🧺<small>Basket</small></div></div>`;
+      case 'basket': return `<div class="sg-world basket-world"><div class="counter-card"><span>STRAWBERRIES</span><strong>${this.placedCount}<em>/ ${this.targetCount}</em></strong></div><div class="berry-row">${Array.from({length:this.targetCount},(_,i)=>this.usedBasket.has(i)?'':`<div class="drag-berry" data-drag-kind="basket" data-item-index="${i}">${berrySvg({size:130})}</div>`).join('')}</div><div class="basket-target" data-drop-target="basket"><div class="basket-glow"></div><span>🧺</span><small>Drop here</small></div></div>`;
+      case 'wash': return `<div class="sg-world wash-world"><div class="tile-wall"></div><div class="sink"><div class="faucet">🚰</div><div class="water"></div><div class="basin"></div></div><div class="wash-berry ${this.washProgress>60?'clean':''}" data-wash-target>${berrySvg({face:this.washProgress>60?'happy':'surprised',size:205})}<div class="soap-bubbles">${this.washProgress>10?'○ ○ ○':''}</div></div><div class="wash-meter"><span style="width:${this.washProgress}%"></span></div><div class="wash-label">${this.washProgress>60?'ALL CLEAN!':'RUB THE STRAWBERRY'}</div></div>`;
+      case 'shake': return `<div class="sg-world kitchen-world"><div class="kitchen-window"><i></i><i></i></div><div class="counter"></div><div class="shake-berry" data-drag-kind="shake">${berrySvg({size:145})}<small>Strawberry</small></div><div class="milk"><span>🥛</span><small>Milk</small></div><div class="blender ${this.shakeReady?'ready':''}" data-drop-target="blender"><div class="jar"><div class="pink-liquid"></div></div><div class="base"></div><div class="blender-star">✦</div></div><button class="blend-button" data-action="blend" ${this.shakeReady?'':'disabled'}>${this.shakeReady?'BLEND!':'DRAG IT HERE'}</button></div>`;
+      case 'decorate': return `<div class="sg-world bakery-world"><div class="bakery-window"><span>♡</span><span>CAFE</span></div><div class="cake" data-drop-target="cake"><div class="cake-top"><div class="icing"></div></div><div class="cake-body"></div><div class="cake-berries"></div></div><div class="decor-tray"><small>ADD STRAWBERRIES</small><div>${[0,1,2].map(i=>this.usedDecor.has(i)?'':`<div class="decor-berry" data-drag-kind="decorate" data-item-index="${i}">${berrySvg({size:105})}</div>`).join('')}</div></div><div class="decor-count">${this.decorationCount} / 3</div></div>`;
+      case 'free': return `<div class="sg-world free-world"><div class="free-sky"><i class="sun"></i><i class="cloud one"></i><i class="cloud two"></i></div><div class="rainbow">◜　◝</div><div class="free-hills"></div><div class="free-tree">🌳</div><div class="free-flower f1">🌷</div><div class="free-flower f2">🌻</div><button class="free-berry b1" data-free-berry>${berrySvg({size:145})}</button><button class="free-berry b2" data-free-berry>${berrySvg({size:120})}</button><button class="free-berry b3" data-free-berry>${berrySvg({size:135})}</button><button class="free-butterfly" data-free-berry>🦋</button><div class="free-palette">${STRAWBERRY_COLORS.map(c=>`<button class="color-dot ${c.value===this.color?'selected':''}" data-color="${c.value}" style="--c:${c.value}" aria-label="${c.name}"></button>`).join('')}</div><button class="play-again" data-action="restart">Play again</button></div>`;
       default: return '';
     }
   }
 
   onClick(event) {
-    const actionEl = event.target.closest?.('[data-action]');
-    if (actionEl) {
-      const action = actionEl.dataset.action;
-      if (action === 'find-strawberry') this.completeScene('Strawberry!');
-      if (action === 'pick-strawberry') this.pickStrawberry();
-      if (action === 'blend') this.blendShake();
-      if (action === 'restart') this.reset();
-      return;
-    }
+    const action = event.target.closest?.('[data-action]')?.dataset.action;
+    if (action === 'find') return this.completeScene('You found it!');
+    if (action === 'pick') return this.pickStrawberry();
+    if (action === 'blend') return this.blendShake();
+    if (action === 'restart') return this.reset();
     const color = event.target.closest?.('[data-color]')?.dataset.color;
-    if (color) {
-      this.color = color;
-      this.announce('Color picked!');
-      this.root.querySelectorAll('.sg-color').forEach((btn) => btn.classList.toggle('selected', btn.dataset.color === color));
-    }
-    if (event.target.closest?.('[data-free-strawberry]')) this.pulseElement(event.target.closest('[data-free-strawberry]'));
+    if (color) { this.color=color; this.root.querySelectorAll('.color-dot').forEach(b=>b.classList.toggle('selected',b.dataset.color===color)); this.announce('Pretty color!'); }
+    const free = event.target.closest?.('[data-free-berry]'); if (free) { free.classList.remove('pulse'); void free.offsetWidth; free.classList.add('pulse'); tapFeedback(this.audioManager,'tap'); }
   }
 
   onPointerDown(event) {
     if (!this.sessionRunning) return;
-    const wash = event.target.closest?.('[data-wash-target]');
-    const dragItem = event.target.closest?.('[data-drag-kind]');
-    if (wash && this.scene.kind === 'wash') {
-      event.preventDefault();
-      this.wash(event);
-      return;
-    }
-    if (dragItem && ['basket', 'decorate', 'shake'].includes(dragItem.dataset.dragKind)) {
-      event.preventDefault();
-      this.startDrag(event, dragItem);
-    }
+    const wash = event.target.closest?.('[data-wash-target]'); const drag = event.target.closest?.('[data-drag-kind]');
+    if (wash && this.scene.kind==='wash') { event.preventDefault(); this.wash(event); return; }
+    if (drag && ['basket','decorate','shake'].includes(drag.dataset.dragKind)) { event.preventDefault(); this.startDrag(event,drag); }
   }
-
   onPointerMove(event) {
     if (!this.sessionRunning) return;
-    if (this.scene.kind === 'wash' && (event.buttons & 1 || event.pointerType === 'touch')) {
-      if (event.target.closest?.('[data-wash-target]') || this.root.querySelector('[data-wash-target]')) this.wash(event);
-    }
-    if (this.drag) {
-      event.preventDefault();
-      this.moveDrag(event);
-    }
+    if (this.scene.kind==='wash' && (event.buttons & 1 || event.pointerType==='touch')) this.wash(event);
+    if (this.drag) { event.preventDefault(); this.moveDrag(event); }
   }
-
-  onPointerUp() {
-    if (this.drag) this.finishDrag();
-  }
-
-  startDrag(event, source) {
-    this.drag = { pointerId: event.pointerId, source, kind: source.dataset.dragKind, ghost: source.cloneNode(true) };
-    this.drag.ghost.classList.add('sg-drag-ghost');
-    document.body.appendChild(this.drag.ghost);
-    source.style.opacity = '0.35';
-    this.moveDrag(event);
-  }
-
-  moveDrag(event) {
-    if (!this.drag) return;
-    const rect = this.drag.ghost.getBoundingClientRect();
-    this.drag.ghost.style.left = `${event.clientX - rect.width / 2 + window.scrollX}px`;
-    this.drag.ghost.style.top = `${event.clientY - rect.height / 2 + window.scrollY}px`;
-  }
-
+  onPointerUp() { if (this.drag) this.finishDrag(); }
+  startDrag(event,source) { this.drag={source,kind:source.dataset.dragKind,ghost:source.cloneNode(true)}; this.drag.ghost.classList.add('drag-ghost'); document.body.appendChild(this.drag.ghost); source.style.opacity='.15'; this.moveDrag(event); }
+  moveDrag(event) { if (!this.drag) return; this.drag.ghost.style.left=`${event.clientX}px`; this.drag.ghost.style.top=`${event.clientY}px`; }
   finishDrag() {
-    if (!this.drag) return;
-    const { source, kind, ghost } = this.drag;
-    const pointerRect = ghost.getBoundingClientRect();
-    ghost.remove();
-    source.style.opacity = '';
-    const targetSelector = kind === 'basket' ? '[data-drop-target="basket"]' : kind === 'shake' ? '[data-drop-target="blender"]' : '[data-drop-target="treat"]';
-    const target = this.root.querySelector(targetSelector);
-    if (target) {
-      const t = target.getBoundingClientRect();
-      const centerX = pointerRect.left + pointerRect.width / 2;
-      const centerY = pointerRect.top + pointerRect.height / 2;
-      const hit = centerX >= t.left - 70 && centerX <= t.right + 70 && centerY >= t.top - 70 && centerY <= t.bottom + 70;
-      if (hit) {
-        const itemIndex = Number(source.dataset.itemIndex);
-        if (kind === 'basket') { this.usedBasketItems.add(itemIndex); this.placedCount += 1; }
-        if (kind === 'decorate') { this.usedDecorItems.add(itemIndex); this.decorationCount += 1; }
-        if (kind === 'shake') this.shakeMixed = true;
-        tapFeedback(this.audioManager, 'success');
-        this.drag = null;
-        if ((kind === 'basket' && this.placedCount >= this.targetCount) || (kind === 'decorate' && this.decorationCount >= 3) || kind === 'shake') {
-          this.completeScene(kind === 'basket' ? 'All in the basket!' : kind === 'decorate' ? 'So pretty!' : 'Ready to blend!');
-          return;
-        }
-        this.renderScene();
-      }
-    }
-    this.drag = null;
+    if (!this.drag) return; const {source,kind,ghost}=this.drag; const r=ghost.getBoundingClientRect(); ghost.remove(); source.style.opacity=''; this.drag=null;
+    const target = this.root.querySelector(kind==='basket'?'[data-drop-target="basket"]':kind==='shake'?'[data-drop-target="blender"]':'[data-drop-target="cake"]'); if(!target) return;
+    const t=target.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; const hit=cx>t.left-90&&cx<t.right+90&&cy>t.top-90&&cy<t.bottom+90; if(!hit) return;
+    if(kind==='basket'){ const i=Number(source.dataset.itemIndex); if(this.usedBasket.has(i)) return; this.usedBasket.add(i); this.placedCount++; }
+    if(kind==='decorate'){ const i=Number(source.dataset.itemIndex); if(this.usedDecor.has(i)) return; this.usedDecor.add(i); this.decorationCount++; }
+    if(kind==='shake') this.shakeReady=true; tapFeedback(this.audioManager,'success'); this.renderScene();
+    if((kind==='basket'&&this.placedCount>=this.targetCount)||(kind==='decorate'&&this.decorationCount>=3)) this.completeScene(kind==='basket'?'Into the basket!':'So pretty!');
   }
-
-  cancelDrag() {
-    if (!this.drag) return;
-    this.drag.ghost?.remove();
-    this.drag.source.style.opacity = '';
-    this.drag = null;
-  }
-
-  wash(event) {
-    const target = this.root.querySelector('[data-wash-target]');
-    if (!target) return;
-    const rect = target.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
-    if (x < -0.2 || x > 1.2 || y < -0.2 || y > 1.2) return;
-    this.washProgress = clamp(this.washProgress + 1.8, 0, 100);
-    if (this.washProgress >= 80) {
-      this.completeScene('All clean!');
-    } else {
-      this.renderScene();
-    }
-  }
-
-  pickStrawberry() {
-    if (this.scene.kind !== 'pick') return;
-    const berry = this.root.querySelector('.sg-hanging-strawberry');
-    if (!berry || berry.dataset.done === 'true') return;
-    berry.dataset.done = 'true';
-    berry.classList.add('picked');
-    const timer = setTimeout(() => this.completeScene('Got it!'), 550);
-    this.pendingTimeouts.add(timer);
-  }
-
-  blendShake() {
-    if (this.scene.kind !== 'shake' || !this.shakeMixed || this.root.querySelector('.sg-big-button')?.disabled) return;
-    const button = this.root.querySelector('.sg-big-button');
-    button.disabled = true;
-    this.root.querySelector('.sg-blender')?.classList.add('blending');
-    const timer = setTimeout(() => this.completeScene('Strawberry shake!'), 800);
-    this.pendingTimeouts.add(timer);
-  }
-
-  completeScene(message) {
-    if (!this.sessionRunning || this.scene.kind === 'free' || this.root?.dataset.completing === 'true') return;
-    this.root.dataset.completing = 'true';
-    rewardFeedback(this.platform, message, '🍓');
-    tapFeedback(this.audioManager, 'success');
-    const timer = setTimeout(() => {
-      this.pendingTimeouts.delete(timer);
-      this.root.dataset.completing = 'false';
-      this.sceneIndex += 1;
-      if (this.sceneIndex >= STRAWBERRY_SCENES.length) this.sceneIndex = STRAWBERRY_SCENES.length - 1;
-      this.renderScene();
-      this.announceCurrent();
-    }, 650);
-    this.pendingTimeouts.add(timer);
-  }
-
-  pulseElement(element) {
-    if (!element) return;
-    element.classList.remove('pulse');
-    void element.offsetWidth;
-    element.classList.add('pulse');
-  }
-
-  announceCurrent() {
-    if (!this.scene) return;
-    this.announce(`${this.scene.prompt}`);
-  }
-
-  announce(text) {
-    this.audioManager?.ensureRunning?.();
-    this.audioManager?.speak?.(text, 0.88);
-  }
+  cancelDrag(){ if(!this.drag)return; this.drag.ghost?.remove(); this.drag.source.style.opacity=''; this.drag=null; }
+  wash(event){ const now=performance.now(); if(now-this.washLast<35)return; this.washLast=now; const t=this.root.querySelector('[data-wash-target]'); if(!t)return; const r=t.getBoundingClientRect(); const x=(event.clientX-r.left)/r.width,y=(event.clientY-r.top)/r.height; if(x<-.25||x>1.25||y<-.25||y>1.25)return; this.washProgress=clamp(this.washProgress+2.5,0,100); if(this.washProgress>=80)this.completeScene('All clean!'); else if(Math.floor(this.washProgress)%10===0)this.renderScene(); }
+  pickStrawberry(){ if(this.scene.kind!=='pick'||this.completing)return; const b=this.root.querySelector('.hanging'); if(!b||b.dataset.done)return; b.dataset.done='true'; b.classList.add('picked'); tapFeedback(this.audioManager,'success'); const id=setTimeout(()=>{this.pending.delete(id);this.completeScene('Got it!')},500);this.pending.add(id); }
+  blendShake(){ if(this.scene.kind!=='shake'||!this.shakeReady||this.completing)return; const b=this.root.querySelector('.blend-button'); if(b?.disabled)return; b.disabled=true; this.root.querySelector('.blender')?.classList.add('blending'); const id=setTimeout(()=>{this.pending.delete(id);this.completeScene('Yummy strawberry shake!')},900);this.pending.add(id); }
+  completeScene(message){ if(!this.sessionRunning||this.scene.kind==='free'||this.completing)return; this.completing=true; rewardFeedback(this.platform,message,'🍓'); tapFeedback(this.audioManager,'success'); const id=setTimeout(()=>{this.pending.delete(id);this.sceneIndex=Math.min(this.sceneIndex+1,STRAWBERRY_SCENES.length-1);this.renderScene();this.announceCurrent();},700);this.pending.add(id); }
+  announceCurrent(){this.announce(this.scene.prompt);} announce(text){this.audioManager?.ensureRunning?.();this.audioManager?.speak?.(text,.86);}
 }
