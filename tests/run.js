@@ -1,7 +1,17 @@
+import { runEngineSystemTests } from './engine-systems.test.js';
 import { expect, MockStorage } from './utils/mock-storage.js';
 import { TimerService } from '../services/TimerService.js';
+import { runVisualAssetSystemTests } from './visual-asset-system.test.js';
+import { runToddlerExperienceTests } from './toddler-experience.test.js';
 
-console.log('Starting TimerService Tests...\n');
+console.log('Starting Phaser Engine Tests...');
+runEngineSystemTests();
+
+console.log('Starting Visual Asset Tests...');
+console.log(`[PASS] Visual assets: ${runVisualAssetSystemTests()} checks`);
+console.log(`[PASS] Toddler experience systems: ${runToddlerExperienceTests()} checks`);
+
+console.log('Starting TimerService Tests...');
 
 let testCount = 0;
 let passCount = 0;

@@ -1,129 +1,248 @@
 import { GameModule } from '../../core/GameModule.js';
 import { rewardFeedback, tapFeedback } from '../../services/FeedbackService.js';
+import { PhaserGameRuntime } from '../../engine/phaser/PhaserGameRuntime.js';
+import { roundedRect, text, addSparkles } from '../../engine/phaser/ToddlerGameScene.js';
+import { ToddlerInteractionSystem } from '../../engine/phaser/ToddlerInteractionSystem.js';
+import { TweenFX } from '../../engine/phaser/TweenFX.js';
+import { SceneTransition } from '../../engine/phaser/SceneTransition.js';
+import { GameStateStore } from '../../engine/core/GameStateStore.js';
+import { strawberryAssets } from '../../assets/games/strawberry-garden/manifest.js';
+import { ToddlerCharacter } from '../../engine/phaser/ToddlerCharacter.js';
+import { ToddlerReward } from '../../engine/phaser/ToddlerReward.js';
+import { playToddlerSound } from '../../engine/phaser/ToddlerAudioEvents.js';
 
-export const STRAWBERRY_SCENES = [
-  { id: 'find', title: 'Find the strawberry', prompt: 'Can you find the strawberry?', kind: 'find' },
-  { id: 'pick', title: 'Pick the strawberry', prompt: 'Pick the strawberry!', kind: 'pick' },
-  { id: 'basket', title: 'Fill the basket', prompt: 'Put the strawberries in the basket.', kind: 'basket' },
-  { id: 'wash', title: 'Wash the strawberry', prompt: 'Give the strawberry a wash!', kind: 'wash' },
-  { id: 'shake', title: 'Make a strawberry shake', prompt: "Let's make a strawberry shake!", kind: 'shake' },
-  { id: 'decorate', title: 'Decorate the treat', prompt: 'Make it pretty with strawberries!', kind: 'decorate' },
-  { id: 'free', title: 'Strawberry garden', prompt: 'Now you can play!', kind: 'free' }
-];
+export const STRAWBERRY_SCENES = ['find', 'pick', 'basket', 'wash', 'shake', 'decorate', 'free'];
+const W = 960;
+const H = 600;
 
-export const STRAWBERRY_COLORS = [
-  { name: 'Berry Red', value: '#FF416C' }, { name: 'Sunshine', value: '#FFD84D' },
-  { name: 'Grape', value: '#A855F7' }, { name: 'Sky', value: '#2FB7FF' },
-  { name: 'Mint', value: '#35D6A4' }, { name: 'Tangerine', value: '#FF8A3D' },
-  { name: 'Leaf', value: '#58C84D' }
-];
-export const TARGET_COUNTS = [1, 2, 3];
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function createStrawberryScene(Phaser, gamePlatform) {
+  return class StrawberryScene extends Phaser.Scene {
+  constructor() { super({ key: 'strawberry-garden' }); this.gamePlatform = gamePlatform; this.state = null; }
 
-function berrySvg({ face = 'happy', size = 150, className = '' } = {}) {
-  const eyes = face === 'surprised'
-    ? '<circle cx="64" cy="68" r="5.5" fill="#402B32"/><circle cx="96" cy="68" r="5.5" fill="#402B32"/>'
-    : '<path d="M58 68 Q64 74 70 68 M90 68 Q96 74 102 68" fill="none" stroke="#402B32" stroke-width="4.5" stroke-linecap="round"/>';
-  const mouth = face === 'surprised' ? '<ellipse cx="80" cy="87" rx="6" ry="8" fill="#402B32"/>' : '<path d="M70 84 Q80 96 90 84" fill="none" stroke="#402B32" stroke-width="4.5" stroke-linecap="round"/>';
-  return `<svg class="sg-berry ${className}" width="${size}" height="${size}" viewBox="0 0 160 160" aria-label="Strawberry">
-    <defs><linearGradient id="berryGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B7D"/><stop offset=".5" stop-color="#FF3155"/><stop offset="1" stop-color="#D8173C"/></linearGradient></defs>
-    <ellipse cx="80" cy="145" rx="43" ry="7" fill="#7E334033"/>
-    <path d="M80 34 C52 23 25 45 31 79 C36 111 61 137 80 145 C99 137 124 111 129 79 C135 45 108 23 80 34Z" fill="url(#berryGrad)" stroke="#C91439" stroke-width="2"/>
-    <path d="M52 37 C61 19 72 15 80 27 C88 15 99 19 108 37 C97 32 89 35 80 44 C71 35 63 32 52 37Z" fill="#5CCB52" stroke="#3EA33A" stroke-width="2"/>
-    <g fill="#FFE9A8">${[[54,57],[80,52],[106,57],[46,82],[68,78],[92,78],[114,82],[57,106],[80,102],[103,106]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="3.2" ry="6"/>`).join('')}</g>
-    ${eyes}${mouth}<circle cx="57" cy="82" r="8" fill="#FF9DA8" opacity=".45"/><circle cx="103" cy="82" r="8" fill="#FF9DA8" opacity=".45"/>
-  </svg>`;
-}
-
-export class StrawberryGardenGame extends GameModule {
-  static metadata = { id: 'strawberry-garden', name: '🍓 Strawberry Garden', description: 'A colorful strawberry adventure for little hands.', version: '2.0.0', author: 'Baby Games', assetPath: 'games/strawberry-garden/' };
-
-  constructor(platform) {
-    super(platform); this.root = null; this.sessionRunning = false; this.sceneIndex = 0; this.targetCount = 1;
-    this.placedCount = 0; this.washProgress = 0; this.shakeReady = false; this.decorationCount = 0;
-    this.usedBasket = new Set(); this.usedDecor = new Set(); this.drag = null; this.completing = false;
-    this.pending = new Set(); this.color = STRAWBERRY_COLORS[0].value; this.washLast = 0;
+  preload() {
+    this.load.svg('sg-strawberry', strawberryAssets.character);
+    this.load.svg('sg-butterfly', strawberryAssets.butterfly);
+    this.load.svg('sg-basket', strawberryAssets.basket);
+    this.load.svg('sg-sink', strawberryAssets.sink);
+    this.load.svg('sg-blender', strawberryAssets.blender);
+    this.load.svg('sg-cake', strawberryAssets.cake);
+    this.load.svg('sg-garden', strawberryAssets.garden);
   }
 
-  async initialize() { await this.audioManager?.initialize?.(); this.mountUI(); }
-  start() { this.sessionRunning = true; this.resetState(); this.renderScene(); this.announceCurrent(); }
-  pause() { this.sessionRunning = false; this.cancelDrag(); }
-  resume() { this.sessionRunning = true; }
-  stop() { this.sessionRunning = false; this.cancelDrag(); this.pending.forEach(clearTimeout); this.pending.clear(); this.audioManager?.stopSpeaking?.(); }
-  reset() { this.stop(); this.start(); }
-  cleanup() { this.stop(); this.root?.remove(); this.root = null; }
-  resetState() { this.sceneIndex = 0; this.targetCount = TARGET_COUNTS[Math.floor(Math.random()*3)]; this.placedCount = 0; this.washProgress = 0; this.shakeReady = false; this.decorationCount = 0; this.usedBasket.clear(); this.usedDecor.clear(); this.completing = false; }
-  get scene() { return STRAWBERRY_SCENES[this.sceneIndex]; }
-
-  mountUI() {
-    if (this.root?.isConnected) return;
-    const host = this.getGameContainerEl(); if (!host) throw new Error('Strawberry Garden container unavailable.');
-    const root = document.createElement('section'); root.id = 'strawberry-garden-game'; root.className = 'strawberry-game';
-    root.innerHTML = `<header class="sg-topbar"><div class="sg-logo"><span>🍓</span><div><small>PLAY • DISCOVER • CREATE</small><strong>Strawberry Garden</strong></div></div><div class="sg-step" data-sg-progress></div></header><main class="sg-stage" data-sg-scene></main><div class="sg-prompt" data-sg-prompt></div>`;
-    host.appendChild(root); this.root = root;
-    root.addEventListener('click', e => this.onClick(e));
-    root.addEventListener('pointerdown', e => this.onPointerDown(e), { passive:false }); root.addEventListener('pointermove', e => this.onPointerMove(e), { passive:false });
-    root.addEventListener('pointerup', () => this.onPointerUp()); root.addEventListener('pointercancel', () => this.cancelDrag());
+  create() {
+    const s = this;
+    s.stateStore = new GameStateStore({ kind: 'find', basket: 0, wash: 0, decor: 0, shakeReady: false, berries: [] });
+    s.state = s.stateStore.get();
+    s.interactions = new ToddlerInteractionSystem(s, { hitPadding: 48 });
+    s.reward = new ToddlerReward(s, s.gamePlatform?.audioManager);
+    s.drawBackdrop();
+    s.drawTopBar();
+    s.renderKind();
   }
 
-  renderScene() {
-    if (!this.root) return; this.cancelDrag(); this.completing = false;
-    this.root.querySelector('[data-sg-scene]').innerHTML = this.sceneMarkup();
-    this.root.querySelector('[data-sg-prompt]').textContent = this.scene.prompt;
-    this.root.querySelector('[data-sg-progress]').textContent = this.scene.kind === 'free' ? 'FREE PLAY' : `${this.sceneIndex + 1} / 6`;
+  drawBackdrop() {
+    const bg = this.add.image(W / 2, H / 2, 'sg-garden').setDisplaySize(W, H);
+    bg.setDepth(-20);
+    const haze = this.add.graphics().setDepth(-19);
+    haze.fillStyle(0xffffff, 0.10);
+    haze.fillEllipse(480, 390, 760, 230);
   }
 
-  sceneMarkup() {
-    switch(this.scene.kind) {
-      case 'find': return `<div class="sg-world garden"><div class="sg-sky"><i class="sun"></i><i class="cloud one"></i><i class="cloud two"></i></div><div class="hills"></div><div class="garden-bed"><span class="leaf l1">🍃</span><span class="leaf l2">🌱</span><span class="leaf l3">🍃</span><button class="berry-button hidden-berry" data-action="find">${berrySvg({face:'surprised',size:170})}</button><button class="garden-object flower">🌼</button><button class="garden-object apple">🍎</button><button class="garden-object butterfly">🦋</button></div><div class="sg-fireflies">✦　·　✦</div></div>`;
-      case 'pick': return `<div class="sg-world orchard"><div class="orchard-sun">☀</div><div class="orchard-tree"><span>🍃</span><span>🌿</span><span>🍃</span></div><button class="berry-button hanging" data-action="pick">${berrySvg({size:190})}<span class="tap-ring"></span></button><div class="wooden-basket">🧺<small>Basket</small></div></div>`;
-      case 'basket': return `<div class="sg-world basket-world"><div class="counter-card"><span>STRAWBERRIES</span><strong>${this.placedCount}<em>/ ${this.targetCount}</em></strong></div><div class="berry-row">${Array.from({length:this.targetCount},(_,i)=>this.usedBasket.has(i)?'':`<div class="drag-berry" data-drag-kind="basket" data-item-index="${i}">${berrySvg({size:130})}</div>`).join('')}</div><div class="basket-target" data-drop-target="basket"><div class="basket-glow"></div><span>🧺</span><small>Drop here</small></div></div>`;
-      case 'wash': return `<div class="sg-world wash-world"><div class="tile-wall"></div><div class="sink"><div class="faucet">🚰</div><div class="water"></div><div class="basin"></div></div><div class="wash-berry ${this.washProgress>60?'clean':''}" data-wash-target>${berrySvg({face:this.washProgress>60?'happy':'surprised',size:205})}<div class="soap-bubbles">${this.washProgress>10?'○ ○ ○':''}</div></div><div class="wash-meter"><span style="width:${this.washProgress}%"></span></div><div class="wash-label">${this.washProgress>60?'ALL CLEAN!':'RUB THE STRAWBERRY'}</div></div>`;
-      case 'shake': return `<div class="sg-world kitchen-world"><div class="kitchen-window"><i></i><i></i></div><div class="counter"></div><div class="shake-berry" data-drag-kind="shake">${berrySvg({size:145})}<small>Strawberry</small></div><div class="milk"><span>🥛</span><small>Milk</small></div><div class="blender ${this.shakeReady?'ready':''}" data-drop-target="blender"><div class="jar"><div class="pink-liquid"></div></div><div class="base"></div><div class="blender-star">✦</div></div><button class="blend-button" data-action="blend" ${this.shakeReady?'':'disabled'}>${this.shakeReady?'BLEND!':'DRAG IT HERE'}</button></div>`;
-      case 'decorate': return `<div class="sg-world bakery-world"><div class="bakery-window"><span>♡</span><span>CAFE</span></div><div class="cake" data-drop-target="cake"><div class="cake-top"><div class="icing"></div></div><div class="cake-body"></div><div class="cake-berries"></div></div><div class="decor-tray"><small>ADD STRAWBERRIES</small><div>${[0,1,2].map(i=>this.usedDecor.has(i)?'':`<div class="decor-berry" data-drag-kind="decorate" data-item-index="${i}">${berrySvg({size:105})}</div>`).join('')}</div></div><div class="decor-count">${this.decorationCount} / 3</div></div>`;
-      case 'free': return `<div class="sg-world free-world"><div class="free-sky"><i class="sun"></i><i class="cloud one"></i><i class="cloud two"></i></div><div class="rainbow">◜　◝</div><div class="free-hills"></div><div class="free-tree">🌳</div><div class="free-flower f1">🌷</div><div class="free-flower f2">🌻</div><button class="free-berry b1" data-free-berry>${berrySvg({size:145})}</button><button class="free-berry b2" data-free-berry>${berrySvg({size:120})}</button><button class="free-berry b3" data-free-berry>${berrySvg({size:135})}</button><button class="free-butterfly" data-free-berry>🦋</button><div class="free-palette">${STRAWBERRY_COLORS.map(c=>`<button class="color-dot ${c.value===this.color?'selected':''}" data-color="${c.value}" style="--c:${c.value}" aria-label="${c.name}"></button>`).join('')}</div><button class="play-again" data-action="restart">Play again</button></div>`;
-      default: return '';
+  drawTopBar() {
+    roundedRect(this, W / 2, 48, 860, 66, 28, 0xffffff, 0.9, { color: 0xffffff, width: 2, alpha: 0.9 });
+    text(this, 'STRAWBERRY GARDEN', 270, 48, { fontSize: 25, color: '#6b3150' });
+    this.add.image(128, 48, 'sg-strawberry').setDisplaySize(38, 44).setDepth(10);
+    this.stepText = text(this, '1 / 6', 760, 48, { fontSize: 22, color: '#7b6471' });
+    this.promptText = text(this, 'Can you find the strawberry?', W / 2, 575, { fontSize: 22, color: '#654958' });
+  }
+
+  updateProgress() {
+    const index = STRAWBERRY_SCENES.indexOf(this.state.kind);
+    this.stepText.setText(this.state.kind === 'free' ? 'FREE PLAY' : `${index + 1} / 6`);
+  }
+
+  renderKind() {
+    this.children.list.filter(c => c.getData?.('sceneObject')).forEach(c => c.destroy());
+    this.updateProgress();
+    const renderers = { find: () => this.findScene(), pick: () => this.pickScene(), basket: () => this.basketScene(), wash: () => this.washScene(), shake: () => this.shakeScene(), decorate: () => this.decorateScene(), free: () => this.freeScene() };
+    renderers[this.state.kind]();
+  }
+
+  mark(obj) { obj.setData('sceneObject', true); return obj; }
+
+  berry(x, y, scale = 1, interactive = false) {
+    const berry = this.add.image(x, y, 'sg-strawberry').setScale(0.46 * scale);
+    berry.setAlpha(0.98);
+    berry.setBlendMode('NORMAL');
+    this.mark(berry);
+    berry.setData('baseScale', berry.scaleX);
+    if (interactive) this.interactions.makeTapTarget(berry, () => this.berryTapped(berry), { padding: 44 });
+    return berry;
+  }
+
+  berryTapped(berry) {
+    const character = berry.getData('character');
+    if (this.state.kind === 'find') {
+      character?.happy(); this.tweenHappy(berry); this.advance('You found it!');
+    } else if (this.state.kind === 'pick') {
+      character?.pick(); this.tweenHappy(berry); this.advance('Got it!');
+    } else if (this.state.kind === 'free') {
+      character?.happy(); this.tweenHappy(berry); tapFeedback(this.gamePlatform?.audioManager, 'tap'); this.reward?.burst(berry.x, berry.y, { count: 12, sound: 'pop', radius: 62 });
     }
   }
 
-  onClick(event) {
-    const action = event.target.closest?.('[data-action]')?.dataset.action;
-    if (action === 'find') return this.completeScene('You found it!');
-    if (action === 'pick') return this.pickStrawberry();
-    if (action === 'blend') return this.blendShake();
-    if (action === 'restart') return this.reset();
-    const color = event.target.closest?.('[data-color]')?.dataset.color;
-    if (color) { this.color=color; this.root.querySelectorAll('.color-dot').forEach(b=>b.classList.toggle('selected',b.dataset.color===color)); this.announce('Pretty color!'); }
-    const free = event.target.closest?.('[data-free-berry]'); if (free) { free.classList.remove('pulse'); void free.offsetWidth; free.classList.add('pulse'); tapFeedback(this.audioManager,'tap'); }
+  tweenHappy(target) {
+    TweenFX.pop(this, target);
+    this.reward?.burst(target.x, target.y, { count: 14, sound: 'success' });
+    tapFeedback(this.gamePlatform?.audioManager, 'success');
   }
 
-  onPointerDown(event) {
-    if (!this.sessionRunning) return;
-    const wash = event.target.closest?.('[data-wash-target]'); const drag = event.target.closest?.('[data-drag-kind]');
-    if (wash && this.scene.kind==='wash') { event.preventDefault(); this.wash(event); return; }
-    if (drag && ['basket','decorate','shake'].includes(drag.dataset.dragKind)) { event.preventDefault(); this.startDrag(event,drag); }
+  advance(message) {
+    if (this.state.advancing) return;
+    this.state.advancing = true;
+    rewardFeedback(this.gamePlatform, message, '🍓');
+    this.reward?.floatText(W / 2, 150, message, { emoji: '🍓' });
+    this.time.delayedCall(650, () => {
+      const i = STRAWBERRY_SCENES.indexOf(this.state.kind);
+      if (i < STRAWBERRY_SCENES.length - 1) this.stateStore.set('kind', STRAWBERRY_SCENES[i + 1]);
+      this.state = this.stateStore.get();
+      this.state.advancing = false; this.renderKind();
+    });
   }
-  onPointerMove(event) {
-    if (!this.sessionRunning) return;
-    if (this.scene.kind==='wash' && (event.buttons & 1 || event.pointerType==='touch')) this.wash(event);
-    if (this.drag) { event.preventDefault(); this.moveDrag(event); }
+
+  findScene() {
+    this.promptText.setText('Can you find the strawberry hiding in the garden?');
+    const leaf = this.add.graphics();
+    leaf.fillStyle(0x2f8f57, 1);
+    for (let i = 0; i < 9; i += 1) {
+      const x = 95 + i * 105; const y = 430 + (i % 3) * 22;
+      leaf.fillEllipse(x, y, 92, 36);
+      leaf.fillStyle(0x55b96a, 1); leaf.fillEllipse(x - 24, y - 30, 30, 58); leaf.fillEllipse(x + 24, y - 30, 30, 58);
+      leaf.fillStyle(0x2f8f57, 1);
+    }
+    this.mark(leaf);
+    const berry = this.berry(725, 355, 1.25, true);
+    berry.setData('character', new ToddlerCharacter(this, berry, { baseScale: berry.scaleX, bob: true }));
+    this.tweens.add({ targets: berry, y: 342, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const butterfly = this.add.image(205, 270, 'sg-butterfly').setDisplaySize(86, 72); this.mark(butterfly);
+    this.tweens.add({ targets: butterfly, x: 260, y: 240, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
-  onPointerUp() { if (this.drag) this.finishDrag(); }
-  startDrag(event,source) { this.drag={source,kind:source.dataset.dragKind,ghost:source.cloneNode(true)}; this.drag.ghost.classList.add('drag-ghost'); document.body.appendChild(this.drag.ghost); source.style.opacity='.15'; this.moveDrag(event); }
-  moveDrag(event) { if (!this.drag) return; this.drag.ghost.style.left=`${event.clientX}px`; this.drag.ghost.style.top=`${event.clientY}px`; }
-  finishDrag() {
-    if (!this.drag) return; const {source,kind,ghost}=this.drag; const r=ghost.getBoundingClientRect(); ghost.remove(); source.style.opacity=''; this.drag=null;
-    const target = this.root.querySelector(kind==='basket'?'[data-drop-target="basket"]':kind==='shake'?'[data-drop-target="blender"]':'[data-drop-target="cake"]'); if(!target) return;
-    const t=target.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; const hit=cx>t.left-90&&cx<t.right+90&&cy>t.top-90&&cy<t.bottom+90; if(!hit) return;
-    if(kind==='basket'){ const i=Number(source.dataset.itemIndex); if(this.usedBasket.has(i)) return; this.usedBasket.add(i); this.placedCount++; }
-    if(kind==='decorate'){ const i=Number(source.dataset.itemIndex); if(this.usedDecor.has(i)) return; this.usedDecor.add(i); this.decorationCount++; }
-    if(kind==='shake') this.shakeReady=true; tapFeedback(this.audioManager,'success'); this.renderScene();
-    if((kind==='basket'&&this.placedCount>=this.targetCount)||(kind==='decorate'&&this.decorationCount>=3)) this.completeScene(kind==='basket'?'Into the basket!':'So pretty!');
+
+  pickScene() {
+    this.promptText.setText('Tap the ripe strawberry to pick it!');
+    const trunk = this.add.graphics();
+    trunk.fillStyle(0x8b5a3c, 1); trunk.fillRoundedRect(450, 180, 58, 290, 26);
+    trunk.fillStyle(0x6cb95c, 1); trunk.fillCircle(385, 205, 95); trunk.fillCircle(505, 175, 105); trunk.fillCircle(610, 225, 90);
+    this.mark(trunk);
+    const berry = this.berry(575, 325, 1.15, true);
+    berry.setData('character', new ToddlerCharacter(this, berry, { baseScale: berry.scaleX, bob: true }));
+    this.tweens.add({ targets: berry, angle: 5, duration: 650, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
-  cancelDrag(){ if(!this.drag)return; this.drag.ghost?.remove(); this.drag.source.style.opacity=''; this.drag=null; }
-  wash(event){ const now=performance.now(); if(now-this.washLast<35)return; this.washLast=now; const t=this.root.querySelector('[data-wash-target]'); if(!t)return; const r=t.getBoundingClientRect(); const x=(event.clientX-r.left)/r.width,y=(event.clientY-r.top)/r.height; if(x<-.25||x>1.25||y<-.25||y>1.25)return; this.washProgress=clamp(this.washProgress+2.5,0,100); if(this.washProgress>=80)this.completeScene('All clean!'); else if(Math.floor(this.washProgress)%10===0)this.renderScene(); }
-  pickStrawberry(){ if(this.scene.kind!=='pick'||this.completing)return; const b=this.root.querySelector('.hanging'); if(!b||b.dataset.done)return; b.dataset.done='true'; b.classList.add('picked'); tapFeedback(this.audioManager,'success'); const id=setTimeout(()=>{this.pending.delete(id);this.completeScene('Got it!')},500);this.pending.add(id); }
-  blendShake(){ if(this.scene.kind!=='shake'||!this.shakeReady||this.completing)return; const b=this.root.querySelector('.blend-button'); if(b?.disabled)return; b.disabled=true; this.root.querySelector('.blender')?.classList.add('blending'); const id=setTimeout(()=>{this.pending.delete(id);this.completeScene('Yummy strawberry shake!')},900);this.pending.add(id); }
-  completeScene(message){ if(!this.sessionRunning||this.scene.kind==='free'||this.completing)return; this.completing=true; rewardFeedback(this.platform,message,'🍓'); tapFeedback(this.audioManager,'success'); const id=setTimeout(()=>{this.pending.delete(id);this.sceneIndex=Math.min(this.sceneIndex+1,STRAWBERRY_SCENES.length-1);this.renderScene();this.announceCurrent();},700);this.pending.add(id); }
-  announceCurrent(){this.announce(this.scene.prompt);} announce(text){this.audioManager?.ensureRunning?.();this.audioManager?.speak?.(text,.86);}
+
+  basketScene() {
+    this.promptText.setText(`Put 3 strawberries in the basket.`);
+    const basket = this.add.image(720, 400, 'sg-basket').setDisplaySize(300, 218); this.mark(basket);
+    const label = text(this, `${this.state.basket} / 3`, 720, 418, { fontSize: 30, color: '#6b3d28' }); this.mark(label);
+    for (let i = 0; i < 3; i += 1) {
+      if (i < this.state.basket) continue;
+      const b = this.berry(150 + i * 155, 350, 0.72, false);
+      this.interactions.makeTapTarget(b, () => {
+        if (this.state.advancing) return;
+        this.state.basket += 1;
+        tapFeedback(this.gamePlatform?.audioManager, 'success');
+        this.tweenTo(b, 720, 390, () => { if (this.state.basket >= 3) this.advance('All in the basket!'); else this.renderKind(); });
+      }, { padding: 45 });
+    }
+  }
+
+  tweenTo(target, x, y, done) { this.tweens.add({ targets: target, x, y, scale: 0.55, duration: 450, ease: 'Cubic.easeInOut', onComplete: done }); }
+
+  washScene() {
+    this.promptText.setText('Rub the strawberry gently to wash it!');
+    const sink = this.add.image(480, 385, 'sg-sink').setDisplaySize(520, 320); this.mark(sink);
+    const berry = this.berry(480, 365, 1.08, false); this.mark(berry);
+    berry.setInteractive({ useHandCursor: true });
+    berry.on('pointermove', (p) => {
+      if (!p.isDown || this.state.advancing) return;
+      this.state.wash = Math.min(100, this.state.wash + 5);
+      if (this.state.wash % 15 === 0) addSparkles(this, p.x, p.y, 6);
+      if (this.state.wash >= 100) this.advance('Sparkling clean!');
+    });
+    const meter = roundedRect(this, 480, 535, 360, 28, 14, 0xffffff, 0.92); this.mark(meter);
+    const fill = roundedRect(this, 300, 535, 1, 20, 10, 0x5fc9ed, 1); this.mark(fill); this.state.washFill = fill;
+  }
+
+  update(time, delta) {
+    if (this.state?.kind === 'wash' && this.state.washFill) {
+      const width = Math.max(1, 360 * (this.state.wash / 100)); this.state.washFill.width = width; this.state.washFill.x = 300 + width / 2; this.state.washFill.setDisplaySize(width, 20);
+    }
+  }
+
+  shakeScene() {
+    this.promptText.setText(this.state.shakeReady ? 'Tap BLEND to make a yummy shake!' : 'Tap the strawberry to add it to the blender!');
+    const blender = this.add.image(700, 350, 'sg-blender').setDisplaySize(245, 292); this.mark(blender);
+    const berry = this.berry(315, 375, 0.95, false);
+    this.interactions.makeTapTarget(berry, () => {
+      if (this.state.shakeReady || this.state.advancing) return;
+      this.state.shakeReady = true;
+      this.tweenTo(berry, 700, 340, () => this.renderKind());
+    }, { padding: 45 });
+    if (this.state.shakeReady) {
+      const btn = roundedRect(this, 700, 520, 190, 62, 28, 0xe85d82, 1, { color: 0xffffff, width: 3, alpha: 0.9 }); this.mark(btn);
+      btn.setInteractive({ useHandCursor: true });
+      btn.on('pointerdown', () => { if (this.state.advancing) return; this.tweens.add({ targets: blender, angle: 2, duration: 90, yoyo: true, repeat: 8 }); this.reward?.burst(700, 300, { count: 24, sound: 'blend', radius: 120 }); this.advance('Yummy shake!'); });
+      text(this, 'BLEND!', 700, 520, { fontSize: 25, color: '#ffffff' });
+    }
+  }
+
+  decorateScene() {
+    this.promptText.setText('Make the cake pretty with 3 strawberries!');
+    const cake = this.add.image(480, 370, 'sg-cake').setDisplaySize(360, 276); this.mark(cake);
+    const label = text(this, `${this.state.decor} / 3`, 480, 505, { fontSize: 30, color: '#8a4b5b' }); this.mark(label);
+    for (let i = 0; i < 3; i += 1) {
+      if (i < this.state.decor) continue;
+      const b = this.berry(150 + i * 155, 520, 0.58, false);
+      this.interactions.makeTapTarget(b, () => {
+        if (this.state.advancing) return;
+        this.state.decor += 1;
+        this.tweenTo(b, 405 + this.state.decor * 55, 310, () => { if (this.state.decor >= 3) this.advance('So pretty!'); else this.renderKind(); });
+      }, { padding: 42 });
+    }
+  }
+
+  freeScene() {
+    this.promptText.setText('Free play — tap the garden friends!');
+    [190, 450, 730].forEach((x, i) => {
+      const b = this.berry(x, 345 + (i % 2) * 48, 0.78 + i * 0.08, true);
+      b.setData('character', new ToddlerCharacter(this, b, { baseScale: b.scaleX, bob: true }));
+      this.tweens.add({ targets: b, y: b.y - 8, duration: 900 + i * 120, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    });
+    const butterfly = this.add.image(790, 255, 'sg-butterfly').setDisplaySize(110, 92); this.mark(butterfly);
+    butterfly.setInteractive({ useHandCursor: true });
+    butterfly.on('pointerdown', () => { addSparkles(this, butterfly.x, butterfly.y, 20); this.tweens.add({ targets: butterfly, x: 860, y: 205, duration: 700, yoyo: true, ease: 'Sine.easeInOut' }); });
+    text(this, 'YOU DID IT!', 480, 150, { fontSize: 44, color: '#6d3f56' });
+  }
+
+  };
+}
+
+export class StrawberryGardenPhaserGame extends GameModule {
+  static metadata = { id: 'strawberry-garden', name: '🍓 Strawberry Garden', description: 'A polished interactive strawberry adventure.', version: '3.1.0', author: 'Baby Games', assetPath: 'games/strawberry-garden/' };
+
+  constructor(platform) { super(platform); this.runtime = null; this.host = null; }
+
+  async initialize() {
+    this.host = this.getGameContainerEl();
+    if (!this.host) throw new Error('Game container unavailable.');
+    this.host.replaceChildren();
+    const canvasHost = document.createElement('div'); canvasHost.className = 'phaser-game-host'; this.host.appendChild(canvasHost);
+    this.runtime = new PhaserGameRuntime({ parent: canvasHost, width: W, height: H, scene: (Phaser) => createStrawberryScene(Phaser, this.platform), background: '#dff7ff' });
+  }
+
+  async start() { this.isRunning = true; await this.runtime.start(); }
+  pause() { this.isRunning = false; this.runtime?.game?.scene?.pause?.('default'); }
+  resume() { this.isRunning = true; this.runtime?.game?.scene?.resume?.('default'); }
+  stop() { this.isRunning = false; this.runtime?.stop(); }
+  reset() { this.stop(); this.start(); }
+  cleanup() { this.stop(); this.host?.replaceChildren(); this.host = null; }
 }

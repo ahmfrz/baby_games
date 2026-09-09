@@ -153,7 +153,7 @@ class BabyGamesPlatform {
         description: 'Find, pick, wash, mix, decorate, and play with a friendly strawberry.',
         stylePath: 'games/strawberry-garden/styles.css',
         loader: () => import('../games/strawberry-garden/StrawberryGardenGame.js'),
-        exportName: 'StrawberryGardenGame'
+        exportName: 'StrawberryGardenPhaserGame'
       },
       {
         id: 'little-scribbles',

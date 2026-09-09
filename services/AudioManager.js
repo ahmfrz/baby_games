@@ -49,6 +49,9 @@ export class AudioManager {
         error: { wave: 'triangle', freq: 220 },
         pop: { wave: 'sine', freq: 610 },
         star: { wave: 'sine', freq: 880 },
+        reward: { wave: 'sine', freq: 988 },
+        wash: { wave: 'triangle', freq: 560 },
+        blend: { wave: 'sawtooth', freq: 190 },
         slice: { wave: 'sawtooth', freq: 320 }
       };
       const preset = presets[type] || {};
