@@ -24,7 +24,6 @@ class BabyGamesPlatform {
     this.timerWatchId = null;
     this.timerExpiryHandled = false;
     this.pinRequestActive = false;
-    this.loadedGameStyles = new Set();
   }
 
   /**
@@ -87,7 +86,6 @@ class BabyGamesPlatform {
         id: 'alphabet-learner',
         name: 'ABC 123 Learner',
         description: 'Learn letters and numbers with pictures, speech, and gentle play.',
-        stylePath: 'games/alphabet-learner/styles.css',
         loader: () => import('../games/alphabet-learner/AlphabetLearnerGame.js'),
         exportName: 'AlphabetLearnerGame'
       },
@@ -95,7 +93,6 @@ class BabyGamesPlatform {
         id: 'comic-stories',
         name: '📖 Comic Stories',
         description: 'Flip through comic-style storybooks, panel by panel.',
-        stylePath: 'games/comic-stories/styles.css',
         loader: () => import('../games/comic-stories/ComicStoryGame.js'),
         exportName: 'ComicStoryGame'
       },
@@ -103,7 +100,6 @@ class BabyGamesPlatform {
         id: 'fruit-color',
         name: '🍎 Fruit Coloring',
         description: 'Paint friendly fruits with big, easy strokes.',
-        stylePath: 'games/fruit-color/styles.css',
         loader: () => import('../games/fruit-color/FruitColorGame.js'),
         exportName: 'FruitColorGame'
       },
@@ -111,7 +107,6 @@ class BabyGamesPlatform {
         id: 'star-collector',
         name: '⭐ Star Catch',
         description: 'Tap the big twinkling stars as they slowly float up into the sky.',
-        stylePath: 'styles/simple-games.css',
         loader: () => import('../games/star-collector/StarCollectorGame.js'),
         exportName: 'StarCollectorGame'
       },
@@ -119,7 +114,6 @@ class BabyGamesPlatform {
         id: 'fruit-slice',
         name: '🍉 Fruit Slice',
         description: 'Swipe through big floating fruit with your finger.',
-        stylePath: 'styles/simple-games.css',
         loader: () => import('../games/fruit-slice/FruitSliceGame.js'),
         exportName: 'FruitSliceGame'
       },
@@ -127,7 +121,6 @@ class BabyGamesPlatform {
         id: 'shape-pop',
         name: '🔷 Shape Pop',
         description: 'Find and tap the huge friendly shape shown at the top.',
-        stylePath: 'styles/simple-games.css',
         loader: () => import('../games/shape-pop/ShapePopGame.js'),
         exportName: 'ShapePopGame'
       },
@@ -135,7 +128,6 @@ class BabyGamesPlatform {
         id: 'pinch-pop',
         name: '🤏 Pinch Pop',
         description: 'Use two fingers to pinch colorful bubbles and make them pop.',
-        stylePath: 'styles/simple-games.css',
         loader: () => import('../games/pinch-pop/PinchPopGame.js'),
         exportName: 'PinchPopGame'
       }
@@ -143,7 +135,6 @@ class BabyGamesPlatform {
         id: 'language-adventures',
         name: '🗣️ Little Adventures',
         description: 'Play little stories while learning easy English phrases.',
-        stylePath: 'games/language-adventures/styles.css',
         loader: () => import('../games/language-adventures/LanguageAdventureGame.js'),
         exportName: 'LanguageAdventureGame'
       },
@@ -151,7 +142,6 @@ class BabyGamesPlatform {
         id: 'strawberry-garden',
         name: '🍓 Strawberry Garden',
         description: 'Find, pick, wash, mix, decorate, and play with a friendly strawberry.',
-        stylePath: 'games/strawberry-garden/styles.css',
         loader: () => import('../games/strawberry-garden/StrawberryGardenGame.js'),
         exportName: 'StrawberryGardenPhaserGame'
       },
@@ -159,7 +149,6 @@ class BabyGamesPlatform {
         id: 'little-scribbles',
         name: '✏️ Little Scribbles',
         description: 'Practice pre-writing lines and shapes, then draw anything you like.',
-        stylePath: 'games/little-scribbles/styles.css',
         loader: () => import('../games/little-scribbles/LittleScribblesGame.js'),
         exportName: 'LittleScribblesGame'
       }
@@ -173,28 +162,6 @@ class BabyGamesPlatform {
   }
 
 
-  async ensureGameStyles(gameMetadata) {
-    const href = gameMetadata?.stylePath;
-    if (!href || this.loadedGameStyles.has(href)) return;
-
-    const existing = document.querySelector(`link[data-game-style="${href}"]`);
-    if (existing) {
-      this.loadedGameStyles.add(href);
-      return;
-    }
-
-    await new Promise((resolve, reject) => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      link.dataset.gameStyle = href;
-      link.onload = resolve;
-      link.onerror = () => reject(new Error(`Could not load game styles: ${href}`));
-      document.head.appendChild(link);
-    });
-
-    this.loadedGameStyles.add(href);
-  }
 
   createRewardLayer() {
     if (document.getElementById('rewardLayer')) return;
@@ -399,7 +366,6 @@ class BabyGamesPlatform {
         if (descriptionEl && previousDescription != null) descriptionEl.textContent = previousDescription;
         if (pinCancel) pinCancel.style.display = previousCancelDisplay;
         this.pinRequestActive = false;
-    this.loadedGameStyles = new Set();
       };
 
       const onSubmit = () => {
@@ -684,7 +650,6 @@ class BabyGamesPlatform {
         gameHost.style.display = 'none';
       }
 
-      await this.ensureGameStyles(gameMetadata);
       const gameInstance = await gameRegistry.instantiate(gameId, this);
       if (gameInstance?.constructor?.metadata?.id !== gameId) {
         throw new Error(`Loaded game does not match requested game: ${gameId}`);

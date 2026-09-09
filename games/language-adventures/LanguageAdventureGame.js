@@ -1,3 +1,4 @@
+import './styles.css';
 import { GameModule } from '../../core/GameModule.js';
 import { rewardFeedback, tapFeedback, vibrate } from '../../services/FeedbackService.js';
 import { ASSET_ROOT, SCENARIOS } from './languageData.js';
