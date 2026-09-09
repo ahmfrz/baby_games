@@ -1,0 +1,56 @@
+#little-scribbles-game {
+  --scribble-ink: #334155;
+  --scribble-muted: #64748b;
+  --scribble-surface: rgba(255, 255, 255, 0.84);
+  --scribble-border: rgba(255,255,255,0.95);
+  width: 100%;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: clamp(10px, 2vw, 18px);
+  color: var(--scribble-ink);
+  background:
+    radial-gradient(circle at 9% 8%, rgba(255, 212, 59, 0.26), transparent 24%),
+    radial-gradient(circle at 92% 18%, rgba(33, 169, 245, 0.22), transparent 26%),
+    linear-gradient(145deg, #f8fdff, #fff7fb 52%, #fffdf4);
+  overflow: hidden;
+}
+
+.scribbles-header { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.scribbles-kicker { font-size:.74rem; font-weight:950; letter-spacing:.14em; color:#8b5cf6; }
+.scribbles-title { margin:0; font-size:clamp(1.65rem,4vw,2.7rem); font-weight:950; line-height:1; }
+.scribbles-subtitle { margin:6px 0 0; font-size:clamp(1rem,2.2vw,1.3rem); font-weight:800; color:var(--scribble-muted); }
+.scribbles-step { flex:none; padding:9px 13px; border-radius:999px; background:rgba(255,255,255,.82); border:3px solid rgba(255,255,255,.98); box-shadow:0 7px 18px rgba(38,51,77,.08); font-weight:950; color:#64748b; }
+.scribbles-stage-wrap { min-height:0; display:flex; align-items:stretch; justify-content:center; }
+.scribbles-stage { position:relative; width:min(100%, 1050px); min-height:300px; overflow:hidden; border:5px solid var(--scribble-border); border-radius:28px; background:white; box-shadow:0 18px 34px rgba(38,51,77,.12), inset 0 0 0 1px rgba(148,163,184,.1); }
+.scribbles-canvas { display:block; width:100%; height:100%; min-height:300px; touch-action:none; cursor:crosshair; }
+.scribbles-badge { position:absolute; left:50%; top:16px; transform:translate(-50%, -16px) scale(.86); opacity:0; pointer-events:none; padding:9px 16px; border-radius:999px; background:linear-gradient(135deg,#22c55e,#10b981); color:white; font-weight:950; box-shadow:0 10px 24px rgba(16,185,129,.24); transition:all .24s ease; white-space:nowrap; }
+.scribbles-badge.show { opacity:1; transform:translate(-50%,0) scale(1); }
+.scribbles-controls { display:grid; grid-template-columns:auto minmax(180px,1fr) auto; gap:10px; align-items:center; width:min(100%,1050px); margin:0 auto; }
+.scribbles-mode-buttons, .scribbles-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.scribbles-control, .scribbles-action { min-height:54px; border:0; border-radius:18px; padding:10px 14px; background:rgba(255,255,255,.88); color:#475569; font-weight:950; box-shadow:0 8px 18px rgba(38,51,77,.08); cursor:pointer; }
+.scribbles-control.active { background:linear-gradient(135deg,#8b5cf6,#ec4899); color:white; }
+.scribbles-action.primary { background:linear-gradient(135deg,#22c55e,#10b981); color:white; }
+.scribbles-palette { display:flex; justify-content:center; gap:9px; padding:7px; border-radius:20px; background:rgba(255,255,255,.72); border:3px solid rgba(255,255,255,.92); }
+.scribbles-color { width:48px; height:48px; flex:0 0 48px; border-radius:50%; border:5px solid white; background:var(--swatch); box-shadow:0 7px 14px rgba(38,51,77,.18), inset 0 3px 5px rgba(255,255,255,.36); cursor:pointer; }
+.scribbles-color.selected { transform:scale(1.1); outline:4px solid rgba(51,65,85,.16); outline-offset:2px; }
+.scribbles-control:active, .scribbles-action:active, .scribbles-color:active { transform:scale(.95); }
+
+@media (max-width: 840px) {
+  #little-scribbles-game { grid-template-rows:auto minmax(0,1fr) auto; }
+  .scribbles-controls { grid-template-columns:1fr; }
+  .scribbles-mode-buttons, .scribbles-actions { justify-content:center; }
+  .scribbles-palette { overflow-x:auto; justify-content:flex-start; }
+}
+
+@media (max-height: 680px) and (orientation: landscape) {
+  #little-scribbles-game { gap:7px; padding:7px 12px; }
+  .scribbles-title { font-size:1.45rem; }
+  .scribbles-subtitle { font-size:.9rem; margin-top:3px; }
+  .scribbles-kicker { display:none; }
+  .scribbles-stage { min-height:230px; }
+  .scribbles-canvas { min-height:230px; }
+  .scribbles-control, .scribbles-action { min-height:44px; padding:7px 10px; }
+  .scribbles-color { width:40px; height:40px; flex-basis:40px; }
+}

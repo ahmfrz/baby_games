@@ -5,6 +5,12 @@ A modular, extensible game platform for toddlers built with vanilla JavaScript, 
 ## 🎮 Features
 
 - **Alphabet & Numbers Learning Game** (Included)
+  - Picture/word pairs are kept aligned with the actual artwork (for example, R is Rose)
+
+- **Little Scribbles** (Included)
+  - Toddler-friendly pre-writing practice from lines to basic and complex shapes
+  - Forgiving tracing guide with one shape at a time
+  - Free-draw mode with bright colors, undo, and clear
   - Display letters A-Z or numbers 0-9
   - Visual feedback (correct answer shows picture, incorrect shows visual cue)
   - Audio feedback (success/fail sounds)

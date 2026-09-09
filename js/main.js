@@ -149,6 +149,14 @@ class BabyGamesPlatform {
         stylePath: 'games/language-adventures/styles.css',
         loader: () => import('../games/language-adventures/LanguageAdventureGame.js'),
         exportName: 'LanguageAdventureGame'
+      },
+      {
+        id: 'little-scribbles',
+        name: '✏️ Little Scribbles',
+        description: 'Practice pre-writing lines and shapes, then draw anything you like.',
+        stylePath: 'games/little-scribbles/styles.css',
+        loader: () => import('../games/little-scribbles/LittleScribblesGame.js'),
+        exportName: 'LittleScribblesGame'
       }
     ];
 
