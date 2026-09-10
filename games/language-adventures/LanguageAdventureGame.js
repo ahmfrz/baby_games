@@ -7,8 +7,8 @@ const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
 export class LanguageAdventureGame extends GameModule {
   static metadata = { id:'language-adventures', name:'🗺️ Little Adventures', description:'Explore, learn, and make kind choices.', version:'2.0.0', author:'Baby Games', assetPath:'games/language-adventures/assets/' };
   constructor(platform){ super(platform); this.root=null; this.stage=null; this.scenario=null; this.stepIndex=0; this.score=0; this.totalStars=this.loadTotalStars(); this.soundEnabled=this.loadSoundPreference(); this.isRunning=false; this.remainingSeconds=0; this.timerId=null; this.stepLocked=false; this.timers=new Set(); this.cleanupFns=[]; this.completed=this.loadProgress(); }
-  async initialize(){ this.mount(); this.showMap(); }
-  start(){ this.timerService?.startSession?.(); this.remainingSeconds=this.timerService?.getRemainingSeconds?.()??120; this.score=0; this.isRunning=true; this.startTimerLoop(); this.updateStats(); }
+  async initialize(){ this.mount(); this.showMap(); requestAnimationFrame(()=>{ if(this.view && !this.view.firstElementChild) this.showMap(); }); }
+  start(){ this.timerService?.startSession?.(); this.remainingSeconds=this.timerService?.getRemainingSeconds?.()??120; this.score=0; this.isRunning=true; this.startTimerLoop(); this.updateStats(); if(this.view && !this.scenario && !this.view.firstElementChild) this.showMap(); }
   stop(){ this.isRunning=false; clearInterval(this.timerId); this.timerId=null; this.clearTimers(); this.clearListeners(); this.platform?.audioManager?.stopSpeaking?.(); }
   pause(){this.isRunning=false;clearInterval(this.timerId);this.timerId=null;this.platform?.audioManager?.stopSpeaking?.()} resume(){ if(this.remainingSeconds>0){this.isRunning=true;this.startTimerLoop();if(this.scenario)this.renderStep();else this.showMap();} }
   reset(){this.stop();this.start();this.showMap();}
