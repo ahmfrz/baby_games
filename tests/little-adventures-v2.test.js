@@ -27,6 +27,7 @@ for (const token of ['At Home','In the Park','At School','In Nature','Around the
   if (!data.includes(token)) throw new Error(`Little Adventures v2 data missing ${token}`);
 }
 for (const token of ['.la2-map','.la2-card','.la2-play','.choice-card','.drag-piece','.la2-complete','.la2-timeup','.timeup-card','.la2-card.is-complete','.scene-avatar','.asset-icon','.character-stage','.character-bubble','.globe-companion','.character-happy','.character-surprised','prefers-reduced-motion']) {
+
   if (!css.includes(token)) throw new Error(`Little Adventures v2 style missing ${token}`);
 }
 
@@ -35,6 +36,14 @@ for (const token of ['totalStars','loadTotalStars()','saveTotalStars()','soundEn
 }
 for (const token of ['.sound-toggle','.la2-progress-panel','.progress-track','.sr-only','focus-visible']) {
   if (!css.includes(token)) throw new Error(`Little Adventures v2 polish style missing ${token}`);
+}
+
+// Regression: the gameplay scene must not use height:0 as its primary sizing mechanism.
+if (!css.includes('.la2-play{position:relative;') || !css.includes('.play-scene{position:absolute;inset:64px 0 0;')) {
+  throw new Error('Little Adventures gameplay viewport sizing is not robust');
+}
+if (css.includes('.play-scene{position:relative;flex:1 1 auto;min-height:0;height:0;')) {
+  throw new Error('Little Adventures still contains the zero-height play-scene rule');
 }
 
 const svg=read('games/language-adventures/assets/new/targets.svg');
@@ -48,6 +57,3 @@ if (!main.includes("'strawberry-garden': new URL('../assets/games/strawberry-gar
 if (!game.includes('if(remaining<=0){') || !game.includes('this.showTimeUp();')) {
   throw new Error('Little Adventures must recover visibly when the session is expired');
 }
-
-console.log('[PASS] Little Adventures uses a body-level fixed viewport portal to prevent blank adventure screens');
-if (!game.includes('document.body') || !css.includes('position:fixed') || !css.includes('100dvh')) throw new Error('Little Adventures viewport portal regression');
