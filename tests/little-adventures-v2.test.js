@@ -48,3 +48,6 @@ if (!main.includes("'strawberry-garden': new URL('../assets/games/strawberry-gar
 if (!game.includes('if(remaining<=0){') || !game.includes('this.showTimeUp();')) {
   throw new Error('Little Adventures must recover visibly when the session is expired');
 }
+
+console.log('[PASS] Little Adventures uses a body-level fixed viewport portal to prevent blank adventure screens');
+if (!game.includes('document.body') || !css.includes('position:fixed') || !css.includes('100dvh')) throw new Error('Little Adventures viewport portal regression');

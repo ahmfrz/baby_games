@@ -19,7 +19,11 @@ export class LanguageAdventureGame extends GameModule {
     const host=this.getGameContainerEl();
     this.root=document.createElement('section'); this.root.className='la2';
     this.root.innerHTML=`<div class="la2-shell"><header class="la2-header"><div class="la2-brand"><span class="la2-logo">🌍</span><div><strong>Little Adventures</strong><small>Explore • Learn • Grow</small></div></div><div class="la2-stats"><span>⏱ <b data-role="timer">2:00</b></span><span>⭐ <b data-role="score">0</b></span><span>🏆 <b data-role="total">0</b></span><button class="sound-toggle" data-sound aria-label="Turn sound off" aria-pressed="true">🔊</button></div></header><main class="la2-main"><div data-role="view"></div><div class="sr-only" data-role="status" aria-live="polite"></div></main></div>`;
-    host?.appendChild(this.root); this.view=this.root.querySelector('[data-role="view"]'); this.timerEl=this.root.querySelector('[data-role="timer"]'); this.scoreEl=this.root.querySelector('[data-role="score"]'); this.totalEl=this.root.querySelector('[data-role="total"]'); this.statusEl=this.root.querySelector('[data-role="status"]'); this.soundBtn=this.root.querySelector('[data-sound]'); this.soundBtn?.addEventListener('click',()=>this.toggleSound()); this.updateSoundButton();
+    // Render Little Adventures in a body-level portal. The platform's game host
+    // can be resized/animated by the launcher, but the game itself must always
+    // have a deterministic viewport while an adventure is active.
+    const mountTarget = document.body || host;
+    mountTarget?.appendChild(this.root); this.view=this.root.querySelector('[data-role="view"]'); this.timerEl=this.root.querySelector('[data-role="timer"]'); this.scoreEl=this.root.querySelector('[data-role="score"]'); this.totalEl=this.root.querySelector('[data-role="total"]'); this.statusEl=this.root.querySelector('[data-role="status"]'); this.soundBtn=this.root.querySelector('[data-sound]'); this.soundBtn?.addEventListener('click',()=>this.toggleSound()); this.updateSoundButton();
   }
   loadProgress(){ try{return JSON.parse(localStorage.getItem('baby-games:little-adventures:completed')||'{}')}catch{return {}} }
   saveProgress(){ try{localStorage.setItem('baby-games:little-adventures:completed',JSON.stringify(this.completed))}catch{} }
