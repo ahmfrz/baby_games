@@ -538,3 +538,101 @@
     radial-gradient(circle at 78% 28%, rgba(146,203,255,.2), transparent 24%),
     linear-gradient(180deg,#15265d 0%,#334a9a 55%,#7d8fd1 100%);
 }
+
+/* Phase 5C — living characters and tactile motion */
+.star-target img,
+.fruit-target img {
+  animation: characterBreathe 1.9s ease-in-out infinite;
+  transform-origin: 50% 68%;
+}
+.star-target:nth-child(3n) img { animation-delay: .22s; }
+.fruit-target:nth-child(2n) img { animation-delay: .18s; }
+.star-target::before,
+.fruit-target::before {
+  content: '✦';
+  position: absolute;
+  top: 8%;
+  right: 9%;
+  z-index: 2;
+  font-size: clamp(1rem, 2.4vw, 1.7rem);
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 0 12px rgba(255,255,255,.75);
+  pointer-events: none;
+  animation: tinyTwinkle 1.45s ease-in-out infinite;
+}
+.star-target.star-caught img,
+.fruit-target.sliced img { animation: characterCelebrate .34s ease-out forwards; }
+.shape-target img {
+  animation: shapeBreath 2.1s ease-in-out infinite;
+  transform-origin: 50% 68%;
+}
+.shape-target:nth-child(2n) img { animation-delay: .16s; }
+.shape-target:nth-child(3n) img { animation-delay: .31s; }
+.shape-target.game-success-burst img { animation: characterCelebrate .34s ease-out forwards; }
+.nest-item img {
+  animation: treasureBob 1.8s ease-in-out infinite;
+  transform-origin: 50% 72%;
+}
+.nest-item:nth-child(2n) img { animation-delay: .14s; }
+.nest-item:nth-child(3n) img { animation-delay: .28s; }
+.nest-item-grabbed img { animation: treasureGrab .26s ease-out forwards; }
+.nest-item-placed img { animation: characterCelebrate .3s ease-out forwards; }
+@keyframes characterBreathe { 0%,100% { transform: scale(1) rotate(-1deg); } 50% { transform: scale(1.035,.975) rotate(1deg); } }
+@keyframes shapeBreath { 0%,100% { transform: scale(1) rotate(-1deg); } 50% { transform: scale(1.045,.97) rotate(1deg); } }
+@keyframes treasureBob { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
+@keyframes treasureGrab { 0% { transform: scale(1); } 55% { transform: scale(1.12) rotate(-3deg); } 100% { transform: scale(1.06); } }
+@keyframes characterCelebrate { 0% { transform: scale(1); } 45% { transform: scale(1.16,.9) rotate(-5deg); } 100% { transform: scale(1.4) rotate(7deg); opacity: 0; } }
+@keyframes tinyTwinkle { 0%,100% { opacity:.15; transform:scale(.7) rotate(0); } 50% { opacity:1; transform:scale(1.2) rotate(18deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .star-target img, .fruit-target img, .shape-target img, .nest-item img, .star-target::before, .fruit-target::before { animation:none !important; }
+}
+
+/* ============================================
+   Phase 5D — scene composition & tactile polish
+   ============================================ */
+.simple-game { position:relative; isolation:isolate; }
+.simple-game::before,
+.simple-game::after { content:""; position:absolute; pointer-events:none; z-index:0; border-radius:50%; opacity:.45; filter:blur(1px); }
+.simple-game::before { width:180px; height:180px; right:-70px; top:70px; background:rgba(255,255,255,.42); }
+.simple-game::after { width:140px; height:140px; left:-55px; bottom:10px; background:rgba(255,255,255,.32); }
+.simple-game-header { position:relative; z-index:20; min-height:58px; backdrop-filter:blur(10px); }
+.simple-game-stage, .shape-prompt, .shape-grid { position:relative; z-index:1; }
+.simple-game-hint, .nest-sky-badge { border:2px solid rgba(255,255,255,.75); box-shadow:0 8px 24px rgba(27,67,94,.12), inset 0 1px 0 rgba(255,255,255,.75); backdrop-filter:blur(7px); }
+.star-stage { background-image: url('../assets/shared/art/backgrounds/star-sky.svg'); background-size:cover; background-position:center; }
+.fruit-stage { background-image: url('../assets/shared/art/backgrounds/fruit-garden.svg'); background-size:cover; background-position:center; }
+.nest-stage { background-image: url('../assets/shared/art/backgrounds/nest-garden.svg'); background-size:cover; background-position:center; }
+.shape-game { background-image: url('../assets/shared/art/backgrounds/shape-meadow.svg'); background-size:cover; background-position:center; }
+.shape-prompt { background:rgba(255,255,255,.62); backdrop-filter:blur(8px); border-bottom:2px solid rgba(255,255,255,.7); }
+.shape-grid { background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.2)); }
+.shape-target { position:relative; overflow:hidden; }
+.shape-target::after { content:""; position:absolute; inset:7px; border-radius:26px; border:2px solid rgba(255,255,255,.65); pointer-events:none; }
+.star-target, .fruit-target, .nest-item { transition:filter .18s ease, transform .18s ease; }
+.star-target:hover, .fruit-target:hover, .nest-item:hover { filter:drop-shadow(0 15px 18px rgba(25,65,92,.25)) brightness(1.04); }
+.star-stage::before, .star-stage::after { content:"✦"; position:absolute; color:rgba(255,255,255,.75); font-size:2rem; animation:ambientTwinkle 2.4s ease-in-out infinite; pointer-events:none; }
+.star-stage::before { left:10%; top:27%; }
+.star-stage::after { right:13%; top:44%; animation-delay:.9s; }
+.fruit-stage::before, .fruit-stage::after { content:"✿"; position:absolute; color:rgba(255,255,255,.72); font-size:2.3rem; animation:ambientFloat 3.5s ease-in-out infinite; pointer-events:none; }
+.fruit-stage::before { left:7%; bottom:13%; }
+.fruit-stage::after { right:8%; top:30%; animation-delay:1.2s; }
+.nest-stage::before, .nest-stage::after { content:"•"; position:absolute; color:rgba(255,255,255,.7); font-size:2.8rem; animation:ambientFloat 3s ease-in-out infinite; pointer-events:none; }
+.nest-stage::before { left:9%; top:32%; }
+.nest-stage::after { right:11%; top:24%; animation-delay:.7s; }
+.shape-game::before { width:120px; height:120px; left:5%; top:24%; background:rgba(255,255,255,.28); }
+.shape-game::after { width:160px; height:160px; right:3%; bottom:14%; background:rgba(255,255,255,.24); }
+@keyframes ambientTwinkle { 0%,100%{opacity:.2;transform:scale(.7) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(18deg)} }
+@keyframes ambientFloat { 0%,100%{transform:translateY(0) rotate(-5deg);opacity:.35}50%{transform:translateY(-12px) rotate(5deg);opacity:.8} }
+@keyframes tactilePress { 0%{transform:scale(1)}55%{transform:scale(.92)}100%{transform:scale(1.03)} }
+.star-target:active, .fruit-target:active, .shape-target:active, .nest-item:active { animation:tactilePress .18s ease-out; }
+.game-success-burst { position:relative; }
+.game-success-burst::before { content:"✦  ✦  ✦"; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:1.3rem; color:#ffd75a; white-space:nowrap; animation:rewardStars .42s ease-out forwards; pointer-events:none; z-index:10; }
+@keyframes rewardStars { 0%{opacity:0;transform:translate(-50%,-35%) scale(.5)}45%{opacity:1}100%{opacity:0;transform:translate(-50%,-95%) scale(1.25)} }
+@media (prefers-reduced-motion: reduce) {
+  .star-stage::before,.star-stage::after,.fruit-stage::before,.fruit-stage::after,.nest-stage::before,.nest-stage::after,.game-success-burst::before { animation:none !important; }
+  .star-target:active,.fruit-target:active,.shape-target:active,.nest-item:active { animation:none !important; }
+}
+
+.scene-sparkles { position:absolute; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+.scene-sparkles i { position:absolute; display:block; width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.8); box-shadow:0 0 14px rgba(255,255,255,.85); animation:ambientFloat 3.2s ease-in-out infinite; }
+.scene-sparkles i:nth-child(1){left:18%;top:24%;animation-delay:.2s}.scene-sparkles i:nth-child(2){left:73%;top:20%;animation-delay:1s}.scene-sparkles i:nth-child(3){left:83%;top:63%;animation-delay:1.7s}.scene-sparkles i:nth-child(4){left:34%;top:70%;animation-delay:2.3s}
+.scene-sparkles::before,.scene-sparkles::after { content:'✦'; position:absolute; font-size:1.3rem; color:rgba(255,255,255,.65); animation:ambientTwinkle 2.1s ease-in-out infinite; }
+.scene-sparkles::before { left:42%; top:28%; }.scene-sparkles::after { right:25%; top:55%; animation-delay:.8s; }

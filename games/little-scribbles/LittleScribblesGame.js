@@ -1,5 +1,7 @@
 import { GameModule } from '../../core/GameModule.js';
-import { rewardFeedback } from '../../services/FeedbackService.js';
+import { rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
+
+const CRAYON_ART = new URL('../../assets/shared/art/education/crayon-pal.svg', import.meta.url).href;
 
 const TRACE_STEPS = [
   { id: 'standing-line', name: 'Standing Line', hint: 'Draw down the line', type: 'polyline', points: [[0.5, 0.2], [0.5, 0.8]] },
@@ -39,7 +41,7 @@ export class LittleScribblesGame extends GameModule {
     id: 'little-scribbles',
     name: '✏️ Little Scribbles',
     description: 'Trace friendly shapes, then make your own colorful drawings.',
-    version: '1.0.0',
+    version: '1.0.1',
     author: 'Baby Games',
     assetPath: 'games/little-scribbles/'
   };
@@ -123,9 +125,10 @@ export class LittleScribblesGame extends GameModule {
     root.setAttribute('aria-label', 'Little Scribbles writing practice');
     root.innerHTML = `
       <div class="scribbles-header">
-        <div>
-          <div class="scribbles-kicker">LET'S DRAW</div>
-          <h1 class="scribbles-title">Little Scribbles</h1>
+        <div class="scribbles-brand">
+          <img class="scribbles-brand-art" src="${CRAYON_ART}" alt="">
+          <div><div class="scribbles-kicker">LET'S DRAW</div>
+          <h1 class="scribbles-title">Little Scribbles</h1></div>
           <p class="scribbles-subtitle" data-scribbles-hint>Draw down the line</p>
         </div>
         <div class="scribbles-step" data-scribbles-step>1 / ${TRACE_STEPS.length}</div>
@@ -272,6 +275,7 @@ export class LittleScribblesGame extends GameModule {
   advanceStep() {
     if (this.stepIndex >= TRACE_STEPS.length - 1) {
       this.setMode('free');
+      completionFeedback(this.platform, 'You finished all the shapes!', '✏️');
       this.announce('You finished all the shapes! Now you can draw anything.');
       return;
     }

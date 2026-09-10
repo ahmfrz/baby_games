@@ -6,6 +6,7 @@ import { runToddlerExperienceTests } from './toddler-experience.test.js';
 import { runCssLoadingTests } from './css-loading.test.js';
 import { runSourceDeploymentTests } from './source-deployment.test.js';
 
+import { runPhase5ECelebrationTests } from './phase5e-celebration.test.js';
 console.log('Starting Phaser Engine Tests...');
 runEngineSystemTests();
 
@@ -194,3 +195,13 @@ function runTests() {
 runTests();
 
 await import('./phase5-visual-upgrade.test.js');
+await import('./phase5c-motion.test.js');
+
+await import('./phase5d-polish.test.js');
+
+const phase5eChecks = runPhase5ECelebrationTests();
+const phase5eFailures = phase5eChecks.filter((check) => !check.pass);
+console.log(`[${phase5eFailures.length ? 'FAIL' : 'PASS'}] Phase 5E celebrations: ${phase5eChecks.length - phase5eFailures.length}/${phase5eChecks.length} checks`);
+phase5eFailures.forEach((check) => console.error(`  - ${check.message}`));
+if (phase5eFailures.length) process.exitCode = 1;
+await import('./phase5f-art-upgrade.test.js');

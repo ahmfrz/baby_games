@@ -563,3 +563,17 @@
     bottom: 2%;
   }
 }
+
+/* Phase 5F — illustrated adventure world */
+.language-game { background:url('../../assets/shared/art/backgrounds/learning/adventure-world.svg') center/cover no-repeat; }
+.language-header { background:rgba(255,255,255,.82); backdrop-filter:blur(14px); border-bottom:3px solid rgba(255,255,255,.92); }
+.language-title { display:grid; grid-template-columns:auto 1fr; align-items:center; column-gap:8px; }
+.language-title .language-brand-art { grid-row:span 2; width:52px; height:52px; object-fit:contain; }
+.language-title span { font-weight:900; font-size:1.15rem; }
+.language-title small { color:#64748b; }
+.language-content { background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.28)); }
+.language-welcome { position:relative; overflow:hidden; border:3px solid rgba(255,255,255,.92); box-shadow:0 20px 48px rgba(43,77,75,.14); }
+.language-welcome-mascot { position:absolute; right:12px; bottom:-10px; width:110px; height:130px; object-fit:contain; animation:languageMascot 4s ease-in-out infinite; pointer-events:none; }
+.scenario-card { border:3px solid rgba(255,255,255,.92); box-shadow:0 14px 30px rgba(43,77,75,.13); backdrop-filter:blur(8px); }
+@keyframes languageMascot { 0%,100%{transform:translateY(0) rotate(1deg)} 50%{transform:translateY(-6px) rotate(-1deg)} }
+@media (prefers-reduced-motion:reduce){.language-welcome-mascot{animation:none}}

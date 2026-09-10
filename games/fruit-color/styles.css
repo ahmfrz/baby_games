@@ -303,3 +303,16 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+/* Phase 5F — art studio */
+.fruit-game { background:url('../../assets/shared/art/backgrounds/learning/art-studio.svg') center/cover no-repeat; }
+.fruit-header { background:rgba(255,255,255,.84); backdrop-filter:blur(14px); border-bottom:3px solid rgba(255,255,255,.92); }
+.fruit-brand .brand-art { width:58px; height:50px; object-fit:contain; }
+.fruit-library { background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,248,230,.45)); }
+.fruit-library-hero { max-width:900px; margin:0 auto 18px; display:flex; align-items:center; gap:16px; padding:12px 18px; border:3px solid rgba(255,255,255,.92); border-radius:28px; background:rgba(255,255,255,.82); box-shadow:0 18px 42px rgba(76,65,55,.12); }
+.fruit-library-hero img { width:92px; height:76px; object-fit:contain; }
+.fruit-library-hero div { display:grid; gap:4px; }
+.fruit-library-hero strong { font-size:1.45rem; color:#56372c; }
+.fruit-library-hero span { color:#725b4f; }
+.fruit-card { border:3px solid rgba(255,255,255,.95); box-shadow:0 14px 30px rgba(76,65,55,.15); }
+.fruit-card:hover { transform:translateY(-4px); box-shadow:0 20px 38px rgba(76,65,55,.2); }

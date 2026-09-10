@@ -8,6 +8,20 @@ import { TimerService } from '../services/TimerService.js';
 import { AudioManager } from '../services/AudioManager.js';
 import { InputManager } from '../services/InputManager.js';
 import { tapFeedback } from '../services/FeedbackService.js';
+import { ToddlerCelebration } from '../engine/core/ToddlerCelebration.js';
+
+const LAUNCHER_ART = {
+  'alphabet-learner': new URL('../assets/shared/art/education/abc-blocks.svg', import.meta.url).href,
+  'comic-stories': new URL('../assets/shared/art/education/story-book.svg', import.meta.url).href,
+  'fruit-color': new URL('../assets/shared/art/fruits/strawberry.svg', import.meta.url).href,
+  'star-collector': new URL('../assets/shared/art/stars/star.svg', import.meta.url).href,
+  'fruit-slice': new URL('../assets/shared/art/fruits/watermelon.svg', import.meta.url).href,
+  'shape-pop': new URL('../assets/shared/art/shapes/star.svg', import.meta.url).href,
+  'pinch-pop': new URL('../assets/shared/art/nest/bird.svg', import.meta.url).href,
+  'language-adventures': new URL('../assets/shared/art/education/globe-smile.svg', import.meta.url).href,
+  'strawberry-garden': new URL('../assets/shared/art/strawberry-garden/art/strawberry.svg', import.meta.url).href,
+  'little-scribbles': new URL('../assets/shared/art/education/crayon-pal.svg', import.meta.url).href
+};
 
 // ============================================
 // Platform Initialization
@@ -24,6 +38,7 @@ class BabyGamesPlatform {
     this.timerWatchId = null;
     this.timerExpiryHandled = false;
     this.pinRequestActive = false;
+    this.celebration = new ToddlerCelebration();
   }
 
   /**
@@ -47,6 +62,10 @@ class BabyGamesPlatform {
 
       this.createRewardLayer();
       window.addEventListener('babyGameReward', (event) => this.showReward(event.detail || {}));
+      window.addEventListener('babyGameComplete', (event) => this.showCompletion(event.detail || {}));
+      document.addEventListener('pointerdown', (event) => {
+        if (event.target?.closest?.('button, a, input, textarea, select')) this.celebration.ripple(event.clientX, event.clientY);
+      }, { passive: true });
       this.setupGlobalFeedback();
 
       // Setup UI event listeners
@@ -164,52 +183,20 @@ class BabyGamesPlatform {
 
 
   createRewardLayer() {
-    if (document.getElementById('rewardLayer')) return;
-    const layer = document.createElement('div');
-    layer.id = 'rewardLayer';
-    layer.className = 'reward-layer';
-    layer.setAttribute('aria-live', 'polite');
-    layer.innerHTML = '<div class="reward-message"><span class="reward-emoji">✨</span><span class="reward-text">Great!</span></div><div class="reward-particles" aria-hidden="true"></div>';
-    document.body.appendChild(layer);
-
+    this.celebration.mount();
   }
 
   showReward(detail = {}) {
-    const layer = document.getElementById('rewardLayer');
-    if (!layer) return;
+    this.celebration.reward(detail);
+  }
 
-    const message = detail.message || 'Great!';
-    const emoji = detail.emoji || '✨';
-    const count = Math.min(22, Math.max(8, Number(detail.particles) || 14));
-    const messageEl = layer.querySelector('.reward-message');
-    const emojiEl = layer.querySelector('.reward-emoji');
-    const textEl = layer.querySelector('.reward-text');
-    const particles = layer.querySelector('.reward-particles');
-
-    emojiEl.textContent = emoji;
-    textEl.textContent = message;
-    particles.innerHTML = '';
-
-    for (let i = 0; i < count; i += 1) {
-      const particle = document.createElement('span');
-      particle.className = 'reward-particle';
-      particle.textContent = ['✨', '⭐', '💖', '🎈', '🌟'][i % 5];
-      particle.style.setProperty('--x', `${-45 + Math.random() * 90}vw`);
-      particle.style.setProperty('--y', `${-30 - Math.random() * 55}vh`);
-      particle.style.setProperty('--delay', `${Math.random() * 0.12}s`);
-      particle.style.setProperty('--spin', `${-180 + Math.random() * 360}deg`);
-      particles.appendChild(particle);
-    }
-
-    layer.classList.remove('reward-show');
-    messageEl.classList.remove('reward-message-pop');
-    void layer.offsetWidth;
-    void messageEl.offsetWidth;
-    layer.classList.add('reward-show');
-    messageEl.classList.add('reward-message-pop');
-
-    clearTimeout(this.rewardHideId);
-    this.rewardHideId = setTimeout(() => layer.classList.remove('reward-show'), 1150);
+  showCompletion(detail = {}) {
+    this.celebration.complete({
+      title: detail.title || 'Amazing job!',
+      message: detail.message || 'You finished the game!',
+      emoji: detail.emoji || '🏆',
+      score: detail.score ?? null
+    });
   }
 
   /**
@@ -366,6 +353,7 @@ class BabyGamesPlatform {
         if (descriptionEl && previousDescription != null) descriptionEl.textContent = previousDescription;
         if (pinCancel) pinCancel.style.display = previousCancelDisplay;
         this.pinRequestActive = false;
+    this.celebration = new ToddlerCelebration();
       };
 
       const onSubmit = () => {
@@ -548,10 +536,11 @@ class BabyGamesPlatform {
     card.className = 'game-card';
 
     const emoji = gameMetadata.name.split(' ')[0] || '🎮';
+    const art = LAUNCHER_ART[gameMetadata.id];
 
     card.innerHTML = `
-      <div class="game-card-emoji">${emoji}</div>
-      <h3 class="game-card-title">${gameMetadata.name}</h3>
+      <div class="game-card-art-wrap">${art ? `<img class="game-card-art" src="${art}" alt="" aria-hidden="true">` : `<div class="game-card-emoji">${emoji}</div>`}</div>
+      <h3 class="game-card-title">${gameMetadata.name.replace(/^\S+\s*/, '')}</h3>
       <p class="game-card-description">${gameMetadata.description}</p>
     `;
 
@@ -624,6 +613,7 @@ class BabyGamesPlatform {
    * @param {string} gameId - Game ID
    */
   async launchGame(gameId) {
+    this.celebration.resetStreak();
     console.log(`[BabyGamesPlatform] Launching game: ${gameId}`);
 
     try {

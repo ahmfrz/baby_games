@@ -1,5 +1,8 @@
 import { GameModule } from '../../core/GameModule.js';
-import { rewardFeedback } from '../../services/FeedbackService.js';
+import { rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
+
+const BOOK_ART = new URL('../../assets/shared/art/education/story-book.svg', import.meta.url).href;
+const TODDLER_ART = new URL('../../assets/shared/art/characters/toddler-mascot.svg', import.meta.url).href;
 
 const SWIPE_THRESHOLD_PX = 40;
 
@@ -8,7 +11,7 @@ export class ComicStoryGame extends GameModule {
     id: 'comic-stories',
     name: '📖 Comic Stories',
     description: 'Flip through comic-style storybooks, panel by panel.',
-    version: '1.0.0',
+    version: '1.0.1',
     author: 'Baby Games',
     assetPath: 'games/comic-stories/assets/'
   };
@@ -136,7 +139,7 @@ export class ComicStoryGame extends GameModule {
 
     const brand = document.createElement('div');
     brand.className = 'comic-brand';
-    brand.innerHTML = '<span class="brand-mark">📖</span><span class="brand-label">Comic Stories</span>';
+    brand.innerHTML = `<img class="brand-art" src="${BOOK_ART}" alt="Story book"><span class="brand-label">Comic Stories</span>`;
 
     const status = document.createElement('div');
     status.className = 'comic-status';
@@ -163,6 +166,10 @@ export class ComicStoryGame extends GameModule {
     const library = document.createElement('main');
     library.className = 'comic-library';
 
+    const hero = document.createElement('div');
+    hero.className = 'comic-library-hero';
+    hero.innerHTML = `<img src="${TODDLER_ART}" alt="" aria-hidden="true"><div><strong>Let's read!</strong><span>Pick a story and turn the pages.</span></div>`;
+
     const heading = document.createElement('h2');
     heading.className = 'library-heading';
     heading.textContent = 'Pick a story';
@@ -174,7 +181,7 @@ export class ComicStoryGame extends GameModule {
     empty.className = 'library-empty hidden';
     empty.textContent = 'No stories yet — add some to assets/manifest.json!';
 
-    library.append(heading, grid, empty);
+    library.append(hero, heading, grid, empty);
 
     this.elements.library = library;
     this.elements.storyGrid = grid;
@@ -367,6 +374,7 @@ export class ComicStoryGame extends GameModule {
     if (this.currentPageIndex >= lastIndex) return;
     this.currentPageIndex += 1;
     rewardFeedback(this.platform, 'Next page!', '📖');
+    if (this.currentPageIndex === lastIndex) completionFeedback(this.platform, 'You reached the end of the story!', '📖');
     this.renderPage();
   }
 

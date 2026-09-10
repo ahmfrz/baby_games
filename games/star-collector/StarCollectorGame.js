@@ -1,5 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
-import { tapFeedback, vibrate, rewardFeedback } from '../../services/FeedbackService.js';
+import { tapFeedback, vibrate, rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
 const STAR_ART = new URL('../../assets/shared/art/stars/star.svg', import.meta.url).href;
 
@@ -52,6 +52,7 @@ export class StarCollectorGame extends GameModule {
     this.timerId = null;
     this.spawnId = null;
     this.timerService?.endSession?.();
+    completionFeedback(this.platform, `You caught ${this.score} stars!`, '⭐', this.score);
     this.platform?.audioManager?.playSequence?.();
     this.platform?.audioManager?.speak?.(`Wonderful! You caught ${this.score} stars.`);
   }
@@ -83,6 +84,7 @@ export class StarCollectorGame extends GameModule {
     this.root.innerHTML = `
       <header class="simple-game-header"><div>⭐ Star Catch</div><div>⏱ <span data-role="timer">0:00</span> · ⭐ <span data-role="score">0</span></div></header>
       <div class="simple-game-stage star-stage" data-role="stage">
+        <div class="scene-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
         <div class="simple-game-hint">Tap a big star before it floats away!</div>
       </div>`;
     host?.appendChild(this.root);

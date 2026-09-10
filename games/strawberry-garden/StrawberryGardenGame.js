@@ -1,5 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
-import { rewardFeedback, tapFeedback } from '../../services/FeedbackService.js';
+import { rewardFeedback, tapFeedback, completionFeedback } from '../../services/FeedbackService.js';
 import { PhaserGameRuntime } from '../../engine/phaser/PhaserGameRuntime.js';
 import { roundedRect, text, addSparkles } from '../../engine/phaser/ToddlerGameScene.js';
 import { ToddlerInteractionSystem } from '../../engine/phaser/ToddlerInteractionSystem.js';
@@ -8,6 +8,7 @@ import { GameStateStore } from '../../engine/core/GameStateStore.js';
 import { strawberryAssets } from '../../assets/games/strawberry-garden/manifest.js';
 import { ToddlerCharacter } from '../../engine/phaser/ToddlerCharacter.js';
 import { ToddlerReward } from '../../engine/phaser/ToddlerReward.js';
+import { ToddlerMotion } from '../../engine/phaser/ToddlerMotion.js';
 
 export const STRAWBERRY_SCENES = ['find', 'pick', 'basket', 'wash', 'shake', 'decorate', 'free'];
 const W = 960;
@@ -19,6 +20,13 @@ function createStrawberryScene(Phaser, gamePlatform) {
 
   preload() {
     this.load.svg('sg-strawberry', strawberryAssets.character);
+    this.load.svg('sg-strawberry-idle', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-idle.svg', import.meta.url).href);
+    this.load.svg('sg-strawberry-happy', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-happy.svg', import.meta.url).href);
+    this.load.svg('sg-strawberry-pick', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-pick.svg', import.meta.url).href);
+    this.load.svg('sg-strawberry-wink', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-wink.svg', import.meta.url).href);
+    this.load.svg('sg-strawberry-surprised', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-surprised.svg', import.meta.url).href);
+    this.load.svg('sg-strawberry-jump', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-jump.svg', import.meta.url).href);
+    this.load.svg('sg-strawberry-celebrate', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-celebrate.svg', import.meta.url).href);
     this.load.svg('sg-butterfly', strawberryAssets.butterfly);
     this.load.svg('sg-basket', strawberryAssets.basket);
     this.load.svg('sg-sink', strawberryAssets.sink);
@@ -99,26 +107,41 @@ function createStrawberryScene(Phaser, gamePlatform) {
       this.mark(mascotImage);
       TweenFX.float(this, mascotImage, 5, 1100);
     }
+    // Small ambient motions make the world feel alive without distracting from the task.
+    const fireflies = [];
+    for (let i = 0; i < 7; i += 1) {
+      const mote = this.add.circle(120 + i * 118, 230 + (i % 3) * 58, 3 + (i % 2), 0xfff4a8, 0.72).setDepth(-1);
+      this.mark(mote); fireflies.push(mote);
+      this.tweens.add({ targets: mote, x: mote.x + (i % 2 ? 22 : -18), y: mote.y - 18, alpha: 0.15, duration: 1200 + i * 90, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: i * 100 });
+    }
   }
 
   berry(x, y, scale = 1, interactive = false) {
-    const berry = this.add.image(x, y, 'sg-strawberry').setScale(0.46 * scale);
+    const berry = this.add.image(x, y, 'sg-strawberry-idle').setScale(0.46 * scale);
     berry.setAlpha(0.98);
     berry.setBlendMode('NORMAL');
     this.mark(berry);
     berry.setData('baseScale', berry.scaleX);
+    berry.setData('characterTextures', { idle: 'sg-strawberry-idle', happy: 'sg-strawberry-happy', pick: 'sg-strawberry-pick', wink: 'sg-strawberry-wink', surprised: 'sg-strawberry-surprised', jump: 'sg-strawberry-jump', celebrate: 'sg-strawberry-celebrate' });
+    ToddlerMotion.breathe(this, berry, { scale: berry.scaleX });
     if (interactive) this.interactions.makeTapTarget(berry, () => this.berryTapped(berry), { padding: 44 });
+    return berry;
+  }
+
+  setBerryState(berry, state) {
+    const key = berry?.getData?.('characterTextures')?.[state];
+    if (key && berry.texture?.key !== key) berry.setTexture(key);
     return berry;
   }
 
   berryTapped(berry) {
     const character = berry.getData('character');
     if (this.state.kind === 'find') {
-      character?.happy(); this.tweenHappy(berry); this.advance('You found it!');
+      character?.happy(); this.setBerryState(berry, 'happy'); this.tweenHappy(berry); this.advance('You found it!');
     } else if (this.state.kind === 'pick') {
-      character?.pick(); this.tweenHappy(berry); this.advance('Got it!');
+      character?.pick(); this.setBerryState(berry, 'pick'); this.tweenHappy(berry); this.advance('Got it!');
     } else if (this.state.kind === 'free') {
-      character?.happy(); this.tweenHappy(berry); tapFeedback(this.gamePlatform?.audioManager, 'tap'); this.reward?.burst(berry.x, berry.y, { count: 12, sound: 'pop', radius: 62 });
+      character?.happy(); this.setBerryState(berry, 'happy'); this.tweenHappy(berry); tapFeedback(this.gamePlatform?.audioManager, 'tap'); this.reward?.burst(berry.x, berry.y, { count: 12, sound: 'pop', radius: 62 });
     }
   }
 
@@ -135,7 +158,12 @@ function createStrawberryScene(Phaser, gamePlatform) {
     this.reward?.floatText(W / 2, 150, message, { emoji: '🍓' });
     this.time.delayedCall(650, () => {
       const i = STRAWBERRY_SCENES.indexOf(this.state.kind);
-      if (i < STRAWBERRY_SCENES.length - 1) this.stateStore.set('kind', STRAWBERRY_SCENES[i + 1]);
+      if (i < STRAWBERRY_SCENES.length - 1) {
+        this.stateStore.set('kind', STRAWBERRY_SCENES[i + 1]);
+        if (this.state.kind === 'decorate' && STRAWBERRY_SCENES[i + 1] === 'free') {
+          completionFeedback(this.gamePlatform, 'You made the garden beautiful!', '🍓');
+        }
+      }
       this.state = this.stateStore.get();
       this.state.advancing = false; this.renderKind();
     });
@@ -159,7 +187,7 @@ function createStrawberryScene(Phaser, gamePlatform) {
     this.tweens.add({ targets: halo, scale: 1.18, alpha: 0.16, duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     const berry = this.berry(725, 355, 1.38, true);
     berry.setData('character', new ToddlerCharacter(this, berry, { baseScale: berry.scaleX, bob: true }));
-    this.tweens.add({ targets: berry, y: 342, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    ToddlerMotion.idle(this, berry, { distance: 7, duration: 920, scale: berry.scaleX });
     const butterfly = this.add.image(205, 270, 'sg-butterfly').setDisplaySize(86, 72); this.mark(butterfly);
     this.tweens.add({ targets: butterfly, x: 260, y: 240, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
@@ -175,7 +203,7 @@ function createStrawberryScene(Phaser, gamePlatform) {
     this.tweens.add({ targets: halo, scale: 1.16, alpha: 0.14, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     const berry = this.berry(575, 325, 1.30, true);
     berry.setData('character', new ToddlerCharacter(this, berry, { baseScale: berry.scaleX, bob: true }));
-    this.tweens.add({ targets: berry, angle: 5, duration: 650, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    ToddlerMotion.wiggle(this, berry, { angle: 5, repeat: 2, duration: 150, onComplete: () => ToddlerMotion.idle(this, berry, { distance: 6, duration: 900, scale: berry.scaleX }) });
   }
 
   basketScene() {
@@ -259,7 +287,7 @@ function createStrawberryScene(Phaser, gamePlatform) {
     [190, 450, 730].forEach((x, i) => {
       const b = this.berry(x, 345 + (i % 2) * 48, 0.78 + i * 0.08, true);
       b.setData('character', new ToddlerCharacter(this, b, { baseScale: b.scaleX, bob: true }));
-      this.tweens.add({ targets: b, y: b.y - 8, duration: 900 + i * 120, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      ToddlerMotion.idle(this, b, { distance: 8, duration: 900 + i * 120, scale: b.scaleX });
     });
     const butterfly = this.add.image(790, 255, 'sg-butterfly').setDisplaySize(110, 92); this.mark(butterfly);
     butterfly.setInteractive({ useHandCursor: true });

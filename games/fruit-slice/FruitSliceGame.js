@@ -1,5 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
-import { tapFeedback, vibrate } from '../../services/FeedbackService.js';
+import { tapFeedback, vibrate, completionFeedback } from '../../services/FeedbackService.js';
 
 const ART_ROOT = '../../assets/shared/art/fruits/';
 const FRUITS = [
@@ -53,6 +53,7 @@ export class FruitSliceGame extends GameModule {
     this.isRunning = false;
     this.clearIntervals();
     this.timerService?.endSession?.();
+    completionFeedback(this.platform, 'You made the fruit dance!', '🍉');
     this.platform?.audioManager?.speak?.('Fruit time is finished!');
   }
 
@@ -89,6 +90,7 @@ export class FruitSliceGame extends GameModule {
     this.root.innerHTML = `
       <header class="simple-game-header"><div>🍉 Fruit Slice</div><div>⏱ <span data-role="timer">0:00</span></div></header>
       <div class="simple-game-stage fruit-stage" data-role="stage">
+        <div class="scene-sparkles fruit-sparkles" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="simple-game-hint">Hold the butter knife and swipe across a fruit!</div>
         <div class="slice-line" aria-hidden="true"></div>
         <div class="slice-knife" data-role="knife" aria-hidden="true">🔪</div>

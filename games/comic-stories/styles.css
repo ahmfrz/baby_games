@@ -337,3 +337,18 @@
     font-size: 1rem;
   }
 }
+
+/* Phase 5F — storybook world */
+.comic-game { background:url('../../assets/shared/art/backgrounds/learning/storybook-room.svg') center/cover no-repeat; }
+.comic-header { background:rgba(255,255,255,.84); backdrop-filter:blur(14px); border-bottom:3px solid rgba(255,255,255,.9); }
+.comic-brand .brand-art { width:68px; height:48px; object-fit:contain; }
+.comic-library { background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,248,230,.52)); }
+.comic-library-hero { max-width:900px; margin:0 auto 18px; display:flex; align-items:center; gap:16px; padding:12px 18px; border:3px solid rgba(255,255,255,.9); border-radius:28px; background:rgba(255,255,255,.82); box-shadow:0 18px 42px rgba(80,57,43,.12); }
+.comic-library-hero img { width:84px; height:92px; object-fit:contain; align-self:flex-end; }
+.comic-library-hero div { display:grid; gap:4px; }
+.comic-library-hero strong { font-size:1.5rem; color:#5b3a2d; }
+.comic-library-hero span { color:#755e52; }
+.story-card { border:3px solid rgba(255,255,255,.95); box-shadow:0 14px 30px rgba(80,57,43,.16); }
+.story-card:hover { transform:translateY(-4px); box-shadow:0 20px 38px rgba(80,57,43,.2); }
+.panel-wrap { border:6px solid rgba(255,255,255,.9); background:#fff7e6; }
+@media (prefers-reduced-motion:reduce){.story-card:hover{transform:none}}

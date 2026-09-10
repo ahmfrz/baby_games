@@ -21,3 +21,17 @@ export function rewardFeedback(platform, message = 'Great!', emoji = '✨') {
     }));
   } catch (e) {}
 }
+
+
+export function completionFeedback(platform, message = 'You did it!', emoji = '🏆', score = null) {
+  try {
+    platform?.audioManager?.playSequence?.([523, 659, 784, 1047, 1319]);
+    vibrate([20, 25, 35, 25, 55, 35]);
+  } catch (e) {}
+
+  try {
+    window.dispatchEvent(new CustomEvent('babyGameComplete', {
+      detail: { message, emoji, score }
+    }));
+  } catch (e) {}
+}

@@ -806,3 +806,15 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Phase 5F — illustrated learning world */
+#alphabet-learner-game::before { content:""; position:absolute; inset:0; z-index:-2; background:url('../../assets/shared/art/backgrounds/learning/abc-garden.svg') center/cover no-repeat; opacity:.72; }
+#alphabet-learner-game::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.28)); pointer-events:none; }
+.alphabet-brand { display:flex; align-items:center; gap:8px; }
+.alphabet-brand .brand-art { width:58px; height:42px; object-fit:contain; }
+.alphabet-brand .brand-copy { display:grid; line-height:.9; }
+.learning-card { position:relative; overflow:hidden; backdrop-filter:blur(8px); border:3px solid rgba(255,255,255,.9); box-shadow:0 22px 55px rgba(42,63,79,.18); }
+.learning-mascot { position:absolute; right:-4px; bottom:-8px; width:clamp(92px,13vw,145px); z-index:0; opacity:.96; transform-origin:bottom center; animation:mascotBreath 3.8s ease-in-out infinite; pointer-events:none; }
+.learning-card > *:not(.learning-mascot) { position:relative; z-index:1; }
+@keyframes mascotBreath { 0%,100%{transform:translateY(0) rotate(1deg)} 50%{transform:translateY(-5px) rotate(-1deg)} }
+@media (prefers-reduced-motion:reduce){.learning-mascot{animation:none}}

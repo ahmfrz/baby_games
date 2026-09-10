@@ -1,5 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
-import { tapFeedback, vibrate, rewardFeedback } from '../../services/FeedbackService.js';
+import { tapFeedback, vibrate, rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
 const LEVELS = [
   { eggs: 3, gap: 28, heightDelta: 0, label: 'Easy nest' },
@@ -26,7 +26,7 @@ export class PinchPopGame extends GameModule {
     id: 'pinch-pop',
     name: '🤏 Nest & Move',
     description: 'Pinch shiny eggs and colorful treasures, then carry them to the other nest.',
-    version: '2.0.0',
+    version: '2.0.1',
     author: 'Baby Games',
     assetPath: 'games/pinch-pop/assets/'
   };
@@ -119,6 +119,7 @@ export class PinchPopGame extends GameModule {
         <div>🏆 <span data-role="score">0</span> · Level <span data-role="level">1</span> · ⏱ <span data-role="timer">0:00</span></div>
       </header>
       <div class="simple-game-stage pinch-stage nest-stage" data-role="stage">
+        <div class="scene-sparkles nest-sparkles" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="nest-sky-badge" data-role="instruction">Pinch an egg with two fingers!</div>
         <div class="nest-zone nest-source" data-role="sourceNest">
           <div class="nest-label">🏡 PICK UP</div>
@@ -322,6 +323,7 @@ export class PinchPopGame extends GameModule {
       this.buildLevel();
     } else {
       this.instructionEl.textContent = 'You finished every nest! Wonderful work!';
+      completionFeedback(this.platform, 'You finished every nest!', '🐣', this.score);
       this.platform?.audioManager?.speak?.('You finished every level. Wonderful work!');
       this.isRunning = false;
       clearInterval(this.timerId);

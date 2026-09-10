@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#16265f"/><stop offset=".62" stop-color="#3e5db0"/><stop offset="1" stop-color="#8ca0dc"/></linearGradient><radialGradient id="moon"><stop stop-color="#fff9c4"/><stop offset="1" stop-color="#ffd76a"/></radialGradient></defs>
+<rect width="960" height="600" fill="url(#sky)"/><circle cx="790" cy="105" r="58" fill="url(#moon)" opacity=".95"/><circle cx="770" cy="87" r="8" fill="#fff" opacity=".35"/><g fill="#fff" opacity=".75"><circle cx="100" cy="105" r="4"/><circle cx="205" cy="170" r="3"/><circle cx="355" cy="92" r="5"/><circle cx="510" cy="155" r="3"/><circle cx="655" cy="72" r="4"/><circle cx="885" cy="210" r="3"/><circle cx="72" cy="290" r="3"/><circle cx="430" cy="250" r="4"/></g>
+<path d="M0 420 Q160 345 320 420 T640 410 T960 400 V600H0Z" fill="#526eae" opacity=".8"/><path d="M0 485 Q170 410 350 480 T700 465 T960 455 V600H0Z" fill="#7892cb"/><g fill="#b9d7f5" opacity=".45"><ellipse cx="120" cy="365" rx="105" ry="30"/><ellipse cx="860" cy="350" rx="120" ry="34"/></g>
+</svg>

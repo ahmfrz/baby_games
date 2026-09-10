@@ -1,5 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
-import { tapFeedback, vibrate, rewardFeedback } from '../../services/FeedbackService.js';
+import { tapFeedback, vibrate, rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
 const SHAPES = [
   ['circle', 'circle'], ['square', 'square'], ['triangle', 'triangle'], ['star', 'star'], ['diamond', 'diamond']
@@ -28,7 +28,7 @@ export class ShapePopGame extends GameModule {
     this.platform?.audioManager?.speak?.('Find the big shape!');
   }
   tick(){this.remainingSeconds=this.timerService?.getRemainingSeconds?.()??Math.max(0,this.remainingSeconds-1);this.updateTimer();if(this.remainingSeconds<=0)this.endSession();}
-  endSession(){if(!this.isRunning)return;this.isRunning=false;clearInterval(this.timerId);this.timerService?.endSession?.();this.platform?.audioManager?.speak?.(`Great playing! You found ${this.score} shapes.`);}
+  endSession(){if(!this.isRunning)return;this.isRunning=false;clearInterval(this.timerId);this.timerService?.endSession?.();completionFeedback(this.platform, `You found ${this.score} shapes!`, '🔷', this.score);this.platform?.audioManager?.speak?.(`Great playing! You found ${this.score} shapes.`);}
   stop(){this.isRunning=false;clearInterval(this.timerId);} pause(){this.stop();} resume(){if(this.remainingSeconds>0){this.isRunning=true;this.timerId=setInterval(()=>this.tick(),250);this.nextRound();}} reset(){this.stop();this.start();} cleanup(){this.stop();this.root?.remove();this.root=null;}
   mountUI(){const host=this.getGameContainerEl();this.root=document.createElement('section');this.root.className='simple-game shape-game';this.root.innerHTML=`<header class="simple-game-header"><div>🔷 Shape Pop</div><div>⏱ <span data-role="timer">0:00</span> · ⭐ <span data-role="score">0</span></div></header><div class="shape-prompt">Find <strong data-role="prompt">●</strong></div><div class="shape-grid" data-role="grid"></div>`;host?.appendChild(this.root);this.timerEl=this.root.querySelector('[data-role="timer"]');this.scoreEl=this.root.querySelector('[data-role="score"]');this.prompt=this.root.querySelector('[data-role="prompt"]');this.grid=this.root.querySelector('[data-role="grid"]');}
   nextRound(){

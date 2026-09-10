@@ -1,5 +1,8 @@
 import { GameModule } from '../../core/GameModule.js';
-import { rewardFeedback } from '../../services/FeedbackService.js';
+import { rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
+
+const STRAWBERRY_ART = new URL('../../assets/shared/art/fruits/strawberry.svg', import.meta.url).href;
+const CRAYON_ART = new URL('../../assets/shared/art/education/crayon-pal.svg', import.meta.url).href;
 
 const CANVAS_SIZE = 400;
 const BRUSH_RADIUS = 24;
@@ -12,7 +15,7 @@ export class FruitColorGame extends GameModule {
     id: 'fruit-color',
     name: '🍎 Fruit Coloring',
     description: 'Rub your finger on the fruit to paint it — color appears where you touch, and only ever the right color.',
-    version: '2.0.0',
+    version: '2.0.1',
     author: 'Baby Games',
     assetPath: 'games/fruit-color/assets/'
   };
@@ -142,7 +145,7 @@ export class FruitColorGame extends GameModule {
 
     const brand = document.createElement('div');
     brand.className = 'fruit-brand';
-    brand.innerHTML = '<span class="brand-mark">🍓</span><span class="brand-label">Fruit Coloring</span>';
+    brand.innerHTML = `<img class="brand-art" src="${STRAWBERRY_ART}" alt="Strawberry"><span class="brand-label">Fruit Coloring</span>`;
 
     const status = document.createElement('div');
     status.className = 'fruit-status';
@@ -179,7 +182,11 @@ export class FruitColorGame extends GameModule {
     empty.className = 'library-empty hidden';
     empty.textContent = 'No fruits yet — add some to assets/manifest.json!';
 
-    library.append(heading, grid, empty);
+    const hero = document.createElement('div');
+    hero.className = 'fruit-library-hero';
+    hero.innerHTML = `<img src="${CRAYON_ART}" alt="" aria-hidden="true"><div><strong>Pick a fruit to color!</strong><span>Big strokes, bright colors, happy fruits.</span></div>`;
+
+    library.append(hero, heading, grid, empty);
 
     this.elements.library = library;
     this.elements.fruitGrid = grid;
@@ -646,6 +653,7 @@ export class FruitColorGame extends GameModule {
     this.clearTimer();
     this.clearPendingTimeouts();
     this.endDrawing();
+    completionFeedback(this.platform, 'You made beautiful fruit art!', '🎨');
     this.showPinBlocker('sessionEnd');
   }
 

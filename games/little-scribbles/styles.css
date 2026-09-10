@@ -54,3 +54,12 @@
   .scribbles-control, .scribbles-action { min-height:44px; padding:7px 10px; }
   .scribbles-color { width:40px; height:40px; flex-basis:40px; }
 }
+
+/* Phase 5F — creative studio */
+#little-scribbles-game { background:url('../../assets/shared/art/backgrounds/learning/pencil-playground.svg') center/cover no-repeat; }
+.scribbles-header { background:rgba(255,255,255,.78); backdrop-filter:blur(14px); border:3px solid rgba(255,255,255,.9); box-shadow:0 16px 36px rgba(65,76,94,.12); }
+.scribbles-brand { display:flex; align-items:center; gap:8px; }
+.scribbles-brand-art { width:70px; height:58px; object-fit:contain; flex:none; }
+.scribbles-stage { border:5px solid rgba(255,255,255,.94); box-shadow:0 24px 50px rgba(65,76,94,.16); background:rgba(255,255,255,.78); }
+.scribbles-stage::before { content:""; position:absolute; inset:12px; border-radius:24px; border:2px dashed rgba(76,201,240,.22); pointer-events:none; }
+.scribbles-control, .scribbles-action { border:3px solid rgba(255,255,255,.9); box-shadow:0 8px 18px rgba(65,76,94,.1); }

@@ -1,5 +1,8 @@
 import { GameModule } from '../../core/GameModule.js';
-import { rewardFeedback } from '../../services/FeedbackService.js';
+import { rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
+
+const ABC_ART = new URL('../../assets/shared/art/education/abc-blocks.svg', import.meta.url).href;
+const TODDLER_ART = new URL('../../assets/shared/art/characters/toddler-mascot.svg', import.meta.url).href;
 
 const MODE_SEQUENCE = 'sequential';
 const MODE_RANDOM = 'random';
@@ -14,7 +17,7 @@ export class AlphabetLearnerGame extends GameModule {
     id: 'alphabet-learner',
     name: 'ABC 123 Learner',
     description: 'Learn letters and numbers with pictures, speech, and gentle play.',
-    version: '3.0.0',
+    version: '3.0.1',
     author: 'Baby Games',
     assetPath: 'games/alphabet-learner/assets/'
   };
@@ -227,7 +230,7 @@ export class AlphabetLearnerGame extends GameModule {
 
     const brand = document.createElement('div');
     brand.className = 'alphabet-brand';
-    brand.innerHTML = '<span class="brand-mark">ABC</span><span class="brand-submark">123</span>';
+    brand.innerHTML = `<img class="brand-art" src="${ABC_ART}" alt="ABC blocks"><span class="brand-copy"><span class="brand-mark">ABC</span><span class="brand-submark">123</span></span>`;
 
     const modes = document.createElement('div');
     modes.className = 'mode-switcher';
@@ -288,6 +291,12 @@ export class AlphabetLearnerGame extends GameModule {
     const card = document.createElement('article');
     card.className = 'learning-card';
 
+    const mascot = document.createElement('img');
+    mascot.className = 'learning-mascot';
+    mascot.src = TODDLER_ART;
+    mascot.alt = '';
+    mascot.setAttribute('aria-hidden', 'true');
+
     const prompt = document.createElement('div');
     prompt.className = 'prompt-line';
     prompt.textContent = 'Find the glowing key';
@@ -328,7 +337,7 @@ export class AlphabetLearnerGame extends GameModule {
     sparkleLayer.className = 'sparkle-layer';
     sparkleLayer.setAttribute('aria-hidden', 'true');
 
-    card.append(prompt, display, feedback, sparkleLayer);
+    card.append(mascot, prompt, display, feedback, sparkleLayer);
     stage.append(ambient, card);
 
     this.elements.prompt = prompt;
@@ -640,6 +649,7 @@ export class AlphabetLearnerGame extends GameModule {
       this.elements.blockerScore.parentElement.classList.add('hidden');
     } else {
       this.elements.blockerTitle.textContent = 'Great learning!';
+      completionFeedback(this.platform, `You learned ${this.score} new things!`, '🌟', this.score);
       this.elements.blockerScore.textContent = String(this.score);
       this.elements.blockerScore.parentElement.classList.remove('hidden');
     }

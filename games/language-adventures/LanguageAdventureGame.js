@@ -1,5 +1,8 @@
+const GLOBE_ART = new URL('../../assets/shared/art/education/globe-smile.svg', import.meta.url).href;
+const TODDLER_ART = new URL('../../assets/shared/art/characters/toddler-mascot.svg', import.meta.url).href;
+
 import { GameModule } from '../../core/GameModule.js';
-import { rewardFeedback, tapFeedback, vibrate } from '../../services/FeedbackService.js';
+import { rewardFeedback, tapFeedback, vibrate, completionFeedback } from '../../services/FeedbackService.js';
 import { ASSET_ROOT, SCENARIOS } from './languageData.js';
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -9,7 +12,7 @@ export class LanguageAdventureGame extends GameModule {
     id: 'language-adventures',
     name: '🗣️ Little Adventures',
     description: 'Play little stories while learning easy English phrases.',
-    version: '1.0.0',
+    version: '1.0.1',
     author: 'Baby Games',
     assetPath: 'games/language-adventures/assets/'
   };
@@ -95,6 +98,7 @@ export class LanguageAdventureGame extends GameModule {
     this.clearStepTimers();
     this.clearPointerListeners();
     this.timerService?.endSession?.();
+    completionFeedback(this.platform, `You learned ${this.score} phrases!`, '💬', this.score);
     this.platform?.audioManager?.speak?.(`Great playing! You learned ${this.score} phrases.`, 0.84);
   }
 
@@ -104,7 +108,7 @@ export class LanguageAdventureGame extends GameModule {
     this.root.className = 'language-game';
     this.root.innerHTML = `
       <header class="language-header">
-        <div class="language-title"><span>🗣️ Little Adventures</span><small>Play & Talk</small></div>
+        <div class="language-title"><img class="language-brand-art" src="${GLOBE_ART}" alt=""><span>Little Adventures</span><small>Play & Talk</small></div>
         <div class="language-stats"><span>⏱ <b data-role="timer">0:00</b></span><span>⭐ <b data-role="score">0</b></span></div>
       </header>
       <div class="language-content">
@@ -149,6 +153,7 @@ export class LanguageAdventureGame extends GameModule {
     if (!this.picker) return;
     this.picker.innerHTML = `
       <div class="language-welcome">
+        <img class="language-welcome-mascot" src="${TODDLER_ART}" alt="" aria-hidden="true">
         <div class="language-welcome-stars">✨ ⭐ ✨</div>
         <h2>Where shall we play?</h2>
         <p>Listen, look, and play. You will hear easy English phrases along the way.</p>
