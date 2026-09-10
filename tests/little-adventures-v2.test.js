@@ -38,11 +38,15 @@ for (const token of ['.sound-toggle','.la2-progress-panel','.progress-track','.s
   if (!css.includes(token)) throw new Error(`Little Adventures v2 polish style missing ${token}`);
 }
 
-// Regression: the gameplay scene must not use height:0 as its primary sizing mechanism.
-if (!css.includes('.la2-play{position:relative;') || !css.includes('.play-scene{position:absolute;inset:64px 0 0;')) {
+// Regression: gameplay layout must be a real flex/grid sizing chain.
+if (!css.includes('.la2-main{min-height:0;flex:1 1 auto;display:flex;flex-direction:column;') ||
+    !css.includes('[data-role="view"]{flex:1 1 auto;min-height:0;min-width:0;display:flex;flex-direction:column;') ||
+    !css.includes('.la2-play{position:relative;display:grid;grid-template-rows:64px minmax(0,1fr);') ||
+    !css.includes('.play-scene{position:relative;grid-row:2;')) {
   throw new Error('Little Adventures gameplay viewport sizing is not robust');
 }
-if (css.includes('.play-scene{position:relative;flex:1 1 auto;min-height:0;height:0;')) {
+if (css.includes('.play-scene{position:absolute;')) throw new Error('Little Adventures play-scene must remain in normal grid flow');
+if (css.includes('height:0') && css.includes('.play-scene{position:relative;flex:1 1 auto;min-height:0;height:0;')) {
   throw new Error('Little Adventures still contains the zero-height play-scene rule');
 }
 

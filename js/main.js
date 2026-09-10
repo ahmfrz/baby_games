@@ -654,9 +654,7 @@ class BabyGamesPlatform {
         gameContainer.style.visibility = 'visible';
         gameContainer.style.opacity = '1';
         gameContainer.style.transform = '';
-        gameContainer.style.minHeight = '';
-        gameContainer.style.height = '';
-        gameContainer.style.flex = '1 1 auto';
+        gameContainer.style.minHeight = '0';
       }
       await this.hideLauncher();
 
