@@ -8,4 +8,6 @@ export const strawberryAssets = {
   blender: asset('blender.svg'),
   cake: asset('cake.svg'),
   garden: asset('garden-bg.svg'),
+  toddler: asset('toddler.svg'),
+  flowers: asset('flower-cluster.svg'),
 };

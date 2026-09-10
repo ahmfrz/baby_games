@@ -2,8 +2,9 @@ import { GameModule } from '../../core/GameModule.js';
 import { tapFeedback, vibrate, rewardFeedback } from '../../services/FeedbackService.js';
 
 const SHAPES = [
-  ['●', 'circle'], ['■', 'square'], ['▲', 'triangle'], ['★', 'star'], ['◆', 'diamond']
+  ['circle', 'circle'], ['square', 'square'], ['triangle', 'triangle'], ['star', 'star'], ['diamond', 'diamond']
 ];
+const SHAPE_ART = (name) => new URL(`../../assets/shared/art/shapes/${name}.svg`, import.meta.url).href;
 
 export class ShapePopGame extends GameModule {
   static metadata = {
@@ -34,7 +35,7 @@ export class ShapePopGame extends GameModule {
     if(!this.isRunning)return;
     this.grid.innerHTML='';
     this.target=SHAPES[Math.floor(Math.random()*SHAPES.length)];
-    this.prompt.textContent=this.target[0];
+    this.prompt.innerHTML=`<img src="${SHAPE_ART(this.target[0])}" alt="${this.target[1]}">`;
     this.prompt.dataset.shapeName=this.target[1];
     this.platform?.audioManager?.speak?.(`Find the ${this.target[1]}.`);
     const choices=[...SHAPES].sort(()=>Math.random()-0.5);
@@ -42,7 +43,7 @@ export class ShapePopGame extends GameModule {
       const b=document.createElement('button');
       b.type='button';
       b.className='shape-target';
-      b.textContent=char;
+      b.innerHTML=`<img src="${SHAPE_ART(char)}" alt="">`;
       b.dataset.name=name;
       b.setAttribute('aria-label',name);
       b.addEventListener('click',()=>{

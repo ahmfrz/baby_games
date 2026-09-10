@@ -1,6 +1,8 @@
 import { GameModule } from '../../core/GameModule.js';
 import { tapFeedback, vibrate, rewardFeedback } from '../../services/FeedbackService.js';
 
+const STAR_ART = new URL('../../assets/shared/art/stars/star.svg', import.meta.url).href;
+
 export class StarCollectorGame extends GameModule {
   static metadata = {
     id: 'star-collector',
@@ -104,7 +106,7 @@ export class StarCollectorGame extends GameModule {
     star.className = 'star-target';
     star.type = 'button';
     star.setAttribute('aria-label', 'Star');
-    star.textContent = ['⭐', '🌟'][Math.floor(Math.random() * 2)];
+    star.innerHTML = `<img src="${STAR_ART}" alt="" draggable="false">`;
     star.style.left = `${10 + Math.random() * 74}%`;
     star.style.setProperty('--rise-duration', `${7.5 + Math.random() * 2.5}s`);
     star.style.setProperty('--star-tilt', `${-4 + Math.random() * 8}deg`);

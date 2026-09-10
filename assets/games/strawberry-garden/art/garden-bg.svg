@@ -1,1 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600"><defs><linearGradient id="sky" y1="0" y2="1"><stop stop-color="#9fe5ff"/><stop offset="1" stop-color="#f5fbff"/></linearGradient><linearGradient id="hill" y1="0" y2="1"><stop stop-color="#8fd58c"/><stop offset="1" stop-color="#4eaa65"/></linearGradient></defs><rect width="960" height="600" fill="url(#sky)"/><circle cx="805" cy="95" r="45" fill="#ffe47f"/><g fill="#fff" opacity=".82"><ellipse cx="110" cy="100" rx="70" ry="25"/><ellipse cx="170" cy="95" rx="60" ry="28"/><ellipse cx="730" cy="145" rx="75" ry="25"/></g><path d="M0 330 Q160 235 330 325 T650 315 T960 320 V600 H0Z" fill="#b8e6a8"/><path d="M0 410 Q200 300 390 405 T720 395 T960 400 V600 H0Z" fill="url(#hill)"/><path d="M0 485 Q210 390 420 480 T960 470 V600 H0Z" fill="#58b96a"/><g opacity=".55" fill="#fff"><circle cx="115" cy="350" r="5"/><circle cx="180" cy="390" r="4"/><circle cx="805" cy="360" r="5"/><circle cx="870" cy="420" r="4"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">
+<defs>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#62d8ff"/><stop offset="1" stop-color="#d9f7ff"/></linearGradient>
+ <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#9de35b"/><stop offset="1" stop-color="#58bb55"/></linearGradient>
+ <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#52b94f"/><stop offset="1" stop-color="#2e9148"/></linearGradient>
+ <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a86b3d"/><stop offset="1" stop-color="#704328"/></linearGradient>
+</defs>
+<rect width="960" height="600" fill="url(#sky)"/>
+<!-- sun --> <circle cx="830" cy="92" r="52" fill="#ffd85a" opacity=".9"/><circle cx="830" cy="92" r="72" fill="#fff3a8" opacity=".28"/>
+<!-- clouds -->
+<g fill="#fff" opacity=".9"><ellipse cx="135" cy="88" rx="70" ry="27"/><ellipse cx="88" cy="96" rx="38" ry="25"/><ellipse cx="180" cy="100" rx="43" ry="22"/><ellipse cx="690" cy="125" rx="68" ry="24"/><ellipse cx="650" cy="132" rx="35" ry="22"/><ellipse cx="735" cy="135" rx="42" ry="20"/></g>
+<!-- distant hills -->
+<path d="M0 285 Q170 185 340 270 T680 245 T960 250 V420 H0Z" fill="url(#hill)"/>
+<!-- trees -->
+<g>
+ <path d="M65 310 L88 175 L112 310Z" fill="#80502e"/><circle cx="75" cy="170" r="65" fill="#45a84d"/><circle cx="125" cy="165" r="55" fill="#57bb52"/><circle cx="105" cy="125" r="48" fill="#66c95a"/>
+ <path d="M850 320 L875 165 L900 320Z" fill="#80502e"/><circle cx="845" cy="165" r="60" fill="#45a84d"/><circle cx="900" cy="145" r="58" fill="#58bd52"/><circle cx="875" cy="110" r="45" fill="#69cb5b"/>
+</g>
+<!-- fence -->
+<g fill="#f4d58e" stroke="#d5ad68" stroke-width="5">
+ <path d="M0 330 H960 V365 H0Z" fill="#e8c77e"/>
+ <path d="M45 300 V390 M145 292 V390 M245 300 V390 M345 292 V390 M445 300 V390 M545 292 V390 M645 300 V390 M745 292 V390 M845 300 V390 M945 292 V390" stroke-linecap="round"/>
+</g>
+<!-- lush ground -->
+<path d="M0 355 Q160 325 320 370 T640 360 T960 350 V600 H0Z" fill="url(#grass)"/>
+<!-- garden beds -->
+<ellipse cx="480" cy="470" rx="315" ry="85" fill="#3c9347" opacity=".35"/>
+<path d="M155 445 Q480 385 805 445 L780 535 Q480 585 180 535Z" fill="url(#soil)" stroke="#6c3e28" stroke-width="6"/>
+<!-- foliage rows -->
+<g fill="#2d9447">
+ <ellipse cx="245" cy="445" rx="58" ry="34"/><ellipse cx="330" cy="425" rx="58" ry="34"/><ellipse cx="420" cy="445" rx="58" ry="34"/><ellipse cx="510" cy="425" rx="58" ry="34"/><ellipse cx="600" cy="445" rx="58" ry="34"/><ellipse cx="690" cy="425" rx="58" ry="34"/>
+ <ellipse cx="285" cy="500" rx="62" ry="35"/><ellipse cx="380" cy="520" rx="62" ry="35"/><ellipse cx="480" cy="495" rx="62" ry="35"/><ellipse cx="580" cy="520" rx="62" ry="35"/><ellipse cx="675" cy="500" rx="62" ry="35"/>
+</g>
+<g fill="#66c95a" opacity=".9">
+ <ellipse cx="230" cy="430" rx="32" ry="18"/><ellipse cx="315" cy="410" rx="32" ry="18"/><ellipse cx="405" cy="430" rx="32" ry="18"/><ellipse cx="495" cy="410" rx="32" ry="18"/><ellipse cx="585" cy="430" rx="32" ry="18"/><ellipse cx="675" cy="410" rx="32" ry="18"/>
+</g>
+<!-- flowers -->
+<g>
+ <g transform="translate(75 430)"><circle r="10" fill="#ffd34e"/><g fill="#fff"><circle cy="-18" r="12"/><circle cy="18" r="12"/><circle cx="-18" cy="0" r="12"/><circle cx="18" cy="0" r="12"/></g></g>
+ <g transform="translate(875 445)"><circle r="10" fill="#ffd34e"/><g fill="#fff"><circle cy="-18" r="12"/><circle cy="18" r="12"/><circle cx="-18" cy="0" r="12"/><circle cx="18" cy="0" r="12"/></g></g>
+ <g transform="translate(130 520)"><circle r="9" fill="#ffd34e"/><g fill="#ff7b9b"><circle cy="-16" r="11"/><circle cy="16" r="11"/><circle cx="-16" cy="0" r="11"/><circle cx="16" cy="0" r="11"/></g></g>
+</g>
+<!-- foreground leaves -->
+<path d="M0 530 Q120 480 225 540 T430 555 T650 545 T960 515 V600 H0Z" fill="#247e43" opacity=".7"/>
+</svg>

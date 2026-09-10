@@ -9,6 +9,17 @@ const LEVELS = [
 ];
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const NEST_ART = new URL('../../assets/shared/art/nest/nest.svg', import.meta.url).href;
+const EGG_ART = new URL('../../assets/shared/art/nest/egg.svg', import.meta.url).href;
+const BIRD_ART = new URL('../../assets/shared/art/nest/bird.svg', import.meta.url).href;
+const TREASURE_ART = [
+  new URL('../../assets/shared/art/nest/egg.svg', import.meta.url).href,
+  new URL('../../assets/shared/art/fruits/orange.svg', import.meta.url).href,
+  new URL('../../assets/shared/art/fruits/strawberry.svg', import.meta.url).href,
+  new URL('../../assets/shared/art/shapes/circle.svg', import.meta.url).href,
+  new URL('../../assets/shared/art/shapes/diamond.svg', import.meta.url).href,
+  new URL('../../assets/shared/art/shapes/star.svg', import.meta.url).href
+];
 
 export class PinchPopGame extends GameModule {
   static metadata = {
@@ -111,14 +122,14 @@ export class PinchPopGame extends GameModule {
         <div class="nest-sky-badge" data-role="instruction">Pinch an egg with two fingers!</div>
         <div class="nest-zone nest-source" data-role="sourceNest">
           <div class="nest-label">🏡 PICK UP</div>
-          <div class="nest-bowl">🪺</div>
+          <div class="nest-bowl"><img src="${NEST_ART}" alt=""></div>
         </div>
         <div class="nest-zone nest-target" data-role="targetNest">
           <div class="nest-label">🏡 PUT HERE</div>
-          <div class="nest-bowl">🪹</div>
+          <div class="nest-bowl"><img src="${NEST_ART}" alt=""></div>
         </div>
         <div class="nest-item-layer" data-role="itemLayer"></div>
-        <div class="pinch-gesture-hint" aria-hidden="true">☝️  +  ☝️  →  🤏  →  🥚</div>
+        <div class="pinch-gesture-hint" aria-hidden="true"><img src="${BIRD_ART}" alt=""><span>2 fingers → pick up → move</span></div>
       </div>`;
     host?.appendChild(this.root);
 
@@ -161,13 +172,13 @@ export class PinchPopGame extends GameModule {
     this.placeNest(this.sourceNest, leftX, baseY);
     this.placeNest(this.targetNest, rightX, rightY);
 
-    const shinyObjects = ['🥚', '🫐', '🍓', '🟡', '🔵', '🩷', '🟣'];
+    const shinyObjects = TREASURE_ART;
     for (let i = 0; i < config.eggs; i += 1) {
       const item = document.createElement('button');
       item.type = 'button';
       item.className = 'nest-item';
       item.dataset.itemId = String(i);
-      item.textContent = shinyObjects[(i + this.levelIndex) % shinyObjects.length];
+      item.innerHTML = `<img src="${shinyObjects[(i + this.levelIndex) % shinyObjects.length]}" alt="" draggable="false">`;
       const angle = (i - (config.eggs - 1) / 2) * 20;
       const radius = Math.min(78, 28 + config.eggs * 8);
       const x = leftX + Math.sin(angle * Math.PI / 180) * radius;

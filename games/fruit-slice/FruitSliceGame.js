@@ -1,9 +1,10 @@
 import { GameModule } from '../../core/GameModule.js';
 import { tapFeedback, vibrate } from '../../services/FeedbackService.js';
 
+const ART_ROOT = '../../assets/shared/art/fruits/';
 const FRUITS = [
-  ['🍎', 'Apple'], ['🍊', 'Orange'], ['🍉', 'Watermelon'], ['🍓', 'Strawberry'],
-  ['🍌', 'Banana'], ['🍇', 'Grapes'], ['🥝', 'Kiwi'], ['🍍', 'Pineapple']
+  ['apple', 'Apple'], ['orange', 'Orange'], ['watermelon', 'Watermelon'], ['strawberry', 'Strawberry'],
+  ['banana', 'Banana'], ['grapes', 'Grapes'], ['kiwi', 'Kiwi'], ['pineapple', 'Pineapple']
 ];
 
 export class FruitSliceGame extends GameModule {
@@ -142,11 +143,11 @@ export class FruitSliceGame extends GameModule {
   spawnFruit() {
     if (!this.isRunning || !this.stage) return;
 
-    const [emoji, name] = FRUITS[Math.floor(Math.random() * FRUITS.length)];
+    const [asset, name] = FRUITS[Math.floor(Math.random() * FRUITS.length)];
     const fruit = document.createElement('button');
     fruit.type = 'button';
     fruit.className = 'fruit-target';
-    fruit.textContent = emoji;
+    fruit.innerHTML = `<img src="${new URL(`${ART_ROOT}${asset}.svg`, import.meta.url).href}" alt="" draggable="false">`;
     fruit.setAttribute('aria-label', name);
     fruit.style.left = `${8 + Math.random() * 76}%`;
     fruit.style.setProperty('--rise-duration', `${8 + Math.random() * 2.5}s`);

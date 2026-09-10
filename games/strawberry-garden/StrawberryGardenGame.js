@@ -4,12 +4,10 @@ import { PhaserGameRuntime } from '../../engine/phaser/PhaserGameRuntime.js';
 import { roundedRect, text, addSparkles } from '../../engine/phaser/ToddlerGameScene.js';
 import { ToddlerInteractionSystem } from '../../engine/phaser/ToddlerInteractionSystem.js';
 import { TweenFX } from '../../engine/phaser/TweenFX.js';
-import { SceneTransition } from '../../engine/phaser/SceneTransition.js';
 import { GameStateStore } from '../../engine/core/GameStateStore.js';
 import { strawberryAssets } from '../../assets/games/strawberry-garden/manifest.js';
 import { ToddlerCharacter } from '../../engine/phaser/ToddlerCharacter.js';
 import { ToddlerReward } from '../../engine/phaser/ToddlerReward.js';
-import { playToddlerSound } from '../../engine/phaser/ToddlerAudioEvents.js';
 
 export const STRAWBERRY_SCENES = ['find', 'pick', 'basket', 'wash', 'shake', 'decorate', 'free'];
 const W = 960;
@@ -27,6 +25,8 @@ function createStrawberryScene(Phaser, gamePlatform) {
     this.load.svg('sg-blender', strawberryAssets.blender);
     this.load.svg('sg-cake', strawberryAssets.cake);
     this.load.svg('sg-garden', strawberryAssets.garden);
+    this.load.svg('sg-toddler', strawberryAssets.toddler);
+    this.load.svg('sg-flowers', strawberryAssets.flowers);
   }
 
   create() {
@@ -49,16 +49,31 @@ function createStrawberryScene(Phaser, gamePlatform) {
   }
 
   drawTopBar() {
-    roundedRect(this, W / 2, 48, 860, 66, 28, 0xffffff, 0.9, { color: 0xffffff, width: 2, alpha: 0.9 });
-    text(this, 'STRAWBERRY GARDEN', 270, 48, { fontSize: 25, color: '#6b3150' });
-    this.add.image(128, 48, 'sg-strawberry').setDisplaySize(38, 44).setDepth(10);
-    this.stepText = text(this, '1 / 6', 760, 48, { fontSize: 22, color: '#7b6471' });
-    this.promptText = text(this, 'Can you find the strawberry?', W / 2, 575, { fontSize: 22, color: '#654958' });
+    const bar = roundedRect(this, W / 2, 48, 860, 72, 30, 0xfffbf6, 0.96, { color: 0xffffff, width: 3, alpha: 0.9 });
+    bar.setDepth(5);
+    const badge = this.add.circle(103, 48, 27, 0xffe9ee, 1).setDepth(6);
+    this.add.image(103, 48, 'sg-strawberry').setDisplaySize(32, 36).setDepth(7);
+    text(this, 'STRAWBERRY', 245, 38, { fontSize: 18, color: '#a44762', fontStyle: 'bold' }).setDepth(7);
+    text(this, 'GARDEN', 245, 61, { fontSize: 25, color: '#56384b', fontStyle: 'bold' }).setDepth(7);
+    this.stepText = text(this, '1 / 6', 790, 48, { fontSize: 20, color: '#7b6471', fontStyle: 'bold' }).setDepth(7);
+    this.progressDots = [];
+    for (let i = 0; i < 6; i += 1) {
+      const dot = this.add.circle(654 + i * 25, 48, 6, i === 0 ? 0xf44868 : 0xe6dbe0, 1).setDepth(7);
+      this.progressDots.push(dot);
+    }
+    this.promptPanel = roundedRect(this, W / 2, 557, 680, 58, 24, 0xfffbf6, 0.95, { color: 0xffffff, width: 3, alpha: 0.85 });
+    this.promptPanel.setDepth(8);
+    this.promptText = text(this, 'Can you find the strawberry?', W / 2, 557, { fontSize: 21, color: '#654958', fontStyle: 'bold' }).setDepth(9);
   }
 
   updateProgress() {
     const index = STRAWBERRY_SCENES.indexOf(this.state.kind);
     this.stepText.setText(this.state.kind === 'free' ? 'FREE PLAY' : `${index + 1} / 6`);
+    this.progressDots?.forEach((dot, i) => {
+      const active = this.state.kind === 'free' ? i < 6 : i <= index;
+      dot.setFillStyle(active ? 0xf44868 : 0xe6dbe0, 1);
+      dot.setScale(active ? 1.18 : 1);
+    });
   }
 
   renderKind() {
@@ -69,6 +84,22 @@ function createStrawberryScene(Phaser, gamePlatform) {
   }
 
   mark(obj) { obj.setData('sceneObject', true); return obj; }
+
+  addSceneDecor({ mascot = true, flowers = true } = {}) {
+    if (flowers) {
+      const left = this.add.image(92, 438, 'sg-flowers').setDisplaySize(185, 136).setDepth(-2);
+      const right = this.add.image(865, 440, 'sg-flowers').setDisplaySize(170, 125).setFlipX(true).setDepth(-2);
+      this.mark(left); this.mark(right);
+      TweenFX.float(this, left, 4, 1400);
+      TweenFX.float(this, right, 5, 1550);
+    }
+    if (mascot) {
+      const mascotImage = this.add.image(845, 380, 'sg-toddler').setDisplaySize(150, 198).setDepth(4);
+      mascotImage.setData('mascot', true);
+      this.mark(mascotImage);
+      TweenFX.float(this, mascotImage, 5, 1100);
+    }
+  }
 
   berry(x, y, scale = 1, interactive = false) {
     const berry = this.add.image(x, y, 'sg-strawberry').setScale(0.46 * scale);
@@ -112,6 +143,9 @@ function createStrawberryScene(Phaser, gamePlatform) {
 
   findScene() {
     this.promptText.setText('Can you find the strawberry hiding in the garden?');
+    this.addSceneDecor({ mascot: true, flowers: true });
+    const island = roundedRect(this, 480, 365, 760, 285, 44, 0xffffff, 0.20, { color: 0xffffff, width: 2, alpha: 0.18 });
+    island.setDepth(-1); this.mark(island);
     const leaf = this.add.graphics();
     leaf.fillStyle(0x2f8f57, 1);
     for (let i = 0; i < 9; i += 1) {
@@ -121,7 +155,9 @@ function createStrawberryScene(Phaser, gamePlatform) {
       leaf.fillStyle(0x2f8f57, 1);
     }
     this.mark(leaf);
-    const berry = this.berry(725, 355, 1.25, true);
+    const halo = this.add.circle(725, 355, 74, 0xffe6ee, 0.5).setDepth(-1); this.mark(halo);
+    this.tweens.add({ targets: halo, scale: 1.18, alpha: 0.16, duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const berry = this.berry(725, 355, 1.38, true);
     berry.setData('character', new ToddlerCharacter(this, berry, { baseScale: berry.scaleX, bob: true }));
     this.tweens.add({ targets: berry, y: 342, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     const butterfly = this.add.image(205, 270, 'sg-butterfly').setDisplaySize(86, 72); this.mark(butterfly);
@@ -130,17 +166,21 @@ function createStrawberryScene(Phaser, gamePlatform) {
 
   pickScene() {
     this.promptText.setText('Tap the ripe strawberry to pick it!');
+    this.addSceneDecor({ mascot: true, flowers: false });
     const trunk = this.add.graphics();
     trunk.fillStyle(0x8b5a3c, 1); trunk.fillRoundedRect(450, 180, 58, 290, 26);
     trunk.fillStyle(0x6cb95c, 1); trunk.fillCircle(385, 205, 95); trunk.fillCircle(505, 175, 105); trunk.fillCircle(610, 225, 90);
     this.mark(trunk);
-    const berry = this.berry(575, 325, 1.15, true);
+    const halo = this.add.circle(575, 325, 70, 0xffe6ee, 0.45).setDepth(-1); this.mark(halo);
+    this.tweens.add({ targets: halo, scale: 1.16, alpha: 0.14, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const berry = this.berry(575, 325, 1.30, true);
     berry.setData('character', new ToddlerCharacter(this, berry, { baseScale: berry.scaleX, bob: true }));
     this.tweens.add({ targets: berry, angle: 5, duration: 650, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   }
 
   basketScene() {
     this.promptText.setText(`Put 3 strawberries in the basket.`);
+    this.addSceneDecor({ mascot: true, flowers: true });
     const basket = this.add.image(720, 400, 'sg-basket').setDisplaySize(300, 218); this.mark(basket);
     const label = text(this, `${this.state.basket} / 3`, 720, 418, { fontSize: 30, color: '#6b3d28' }); this.mark(label);
     for (let i = 0; i < 3; i += 1) {
@@ -159,8 +199,9 @@ function createStrawberryScene(Phaser, gamePlatform) {
 
   washScene() {
     this.promptText.setText('Rub the strawberry gently to wash it!');
+    this.addSceneDecor({ mascot: true, flowers: false });
     const sink = this.add.image(480, 385, 'sg-sink').setDisplaySize(520, 320); this.mark(sink);
-    const berry = this.berry(480, 365, 1.08, false); this.mark(berry);
+    const berry = this.berry(480, 365, 1.12, false); this.mark(berry);
     berry.setInteractive({ useHandCursor: true });
     berry.on('pointermove', (p) => {
       if (!p.isDown || this.state.advancing) return;
@@ -180,8 +221,9 @@ function createStrawberryScene(Phaser, gamePlatform) {
 
   shakeScene() {
     this.promptText.setText(this.state.shakeReady ? 'Tap BLEND to make a yummy shake!' : 'Tap the strawberry to add it to the blender!');
+    this.addSceneDecor({ mascot: true, flowers: true });
     const blender = this.add.image(700, 350, 'sg-blender').setDisplaySize(245, 292); this.mark(blender);
-    const berry = this.berry(315, 375, 0.95, false);
+    const berry = this.berry(315, 375, 1.00, false);
     this.interactions.makeTapTarget(berry, () => {
       if (this.state.shakeReady || this.state.advancing) return;
       this.state.shakeReady = true;
@@ -197,6 +239,7 @@ function createStrawberryScene(Phaser, gamePlatform) {
 
   decorateScene() {
     this.promptText.setText('Make the cake pretty with 3 strawberries!');
+    this.addSceneDecor({ mascot: true, flowers: true });
     const cake = this.add.image(480, 370, 'sg-cake').setDisplaySize(360, 276); this.mark(cake);
     const label = text(this, `${this.state.decor} / 3`, 480, 505, { fontSize: 30, color: '#8a4b5b' }); this.mark(label);
     for (let i = 0; i < 3; i += 1) {
@@ -212,6 +255,7 @@ function createStrawberryScene(Phaser, gamePlatform) {
 
   freeScene() {
     this.promptText.setText('Free play — tap the garden friends!');
+    this.addSceneDecor({ mascot: false, flowers: true });
     [190, 450, 730].forEach((x, i) => {
       const b = this.berry(x, 345 + (i % 2) * 48, 0.78 + i * 0.08, true);
       b.setData('character', new ToddlerCharacter(this, b, { baseScale: b.scaleX, bob: true }));
@@ -227,7 +271,7 @@ function createStrawberryScene(Phaser, gamePlatform) {
 }
 
 export class StrawberryGardenPhaserGame extends GameModule {
-  static metadata = { id: 'strawberry-garden', name: '🍓 Strawberry Garden', description: 'A polished interactive strawberry adventure.', version: '3.1.0', author: 'Baby Games', assetPath: 'games/strawberry-garden/' };
+  static metadata = { id: 'strawberry-garden', name: '🍓 Strawberry Garden', description: 'A polished interactive strawberry adventure.', version: '3.2.0', author: 'Baby Games', assetPath: 'games/strawberry-garden/' };
 
   constructor(platform) { super(platform); this.runtime = null; this.host = null; }
 

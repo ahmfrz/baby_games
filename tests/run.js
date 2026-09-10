@@ -9,6 +9,7 @@ import { runSourceDeploymentTests } from './source-deployment.test.js';
 console.log('Starting Phaser Engine Tests...');
 runEngineSystemTests();
 
+await import('./shared-art-upgrade.test.js');
 console.log('Starting Visual Asset Tests...');
 console.log(`[PASS] Visual assets: ${runVisualAssetSystemTests()} checks`);
 console.log(`[PASS] Toddler experience systems: ${runToddlerExperienceTests()} checks`);
@@ -191,3 +192,5 @@ function runTests() {
 }
 
 runTests();
+
+await import('./phase5-visual-upgrade.test.js');

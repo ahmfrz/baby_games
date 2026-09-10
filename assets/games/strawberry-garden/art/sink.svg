@@ -1,1 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="520" height="320" viewBox="0 0 520 320"><defs><linearGradient id="s" y1="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#d9e7f2"/></linearGradient><linearGradient id="w" y1="0" y2="1"><stop stop-color="#8ce2f5"/><stop offset="1" stop-color="#3bb8df"/></linearGradient></defs><rect x="25" y="65" width="470" height="220" rx="38" fill="url(#s)" stroke="#a8bdca" stroke-width="6"/><ellipse cx="260" cy="195" rx="180" ry="65" fill="url(#w)" stroke="#58a9c6" stroke-width="5"/><path d="M390 112 V55 Q390 22 355 22 Q325 22 325 52 V78" fill="none" stroke="#8d9da8" stroke-width="18" stroke-linecap="round"/><path d="M325 76 Q355 101 390 76" fill="none" stroke="#8d9da8" stroke-width="8"/><circle cx="425" cy="90" r="13" fill="#ffcf6b"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="390" viewBox="0 0 620 390">
+<defs>
+ <linearGradient id="ceramic" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#d8edf4"/></linearGradient>
+ <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a5efff"/><stop offset="1" stop-color="#4dc9e9"/></linearGradient>
+</defs>
+<ellipse cx="310" cy="350" rx="205" ry="20" fill="#47738b" opacity=".12"/>
+<rect x="42" y="83" width="536" height="246" rx="50" fill="url(#ceramic)" stroke="#a7c8d4" stroke-width="8"/>
+<ellipse cx="310" cy="217" rx="198" ry="76" fill="#c7edf6" stroke="#9cc8d5" stroke-width="7"/>
+<ellipse cx="310" cy="225" rx="168" ry="58" fill="url(#water)" opacity=".92"/>
+<path d="M230 104 V57 Q230 29 258 29 H362 Q390 29 390 57 V82" fill="none" stroke="#9db8c6" stroke-width="26" stroke-linecap="round"/>
+<path d="M250 70 Q310 54 370 70" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity=".8"/>
+<path d="M310 84 V145" stroke="#54cbe7" stroke-width="14" stroke-linecap="round" stroke-dasharray="5 12"/>
+<circle cx="310" cy="247" r="18" fill="#75d9ed" opacity=".7"/>
+<circle cx="272" cy="239" r="8" fill="#fff" opacity=".65"/><circle cx="348" cy="254" r="10" fill="#fff" opacity=".55"/>
+<path d="M160 293 Q310 327 460 293" fill="none" stroke="#c1dce5" stroke-width="9" stroke-linecap="round"/>
+</svg>
