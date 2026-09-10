@@ -19,7 +19,7 @@ const LAUNCHER_ART = {
   'shape-pop': new URL('../assets/shared/art/shapes/star.svg', import.meta.url).href,
   'pinch-pop': new URL('../assets/shared/art/nest/bird.svg', import.meta.url).href,
   'language-adventures': new URL('../assets/shared/art/education/globe-smile.svg', import.meta.url).href,
-  'strawberry-garden': new URL('../assets/shared/art/strawberry-garden/art/strawberry.svg', import.meta.url).href,
+  'strawberry-garden': new URL('../assets/games/strawberry-garden/art/strawberry.svg', import.meta.url).href,
   'little-scribbles': new URL('../assets/shared/art/education/crayon-pal.svg', import.meta.url).href
 };
 

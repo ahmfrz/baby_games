@@ -40,3 +40,11 @@ for (const token of ['.sound-toggle','.la2-progress-panel','.progress-track','.s
 const svg=read('games/language-adventures/assets/new/targets.svg');
 for (const id of ['toybox','teddy','ball','bed','puppy','butterfly','friend','child','crayons','book','mountains','bottle','bin','earth','plane','landmark','globe','map']) if (!svg.includes(`id="${id}"`)) throw new Error(`Missing vector target: ${id}`);
 console.log(`[PASS] Little Adventures v2: ${assets.length} art assets, vector targets, distinct activity surfaces, and character reactions`);
+
+const main = read('js/main.js');
+if (!main.includes("'strawberry-garden': new URL('../assets/games/strawberry-garden/art/strawberry.svg', import.meta.url).href")) {
+  throw new Error('Launcher Strawberry Garden art path is incorrect');
+}
+if (!game.includes('if(remaining<=0){') || !game.includes('this.showTimeUp();')) {
+  throw new Error('Little Adventures must recover visibly when the session is expired');
+}

@@ -122,3 +122,9 @@
 @media(max-width:720px){.la2-header{padding:0 10px;height:60px;flex-basis:60px}.la2-brand small{display:none}.la2-logo{width:38px;height:38px}.la2-stats{gap:5px}.la2-stats span{padding:7px 8px;font-size:.72rem}.sound-toggle{height:36px;min-width:38px;padding:0 8px}.la2-progress-panel{margin-top:10px;padding:10px 12px}}
 @media(max-width:480px){.la2-stats span:nth-child(3){display:none}.la2-brand strong{font-size:1rem}.back-btn{padding:9px 10px}.step-title>span{display:none}.step-title strong{font-size:.86rem}.dots i{width:7px;height:7px}.sound-btn{width:40px;height:40px}.la2-progress-panel>div:first-child{font-size:.7rem}}
 @media(prefers-reduced-motion:reduce){.progress-track i{transition:none}}
+
+/* Defensive error state: never leave a blank game surface after a scene-render failure. */
+.la2-error{height:100%;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,#bceeff,#e5f9d9)}
+.la2-error-card{width:min(520px,100%);padding:32px 28px;text-align:center;border-radius:34px;background:rgba(255,255,255,.96);box-shadow:0 24px 48px rgba(27,80,110,.18)}
+.la2-error-card h2{margin:0 0 8px;color:#35638a;font-size:clamp(1.8rem,5vw,2.7rem)}
+.la2-error-card p{margin:0 auto 22px;color:#647f95;font-weight:800}

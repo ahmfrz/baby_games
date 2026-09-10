@@ -37,7 +37,39 @@ export class LanguageAdventureGame extends GameModule {
     this.view.innerHTML=`<section class="la2-map"><div class="la2-map-hero"><div class="la2-hero-art"><img src="${NEW_ART_ROOT}hero-explorer.png" alt="Little explorer and friends"></div><div class="la2-hero-copy"><span class="eyebrow">BIG WORLD • SMALL STEPS</span><h1>Choose an adventure</h1><p>Tap a place, learn a simple phrase, and make a kind choice.</p><div class="la2-values"><span>💛 Be kind</span><span>🔎 Be curious</span><span>🌱 Keep growing</span></div></div></div><div class="la2-path">${SCENARIOS.map((s,i)=>{const done=Boolean(this.completed[s.id]);return `<button class="la2-card tone-${s.tone} ${done?'is-complete':''}" data-id="${s.id}"><div class="card-art"><img src="${NEW_ART_ROOT}${s.art}" alt=""></div><div class="card-body"><div class="card-title"><span>${s.icon}</span><strong>${s.title}</strong><em>${done?'✓':i+1}</em></div><p>${s.subtitle}</p><span class="play-pill">${done?'Play again':'Play adventure'} <b>→</b></span></div></button>`}).join('')}</div><div class="la2-progress-panel"><div><strong>${completedCount}/${SCENARIOS.length} adventures explored</strong><span>${this.totalStars} total stars</span></div><div class="progress-track"><i style="width:${(completedCount/SCENARIOS.length)*100}%"></i></div></div><div class="la2-map-footer">✨ Every adventure teaches a little phrase and a big idea. ✨</div></section>`;
     this.view.querySelectorAll('[data-id]').forEach(b=>b.addEventListener('click',()=>this.choose(b.dataset.id)));
   }
-  choose(id){ if(!this.isRunning)return; this.scenario=SCENARIOS.find(s=>s.id===id); if(!this.scenario)return; this.stepIndex=0; this.updateStats(); this.renderStep(); }
+  choose(id){
+    const next=SCENARIOS.find(s=>s.id===id);
+    if(!next || !this.view)return;
+    // The map is interactive only during an active session. If the platform has
+    // just handed control back after initialization, recover the local running
+    // state without creating a new timer session or bypassing the global timer.
+    if(!this.isRunning){
+      const remaining=this.timerService?.getRemainingSeconds?.() ?? this.remainingSeconds;
+      if(remaining<=0){
+        this.showTimeUp();
+        return;
+      }
+      this.isRunning=true;
+      this.remainingSeconds=remaining;
+      this.startTimerLoop();
+    }
+    this.scenario=next;
+    this.stepIndex=0;
+    this.updateStats();
+    try{
+      this.renderStep();
+    }catch(error){
+      console.error('[Little Adventures] Failed to open adventure:',error);
+      this.showRenderError();
+    }
+  }
+  showRenderError(){
+    if(!this.view)return;
+    this.clearTimers();
+    this.clearListeners();
+    this.view.innerHTML=`<section class="la2-error"><div class="la2-error-card"><div class="timeup-icon">🧭</div><h2>Let’s try that again!</h2><p>This adventure did not open correctly.</p><div class="complete-actions"><button data-error-map>Back to adventures</button></div></div></section>`;
+    this.view.querySelector('[data-error-map]')?.addEventListener('click',()=>this.showMap());
+  }
   renderStep(){
     if(!this.scenario)return; this.clearTimers(); this.clearListeners(); this.stepLocked=false; const s=this.scenario, step=s.steps[this.stepIndex];
     this.view.innerHTML=`<section class="la2-play"><div class="play-top"><button class="back-btn" data-back>← Adventures</button><div class="step-title"><span>${s.icon}</span><strong>${s.title}</strong><div class="dots">${s.steps.map((_,i)=>`<i class="${i<=this.stepIndex?'on':''}"></i>`).join('')}</div><small>${this.stepIndex+1}/${s.steps.length}</small></div><button class="sound-btn" data-speak>🔊</button></div><div class="play-scene tone-${s.tone}" style="--scene:url('${NEW_ART_ROOT}${s.art}')"><div class="scene-wash"></div><div class="character-stage"><img class="scene-avatar character-idle" data-character src="${NEW_ART_ROOT}explorer-avatar.png" alt="Explorer"><div class="character-bubble" data-character-bubble aria-live="polite"></div></div><div class="globe-companion" data-companion>${this.iconFor('globe')}</div><div class="phrase-card"><div class="phrase">${step.phrase}</div><div class="prompt">${step.prompt}</div></div><div class="interaction" data-interaction></div><div class="guide">💡 ${this.guideFor(step)}</div></div></section>`;
