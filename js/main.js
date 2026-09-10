@@ -649,15 +649,27 @@ class BabyGamesPlatform {
       const gameContainer = document.getElementById('gameContainer');
       // Make the host measurable before game initialization/start. Some games
       // calculate touch targets from the stage dimensions during start().
-      if (gameContainer) gameContainer.style.display = 'flex';
+      if (gameContainer) {
+        gameContainer.style.display = 'flex';
+        gameContainer.style.visibility = 'visible';
+        gameContainer.style.opacity = '1';
+        gameContainer.style.transform = '';
+        gameContainer.style.minHeight = '0';
+      }
       await this.hideLauncher();
 
       await this.currentGame.initialize();
       this.currentGame.start();
 
       if (gameContainer) {
-        // Don't clear innerHTML — the game manages its own content via initialize/createGameUI/showGameUI
-        await this.animateEnter(gameContainer);
+        // The game owns its DOM. Animate only the host and explicitly restore
+        // visibility afterwards so a failed/cancelled Web Animations promise
+        // can never leave a game mounted but invisible.
+        try { await this.animateEnter(gameContainer); } catch (e) {}
+        gameContainer.style.display = 'flex';
+        gameContainer.style.visibility = 'visible';
+        gameContainer.style.opacity = '1';
+        gameContainer.style.transform = '';
       }
 
       this.showGameNavigation();

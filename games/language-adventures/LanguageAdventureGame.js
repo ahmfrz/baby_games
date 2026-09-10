@@ -40,19 +40,30 @@ export class LanguageAdventureGame extends GameModule {
   choose(id){
     const next=SCENARIOS.find(s=>s.id===id);
     if(!next || !this.view)return;
-    // The map is interactive only during an active session. If the platform has
-    // just handed control back after initialization, recover the local running
-    // state without creating a new timer session or bypassing the global timer.
+
+    // The platform may animate the host while the game changes screens. Make
+    // the game surface explicitly visible before swapping the map for play.
+    const host=this.getGameContainerEl();
+    if(host){
+      host.style.display='flex';
+      host.style.visibility='visible';
+      host.style.opacity='1';
+      host.style.transform='';
+    }
+    if(this.root){
+      this.root.style.display='block';
+      this.root.style.visibility='visible';
+      this.root.style.opacity='1';
+    }
+
     if(!this.isRunning){
       const remaining=this.timerService?.getRemainingSeconds?.() ?? this.remainingSeconds;
-      if(remaining<=0){
-        this.showTimeUp();
-        return;
-      }
+      if(remaining<=0){ this.showTimeUp(); return; }
       this.isRunning=true;
       this.remainingSeconds=remaining;
       this.startTimerLoop();
     }
+
     this.scenario=next;
     this.stepIndex=0;
     this.updateStats();
@@ -60,18 +71,23 @@ export class LanguageAdventureGame extends GameModule {
       this.renderStep();
     }catch(error){
       console.error('[Little Adventures] Failed to open adventure:',error);
-      this.showRenderError();
+      this.showRenderError(error);
     }
   }
-  showRenderError(){
+
+  showRenderError(error=null){
     if(!this.view)return;
     this.clearTimers();
     this.clearListeners();
+    if(error) console.error('[Little Adventures] Render error details:',error);
     this.view.innerHTML=`<section class="la2-error"><div class="la2-error-card"><div class="timeup-icon">🧭</div><h2>Let’s try that again!</h2><p>This adventure did not open correctly.</p><div class="complete-actions"><button data-error-map>Back to adventures</button></div></div></section>`;
     this.view.querySelector('[data-error-map]')?.addEventListener('click',()=>this.showMap());
   }
   renderStep(){
-    if(!this.scenario)return; this.clearTimers(); this.clearListeners(); this.stepLocked=false; const s=this.scenario, step=s.steps[this.stepIndex];
+    if(!this.scenario || !this.view)return;
+    const step=this.scenario.steps?.[this.stepIndex];
+    if(!step){ console.error('[Little Adventures] Missing adventure step', this.scenario.id, this.stepIndex); this.showRenderError(); return; }
+    this.clearTimers(); this.clearListeners(); this.stepLocked=false; const s=this.scenario;
     this.view.innerHTML=`<section class="la2-play"><div class="play-top"><button class="back-btn" data-back>← Adventures</button><div class="step-title"><span>${s.icon}</span><strong>${s.title}</strong><div class="dots">${s.steps.map((_,i)=>`<i class="${i<=this.stepIndex?'on':''}"></i>`).join('')}</div><small>${this.stepIndex+1}/${s.steps.length}</small></div><button class="sound-btn" data-speak>🔊</button></div><div class="play-scene tone-${s.tone}" style="--scene:url('${NEW_ART_ROOT}${s.art}')"><div class="scene-wash"></div><div class="character-stage"><img class="scene-avatar character-idle" data-character src="${NEW_ART_ROOT}explorer-avatar.png" alt="Explorer"><div class="character-bubble" data-character-bubble aria-live="polite"></div></div><div class="globe-companion" data-companion>${this.iconFor('globe')}</div><div class="phrase-card"><div class="phrase">${step.phrase}</div><div class="prompt">${step.prompt}</div></div><div class="interaction" data-interaction></div><div class="guide">💡 ${this.guideFor(step)}</div></div></section>`;
     this.view.querySelector('[data-back]').addEventListener('click',()=>this.showMap());
     this.view.querySelector('[data-speak]').addEventListener('click',()=>this.speak(step));
