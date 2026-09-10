@@ -9,3 +9,9 @@ if (StrawberryGardenGame.metadata.id !== 'strawberry-garden') throw new Error('S
 if (StrawberryGardenGame.metadata.name !== '🍓 Strawberry Garden') throw new Error('Strawberry Garden name is incorrect.');
 
 console.log('Strawberry Garden tests passed: 5 checks.');
+const fs = await import('node:fs/promises');
+const gameSource = await fs.readFile(new URL('../games/strawberry-garden/StrawberryGardenGame.js', import.meta.url), 'utf8');
+if (!gameSource.includes("this.stateStore.set('basket', nextCount)")) throw new Error('Basket progress must be committed through GameStateStore.');
+if (!gameSource.includes("if (nextCount >= 3) this.advance('All 3 strawberries are in the basket!')")) throw new Error('Basket scene must advance after the third strawberry.');
+if (!gameSource.includes("this.stateStore.set({ kind: STRAWBERRY_SCENES[i + 1], advancing: false })")) throw new Error('Scene advance must clear the advancing lock in shared state.');
+console.log('Strawberry Garden progression regression checks passed: 3 checks.');

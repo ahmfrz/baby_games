@@ -20,7 +20,7 @@ const gameFiles = [
   ['games/alphabet-learner/AlphabetLearnerGame.js', 'ABC_ART', 'TODDLER_ART'],
   ['games/comic-stories/ComicStoryGame.js', 'BOOK_ART', 'TODDLER_ART'],
   ['games/fruit-color/FruitColorGame.js', 'STRAWBERRY_ART', 'CRAYON_ART'],
-  ['games/language-adventures/LanguageAdventureGame.js', 'GLOBE_ART', 'TODDLER_ART'],
+  ['games/language-adventures/LanguageAdventureGame.js', 'showMap()', 'buildInteraction(step)', 'finish()'],
   ['games/little-scribbles/LittleScribblesGame.js', 'CRAYON_ART']
 ];
 

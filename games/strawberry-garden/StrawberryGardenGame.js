@@ -153,19 +153,20 @@ function createStrawberryScene(Phaser, gamePlatform) {
 
   advance(message) {
     if (this.state.advancing) return;
-    this.state.advancing = true;
+    this.stateStore.set('advancing', true);
+    this.state = this.stateStore.get();
     rewardFeedback(this.gamePlatform, message, '🍓');
     this.reward?.floatText(W / 2, 150, message, { emoji: '🍓' });
     this.time.delayedCall(650, () => {
       const i = STRAWBERRY_SCENES.indexOf(this.state.kind);
       if (i < STRAWBERRY_SCENES.length - 1) {
-        this.stateStore.set('kind', STRAWBERRY_SCENES[i + 1]);
+        this.stateStore.set({ kind: STRAWBERRY_SCENES[i + 1], advancing: false });
         if (this.state.kind === 'decorate' && STRAWBERRY_SCENES[i + 1] === 'free') {
           completionFeedback(this.gamePlatform, 'You made the garden beautiful!', '🍓');
         }
       }
       this.state = this.stateStore.get();
-      this.state.advancing = false; this.renderKind();
+      this.renderKind();
     });
   }
 
@@ -207,19 +208,34 @@ function createStrawberryScene(Phaser, gamePlatform) {
   }
 
   basketScene() {
-    this.promptText.setText(`Put 3 strawberries in the basket.`);
+    this.promptText.setText('Pick 3 strawberries and put them in the basket!');
     this.addSceneDecor({ mascot: true, flowers: true });
     const basket = this.add.image(720, 400, 'sg-basket').setDisplaySize(300, 218); this.mark(basket);
-    const label = text(this, `${this.state.basket} / 3`, 720, 418, { fontSize: 30, color: '#6b3d28' }); this.mark(label);
-    for (let i = 0; i < 3; i += 1) {
-      if (i < this.state.basket) continue;
+    const label = text(this, `${this.state.basket} / 3`, 720, 418, { fontSize: 30, color: '#6b3d28' }).setDepth(6); this.mark(label);
+
+    // Render already-collected berries inside the basket so progress is visually persistent.
+    for (let i = 0; i < this.state.basket; i += 1) {
+      const placed = this.berry(665 + (i - 1) * 48, 388 - (i % 2) * 20, 0.34, false);
+      placed.setDepth(4);
+    }
+
+    for (let i = this.state.basket; i < 3; i += 1) {
       const b = this.berry(150 + i * 155, 350, 0.72, false);
+      b.setData('collecting', false);
       this.interactions.makeTapTarget(b, () => {
-        if (this.state.advancing) return;
-        this.state.basket += 1;
+        if (this.state.advancing || b.getData('collecting')) return;
+        b.setData('collecting', true);
+        const nextCount = Math.min(3, this.stateStore.get('basket') + 1);
+        // Commit progress before the animation so the next render cannot lose the pick.
+        this.stateStore.set('basket', nextCount);
+        this.state = this.stateStore.get();
         tapFeedback(this.gamePlatform?.audioManager, 'success');
-        this.tweenTo(b, 720, 390, () => { if (this.state.basket >= 3) this.advance('All in the basket!'); else this.renderKind(); });
-      }, { padding: 45 });
+        this.reward?.burst(b.x, b.y, { count: 12, sound: 'success', radius: 58 });
+        this.tweenTo(b, 720, 390, () => {
+          if (nextCount >= 3) this.advance('All 3 strawberries are in the basket!');
+          else this.renderKind();
+        });
+      }, { padding: 50 });
     }
   }
 

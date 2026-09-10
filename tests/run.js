@@ -7,6 +7,7 @@ import { runCssLoadingTests } from './css-loading.test.js';
 import { runSourceDeploymentTests } from './source-deployment.test.js';
 
 import { runPhase5ECelebrationTests } from './phase5e-celebration.test.js';
+import './little-adventures-v2.test.js';
 console.log('Starting Phaser Engine Tests...');
 runEngineSystemTests();
 
