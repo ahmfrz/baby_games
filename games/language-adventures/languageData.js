@@ -1,5 +1,5 @@
 export const SCENARIOS = [
-  { id:'home', title:'At Home', icon:'🏠', tone:'coral', art:'home-helper.png', subtitle:'Little helpers make a big difference.', steps:[
+  { id:'home', title:'At Home', icon:'🏠', tone:'coral', art:'home-helper.png', cardArt:'mumma-card.png', subtitle:'Little helpers make a big difference.', steps:[
     { phrase:'Let’s tidy up!', prompt:'Tap the toy box.', type:'tap', activity:'tidy-room', target:'toybox', position:[72,66], success:'Great helping!' },
     { phrase:'Where is Teddy?', prompt:'Tap Teddy.', type:'choice', activity:'find-hidden', choices:[['Teddy','teddy',true],['Ball','ball',false],['Book','book',false]], success:'There is Teddy!' },
     { phrase:'Give me the ball.', prompt:'Drag the ball to the child.', type:'drag', activity:'share-toy', item:'ball', target:'child', itemPosition:[45,60], targetPosition:[18,68], success:'Thank you!' },

@@ -16,11 +16,23 @@ const assets = [
   'games/language-adventures/assets/new/nature-helper.png',
   'games/language-adventures/assets/new/adventure-complete.png',
   'games/language-adventures/assets/new/explorer-avatar.png',
-  'games/language-adventures/assets/new/targets.svg'
+  'games/language-adventures/assets/new/targets.svg',
+  'games/language-adventures/assets/new/toddler-hero.png',
+  'games/language-adventures/assets/new/mumma-card.png',
+  'games/language-adventures/assets/new/explorer-celebrate.png',
+  'games/language-adventures/assets/new/mumma-encourage.png',
+  'games/language-adventures/assets/new/characters/toddler/idle.png',
+  'games/language-adventures/assets/new/characters/toddler/point.png',
+  'games/language-adventures/assets/new/characters/toddler/happy.png',
+  'games/language-adventures/assets/new/characters/toddler/surprised.png',
+  'games/language-adventures/assets/new/characters/mumma/standing.png',
+  'games/language-adventures/assets/new/characters/mumma/point.png',
+  'games/language-adventures/assets/new/characters/mumma/happy.png',
+  'games/language-adventures/assets/new/characters/mumma/surprised.png'
 ];
 
 for (const a of assets) if (!fs.existsSync(path.join(root,a))) throw new Error(`Missing Little Adventures v2 asset: ${a}`);
-for (const token of ['class LanguageAdventureGame','showMap()','renderStep()','buildInteraction(step)','makeDrag','finish()','showTimeUp()','loadProgress()','saveProgress()','completionFeedback','scene-avatar','targetPosition','itemPosition','asset-icon']) {
+for (const token of ['class LanguageAdventureGame','showMap()','renderStep()','buildInteraction(step)','makeDrag','finish()','showTimeUp()','loadProgress()','saveProgress()','completionFeedback','scene-avatar','characters/toddler/idle.png','data-mumma','explorer-celebrate.png','mumma-encourage.png','targetPosition','itemPosition','asset-icon']) {
   if (!game.includes(token)) throw new Error(`Little Adventures v2 missing ${token}`);
 }
 for (const token of ['At Home','In the Park','At School','In Nature','Around the World','type:\'drag\'','type:\'choice\'','activity:\'tidy-room\'','activity:\'share-at-park\'','activity:\'pack-school\'','activity:\'recycle-cleanup\'','activity:\'landmark-match\'']) {

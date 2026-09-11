@@ -36,3 +36,14 @@ The game keeps interaction state in `LanguageAdventureGame.js`, content in `lang
 - Keyboard-visible focus treatment and touch-friendly controls.
 - Session timer cleanup on timeout.
 - Responsive compact HUD for small screens.
+
+## V2.1 character art integration
+
+The main explorer is based on the supplied toddler reference and is available as reusable transparent pose assets under `assets/new/characters/toddler/`. Mumma is based on the supplied reference and is available under `assets/new/characters/mumma/`.
+
+- The map hero uses the toddler character.
+- The Home adventure card uses Mumma.
+- The active game uses toddler idle/point/happy/surprised poses.
+- The Home adventure also shows Mumma as a supporting character.
+- The completion screen uses the toddler celebration pose and Mumma encouragement pose.
+- Original character-sheet source images are preserved under `assets/new/source/`.
