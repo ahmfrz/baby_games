@@ -31,5 +31,7 @@ export const SCENARIOS = [
   ]}
 ];
 
-export const ASSET_ROOT = new URL('./assets/', import.meta.url).href;
-export const NEW_ART_ROOT = new URL('./assets/new/', import.meta.url).href;
+// Runtime asset URL rooted at the site document, not the generated Vite JS chunk.
+// Using import.meta.url here breaks after build because Vite emits the chunk under /assets/.
+export const ASSET_ROOT = new URL('games/language-adventures/assets/', document.baseURI).href;
+export const NEW_ART_ROOT = new URL('games/language-adventures/assets/new/', document.baseURI).href;

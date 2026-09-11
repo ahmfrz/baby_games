@@ -5,6 +5,9 @@ const root = process.cwd();
 const read = f => fs.readFileSync(path.join(root,f),'utf8');
 const game = read('games/language-adventures/LanguageAdventureGame.js');
 const data = read('games/language-adventures/languageData.js');
+if (data.includes("new URL('./assets/new/', import.meta.url)") || data.includes("new URL('./assets/', import.meta.url)")) {
+  throw new Error('Little Adventures asset URLs must not be relative to the generated Vite chunk');
+}
 const css = read('games/language-adventures/styles.css');
 
 const assets = [
