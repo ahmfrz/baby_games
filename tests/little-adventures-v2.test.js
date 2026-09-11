@@ -61,6 +61,11 @@ if (!css.includes('.la2-main{min-height:0;flex:1 1 auto;display:flex;flex-direct
   throw new Error('Little Adventures gameplay viewport sizing is not robust');
 }
 if (css.includes('.play-scene{position:absolute;')) throw new Error('Little Adventures play-scene must remain in normal grid flow');
+if (!data.includes("art:'../scenes/toy-room.png'")) throw new Error('Home adventure must use the clean toy-room scene background');
+if (!data.includes("cardArt:'cards/home.png'")) throw new Error('Home adventure card must use clean card artwork');
+if (!game.includes("characters/toddler/happy.png")) throw new Error('Main map must use the clean toddler hero cutout');
+if (!game.includes("s.id!=='home'")) throw new Error('Globe companion must not overlap the Home Mumma layout');
+if (!css.includes('.play-scene.is-home-scene')) throw new Error('Home adventure layout fixes are missing');
 if (css.includes('height:0') && css.includes('.play-scene{position:relative;flex:1 1 auto;min-height:0;height:0;')) {
   throw new Error('Little Adventures still contains the zero-height play-scene rule');
 }
