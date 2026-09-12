@@ -1,6 +1,6 @@
 # Little Adventures — V2
 
-Little Adventures is a toddler-friendly language and social-learning game built around five short adventures.
+Little Adventures is a toddler-friendly language and social-learning game built around five short adventures. The Home adventure now uses a short animated video as its story layer, with pause points and large touch hotspots layered over the video.
 
 ## Adventures
 
@@ -12,9 +12,9 @@ Little Adventures is a toddler-friendly language and social-learning game built 
 
 ## Gameplay
 
-Each adventure contains four short activities using toddler-friendly tap, choice, and drag interactions. Activities have distinct visual surfaces and success choreography rather than relying on one generic interaction layout.
+Each adventure contains four short activities using toddler-friendly tap, choice, and drag interactions. The Home adventure is the first video-driven prototype: a 10-second animated sequence is reused across four learning checkpoints, pausing for the toddler to find the ball, put it away, find Teddy, and put Teddy away.
 
-The explorer and globe companion react to instructions, correct answers, mistakes, and completion. Success effects are contextual to the activity.
+Non-video adventures retain the explorer/globe reaction system. Video checkpoints use the animation itself for character movement and add lightweight success effects around the interactive target.
 
 ## Architecture
 
@@ -36,6 +36,10 @@ The game keeps interaction state in `LanguageAdventureGame.js`, content in `lang
 - Keyboard-visible focus treatment and touch-friendly controls.
 - Session timer cleanup on timeout.
 - Responsive compact HUD for small screens.
+
+## Legacy character art
+
+The existing reusable character assets remain available for the non-video adventures and completion/map surfaces. The Home video prototype does not depend on those character overlays; its toddler character is embedded in the generated video.
 
 ## V2.1 character art integration
 

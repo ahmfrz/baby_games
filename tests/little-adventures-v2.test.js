@@ -24,6 +24,7 @@ const assets = [
   'games/language-adventures/assets/new/mumma-card.png',
   'games/language-adventures/assets/new/explorer-celebrate.png',
   'games/language-adventures/assets/new/mumma-encourage.png',
+  'games/language-adventures/assets/new/cards/home-video.jpg',
   'games/language-adventures/assets/new/characters/toddler/idle.png',
   'games/language-adventures/assets/new/characters/toddler/point.png',
   'games/language-adventures/assets/new/characters/toddler/happy.png',
@@ -31,11 +32,12 @@ const assets = [
   'games/language-adventures/assets/new/characters/mumma/standing.png',
   'games/language-adventures/assets/new/characters/mumma/point.png',
   'games/language-adventures/assets/new/characters/mumma/happy.png',
-  'games/language-adventures/assets/new/characters/mumma/surprised.png'
+  'games/language-adventures/assets/new/characters/mumma/surprised.png',
+  'public/games/language-adventures/video/home-tidy-room.mp4'
 ];
 
 for (const a of assets) if (!fs.existsSync(path.join(root,a))) throw new Error(`Missing Little Adventures v2 asset: ${a}`);
-for (const token of ['class LanguageAdventureGame','showMap()','renderStep()','buildInteraction(step)','makeDrag','finish()','showTimeUp()','loadProgress()','saveProgress()','completionFeedback','scene-avatar','characters/toddler/idle.png','data-mumma','explorer-celebrate.png','mumma-encourage.png','targetPosition','itemPosition','asset-icon']) {
+for (const token of ['class LanguageAdventureGame','showMap()','renderStep()','renderVideoStep()','buildVideoInteraction(step)','buildInteraction(step)','makeDrag','finish()','showTimeUp()','loadProgress()','saveProgress()','completionFeedback','scene-avatar','characters/toddler/idle.png','data-mumma','explorer-celebrate.png','mumma-encourage.png','targetPosition','itemPosition','asset-icon']) {
   if (!game.includes(token)) throw new Error(`Little Adventures v2 missing ${token}`);
 }
 for (const token of ['At Home','In the Park','At School','In Nature','Around the World','type:\'drag\'','type:\'choice\'','activity:\'tidy-room\'','activity:\'share-at-park\'','activity:\'pack-school\'','activity:\'recycle-cleanup\'','activity:\'landmark-match\'']) {
@@ -62,13 +64,18 @@ if (!css.includes('.la2-main{min-height:0;flex:1 1 auto;display:flex;flex-direct
 }
 if (css.includes('.play-scene{position:absolute;')) throw new Error('Little Adventures play-scene must remain in normal grid flow');
 if (!data.includes("art:'../scenes/toy-room.png'")) throw new Error('Home adventure must use the clean toy-room scene background');
-if (!data.includes("cardArt:'cards/home.png'")) throw new Error('Home adventure card must use clean card artwork');
+if (!data.includes("cardArt:'cards/home-video.jpg'")) throw new Error('Home adventure card must use the video-derived artwork');
 if (!game.includes("characters/toddler/happy.png")) throw new Error('Main map must use the clean toddler hero cutout');
 if (!game.includes("s.id!=='home'")) throw new Error('Globe companion must not overlap the Home Mumma layout');
 if (!css.includes('.play-scene.is-home-scene')) throw new Error('Home adventure layout fixes are missing');
 if (css.includes('height:0') && css.includes('.play-scene{position:relative;flex:1 1 auto;min-height:0;height:0;')) {
   throw new Error('Little Adventures still contains the zero-height play-scene rule');
 }
+
+if (!data.includes("video:'home-tidy-room.mp4'")) throw new Error('Home adventure must declare the video-driven prototype');
+if (!data.includes("type:'video-tap'")) throw new Error('Home adventure must use video interaction checkpoints');
+for (const token of ['videoStart','videoPause','VIDEO_ROOT']) if (!data.includes(token)) throw new Error(`Video adventure data missing ${token}`);
+for (const token of ['.adventure-video','.video-hotspot','.video-progress','.video-phrase-card']) if (!css.includes(token)) throw new Error(`Video adventure style missing ${token}`);
 
 const svg=read('games/language-adventures/assets/new/targets.svg');
 for (const id of ['toybox','teddy','ball','bed','puppy','butterfly','friend','child','crayons','book','mountains','bottle','bin','earth','plane','landmark','globe','map']) if (!svg.includes(`id="${id}"`)) throw new Error(`Missing vector target: ${id}`);
