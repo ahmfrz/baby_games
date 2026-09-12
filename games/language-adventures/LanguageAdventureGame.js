@@ -105,7 +105,7 @@ export class LanguageAdventureGame extends GameModule {
     this.videoEl?.pause?.();
     this.videoEl=null;
 
-    const videoSrc=`${VIDEO_ROOT}${s.video}`;
+    const videoSrc=s.videoUrl || (s.video ? `${VIDEO_ROOT}${s.video}` : '');
     this.view.innerHTML=`<section class="la2-play la2-video-play"><div class="play-top"><button class="back-btn" data-back>← Adventures</button><div class="step-title"><span>${s.icon}</span><strong>${s.title}</strong><div class="dots">${s.steps.map((_,i)=>`<i class="${i<=this.stepIndex?'on':''}"></i>`).join('')}</div><small>${this.stepIndex+1}/${s.steps.length}</small></div><button class="sound-btn" data-speak>🔊</button></div><div class="play-scene video-scene tone-${s.tone}"><video class="adventure-video" data-adventure-video playsinline muted preload="auto" src="${videoSrc}"></video><div class="video-shade"></div><div class="phrase-card video-phrase-card"><div class="phrase">${step.phrase}</div><div class="prompt">${step.prompt}</div></div><div class="interaction video-interaction" data-interaction data-activity="${step.activity}"></div><div class="video-progress"><i data-video-progress></i></div><div class="guide video-guide">💡 ${this.guideFor(step)}</div></div></section>`;
 
     this.view.querySelector('[data-back]').addEventListener('click',()=>this.showMap());
