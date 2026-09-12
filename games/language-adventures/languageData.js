@@ -1,11 +1,9 @@
-import homeTidyRoomVideo from './video/home-tidy-room.mp4';
-
 export const SCENARIOS = [
-  { id:'home', title:'At Home', icon:'🏠', tone:'coral', art:'../scenes/toy-room.png', cardArt:'cards/home-video.jpg', subtitle:'Little helpers make a big difference.', videoUrl:homeTidyRoomVideo, steps:[
-    { phrase:'Can you find the ball?', prompt:'Tap the ball.', type:'video-tap', activity:'tidy-room', target:'ball', position:[38,63], videoStart:0, videoPause:2.15, success:'You found the ball!' },
-    { phrase:'Where should the ball go?', prompt:'Tap the toy box.', type:'video-tap', activity:'put-ball-away', target:'toybox', position:[73,54], videoStart:2.15, videoPause:5.05, success:'Great helping!' },
-    { phrase:'Can you find Teddy?', prompt:'Tap Teddy.', type:'video-tap', activity:'find-hidden', target:'teddy', position:[67,67], videoStart:5.05, videoPause:6.65, success:'There is Teddy!' },
-    { phrase:'Where should Teddy go?', prompt:'Tap the toy box.', type:'video-tap', activity:'put-teddy-away', target:'toybox', position:[73,54], videoStart:6.65, videoPause:8.15, success:'You tidied up!' }
+  { id:'home', title:'At Home', icon:'🏠', tone:'coral', art:'../scenes/toy-room.png', cardArt:'cards/home-video.jpg', subtitle:'Little helpers make a big difference.', video:'home-tidy-room.mp4', steps:[
+    { phrase:'Can you find the ball?', prompt:'Tap the ball.', type:'video-tap', activity:'tidy-room', target:'ball', position:[38,63], videoStart:0, videoPause:1.85, success:'You found the ball!' },
+    { phrase:'Where should the ball go?', prompt:'Tap the toy box.', type:'video-tap', activity:'put-ball-away', target:'toybox', position:[73,54], videoStart:1.85, videoPause:5.00, success:'Great helping!' },
+    { phrase:'Can you find Teddy?', prompt:'Tap Teddy.', type:'video-tap', activity:'find-hidden', target:'teddy', position:[67,67], videoStart:5.00, videoPause:6.85, success:'There is Teddy!' },
+    { phrase:'Where should Teddy go?', prompt:'Tap the toy box.', type:'video-tap', activity:'put-teddy-away', target:'toybox', position:[73,54], videoStart:6.85, videoPause:8.55, success:'You tidied up!' }
   ]},
   { id:'park', title:'In the Park', icon:'🌳', tone:'green', art:'../scenes/park.png', cardArt:'cards/park.png', subtitle:'Notice, share, and make a new friend.', steps:[
     { phrase:'Look at the puppy!', prompt:'Tap the puppy.', type:'tap', activity:'meet-friend', target:'puppy', position:[53,68], success:'Hello, puppy!' },

@@ -33,7 +33,8 @@ const assets = [
   'games/language-adventures/assets/new/characters/mumma/point.png',
   'games/language-adventures/assets/new/characters/mumma/happy.png',
   'games/language-adventures/assets/new/characters/mumma/surprised.png',
-  'games/language-adventures/video/home-tidy-room.mp4'
+  'games/language-adventures/video/home-tidy-room.mp4',
+  'public/games/language-adventures/video/home-tidy-room.mp4'
 ];
 
 for (const a of assets) if (!fs.existsSync(path.join(root,a))) throw new Error(`Missing Little Adventures v2 asset: ${a}`);
@@ -72,9 +73,12 @@ if (css.includes('height:0') && css.includes('.play-scene{position:relative;flex
   throw new Error('Little Adventures still contains the zero-height play-scene rule');
 }
 
-if (!data.includes("videoUrl:homeTidyRoomVideo")) throw new Error('Home adventure must use the Vite-imported video asset');
+if (!game.includes("if(this.scenario.videoUrl || this.scenario.video){ this.renderVideoStep(); return; }")) throw new Error('Home video scenario must enter the video renderer');
+if (!data.includes("video:'home-tidy-room.mp4'")) throw new Error('Home adventure must declare its public video asset');
 if (!data.includes("type:'video-tap'")) throw new Error('Home adventure must use video interaction checkpoints');
-for (const token of ['videoStart','videoPause','VIDEO_ROOT','homeTidyRoomVideo']) if (!data.includes(token)) throw new Error(`Video adventure data missing ${token}`);
+for (const token of ['videoStart','videoPause','VIDEO_ROOT','home-tidy-room.mp4']) if (!data.includes(token)) throw new Error(`Video adventure data missing ${token}`);
+for (const token of ['videoStart:0','videoPause:1.85','videoStart:1.85','videoPause:5','videoStart:5','videoPause:6.85','videoStart:6.85','videoPause:8.55']) if (!data.includes(token)) throw new Error(`Home video checkpoint missing ${token}`);
+if (!fs.existsSync(path.join(root,'public/games/language-adventures/video/home-tidy-room.mp4'))) throw new Error('Public Home adventure video is missing');
 for (const token of ['.adventure-video','.video-hotspot','.video-progress','.video-phrase-card']) if (!css.includes(token)) throw new Error(`Video adventure style missing ${token}`);
 
 const svg=read('games/language-adventures/assets/new/targets.svg');

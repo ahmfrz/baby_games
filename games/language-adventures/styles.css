@@ -166,6 +166,20 @@
 .video-progress{position:absolute;left:14px;right:14px;bottom:13px;height:7px;border-radius:999px;background:rgba(255,255,255,.48);overflow:hidden;z-index:9;box-shadow:0 2px 7px rgba(30,70,90,.1)}
 .video-progress i{display:block;width:0;height:100%;border-radius:inherit;background:rgba(255,255,255,.96);transition:width .08s linear}
 .video-guide{bottom:30px;z-index:10}
+
+.video-phrase-card:not(.is-ready),.video-hotspot:not(.is-ready),.video-target-hint:not(.is-ready){opacity:0;pointer-events:none}
+.video-hotspot:not(.is-ready){transform:translate(-50%,-50%) scale(.92)}
+.video-phrase-card.is-ready{animation:videoPromptIn .24s ease both}
+.video-hotspot.is-ready{animation:videoHotspotIn .24s ease both}
+@keyframes videoPromptIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes videoHotspotIn{from{opacity:0;transform:translate(-50%,-50%) scale(.86)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.video-load-failed .adventure-video,.video-load-failed .video-shade{visibility:hidden}
+.video-error-card{position:absolute;inset:0;z-index:30;display:grid;place-items:center;align-content:center;gap:8px;padding:24px;text-align:center;background:rgba(240,250,255,.94);color:#4d6b80}
+.video-error-card h2{margin:0;color:#35638a;font-size:clamp(1.5rem,4vw,2.2rem)}
+.video-error-card p{margin:0 0 10px;font-weight:800}
+.video-error-card button{border:0;border-radius:999px;padding:12px 22px;background:#35bd79;color:#fff;font-weight:950;cursor:pointer;box-shadow:0 8px 18px rgba(35,76,100,.16)}
+@media(prefers-reduced-motion:reduce){.video-phrase-card.is-ready,.video-hotspot.is-ready{animation:none}}
+
 @keyframes videoHotspotPulse{0%,100%{transform:scale(.96);opacity:.75}50%{transform:scale(1.04);opacity:1}}
 @keyframes videoHotspotHit{0%{transform:translate(-50%,-50%) scale(1)}45%{transform:translate(-50%,-50%) scale(1.14)}100%{transform:translate(-50%,-50%) scale(.95);opacity:.55}}
 @media(max-width:620px){

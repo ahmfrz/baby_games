@@ -51,3 +51,12 @@ The main explorer is based on the supplied toddler reference and is available as
 - The Home adventure also shows Mumma as a supporting character.
 - The completion screen uses the toddler celebration pose and Mumma encouragement pose.
 - Original character-sheet source images are preserved under `assets/new/source/`.
+
+## V2.2.2 video prototype fix
+
+- The Home scenario explicitly declares `video: 'home-tidy-room.mp4'`, so the renderer reliably enters the video gameplay path.
+- The Home MP4 is copied into `public/games/language-adventures/video/` so Vite copies it into the production deployment at a stable GitHub Pages URL.
+- Video prompts and target hotspots stay hidden while the story is playing and appear only when the video reaches the configured pause checkpoint.
+- Home checkpoints were aligned to the supplied 10-second Gemini clip: 1.85s, 5.00s, 6.85s, and 8.55s.
+- Completing the final Teddy interaction now lets the video play through its final celebratory moment before showing the adventure completion screen.
+- A visible video-load error state with Retry was added for failed production asset loads.

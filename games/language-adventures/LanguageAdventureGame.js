@@ -5,7 +5,7 @@ import { ASSET_ROOT, NEW_ART_ROOT, VIDEO_ROOT, SCENARIOS } from './languageData.
 const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
 
 export class LanguageAdventureGame extends GameModule {
-  static metadata = { id:'language-adventures', name:'🗺️ Little Adventures', description:'Explore, learn, and make kind choices.', version:'2.2.0', author:'Baby Games', assetPath:'games/language-adventures/assets/' };
+  static metadata = { id:'language-adventures', name:'🗺️ Little Adventures', description:'Explore, learn, and make kind choices.', version:'2.2.2', author:'Baby Games', assetPath:'games/language-adventures/assets/' };
   constructor(platform){ super(platform); this.root=null; this.stage=null; this.scenario=null; this.videoEl=null; this.stepIndex=0; this.score=0; this.totalStars=this.loadTotalStars(); this.soundEnabled=this.loadSoundPreference(); this.isRunning=false; this.remainingSeconds=0; this.timerId=null; this.stepLocked=false; this.timers=new Set(); this.cleanupFns=[]; this.completed=this.loadProgress(); }
   async initialize(){ this.mount(); this.showMap(); }
   start(){ this.timerService?.startSession?.(); this.remainingSeconds=this.timerService?.getRemainingSeconds?.()??120; this.score=0; this.isRunning=true; this.startTimerLoop(); this.updateStats(); }
@@ -85,7 +85,7 @@ export class LanguageAdventureGame extends GameModule {
   }
   renderStep(){
     if(!this.scenario || !this.view)return;
-    if(this.scenario.video){ this.renderVideoStep(); return; }
+    if(this.scenario.videoUrl || this.scenario.video){ this.renderVideoStep(); return; }
     const step=this.scenario.steps?.[this.stepIndex];
     if(!step){ console.error('[Little Adventures] Missing adventure step', this.scenario.id, this.stepIndex); this.showRenderError(); return; }
     this.clearTimers(); this.clearListeners(); this.stepLocked=false; const s=this.scenario;
@@ -117,6 +117,15 @@ export class LanguageAdventureGame extends GameModule {
     const start=Math.max(0,Number(step.videoStart)||0);
     const pauseAt=Math.max(start+0.1,Number(step.videoPause)||start+2);
     const progress=this.view.querySelector('[data-video-progress]');
+    const phraseCard=this.view.querySelector('.video-phrase-card');
+    const hotspot=this.view.querySelector('[data-video-tap]');
+    const readyForInteraction=()=>{
+      phraseCard?.classList.add('is-ready');
+      hotspot?.classList.add('is-ready');
+      if(hotspot)hotspot.disabled=false;
+      this.speak(step);
+      this.announce(step.prompt);
+    };
     const syncProgress=()=>{
       const span=Math.max(0.1,pauseAt-start);
       const pct=Math.max(0,Math.min(100,((video.currentTime-start)/span)*100));
@@ -125,19 +134,43 @@ export class LanguageAdventureGame extends GameModule {
         video.pause();
         video.currentTime=Math.min(pauseAt,video.duration||pauseAt);
         if(progress)progress.style.width='100%';
+        readyForInteraction();
       }
     };
     const startPlayback=()=>{
       try{ video.currentTime=Math.min(start,Math.max(0,(video.duration||pauseAt)-0.05)); }catch{}
-      this.speak(step);
+      phraseCard?.classList.remove('is-ready');
+      hotspot?.classList.remove('is-ready');
+      if(hotspot)hotspot.disabled=true;
       const playPromise=video.play();
       if(playPromise?.catch)playPromise.catch(err=>console.warn('[Little Adventures] Video autoplay prevented:',err));
+    };
+    const onError=()=>{
+      console.error('[Little Adventures] Failed to load video:',videoSrc);
+      this.showVideoError(videoSrc);
     };
     video.addEventListener('timeupdate',syncProgress);
     video.addEventListener('loadedmetadata',startPlayback,{once:true});
     video.addEventListener('ended',syncProgress);
-    this.cleanupFns.push(()=>{video.removeEventListener('timeupdate',syncProgress);video.removeEventListener('loadedmetadata',startPlayback);video.removeEventListener('ended',syncProgress);video.pause();});
+    video.addEventListener('error',onError,{once:true});
+    this.cleanupFns.push(()=>{video.removeEventListener('timeupdate',syncProgress);video.removeEventListener('loadedmetadata',startPlayback);video.removeEventListener('ended',syncProgress);video.removeEventListener('error',onError);video.pause();});
     if(video.readyState>=1)startPlayback();
+  }
+
+  showVideoError(videoSrc){
+    if(!this.view)return;
+    this.clearTimers();
+    this.clearListeners();
+    this.view.querySelector('.la2-video-play')?.classList.add('video-load-failed');
+    const scene=this.view.querySelector('.video-scene');
+    if(scene){
+      const box=document.createElement('div');
+      box.className='video-error-card';
+      box.innerHTML=`<div class="timeup-icon">🎬</div><h2>Let’s try that adventure again!</h2><p>The story video could not be loaded.</p><button data-video-retry>Retry</button>`;
+      scene.appendChild(box);
+      box.querySelector('[data-video-retry]')?.addEventListener('click',()=>this.renderVideoStep());
+    }
+    this.announce(`Video could not be loaded: ${videoSrc}`);
   }
 
   buildVideoInteraction(step){
@@ -145,7 +178,7 @@ export class LanguageAdventureGame extends GameModule {
     if(!host)return;
     const [x,y]=step.position||[50,60];
     const label=this.targetLabel(step.target);
-    host.innerHTML=`<div class="video-target-hint" aria-hidden="true">✦</div><button class="video-hotspot target-${step.target}" data-video-tap aria-label="${label}" style="--x:${x}%;--y:${y}%"><span class="hotspot-ring"></span><span class="hotspot-icon">${this.iconFor(step.target)}</span><em>${label}</em></button>`;
+    host.innerHTML=`<div class="video-target-hint" aria-hidden="true">✦</div><button class="video-hotspot target-${step.target}" data-video-tap aria-label="${label}" disabled style="--x:${x}%;--y:${y}%"><span class="hotspot-ring"></span><span class="hotspot-icon">${this.iconFor(step.target)}</span><em>${label}</em></button>`;
     host.querySelector('[data-video-tap]').addEventListener('click',e=>this.success(step,e.currentTarget));
   }
 
@@ -226,7 +259,30 @@ export class LanguageAdventureGame extends GameModule {
     vibrate([18,25,35]);
     const phrase=this.view.querySelector('.phrase');
     phrase?.classList.add('win');
-    this.schedule(()=>{if(!this.scenario)return;if(this.stepIndex<this.scenario.steps.length-1){this.stepIndex++;this.renderStep();}else this.finish();},850);
+    this.schedule(()=>{
+      if(!this.scenario)return;
+      if(this.stepIndex<this.scenario.steps.length-1){
+        this.stepIndex++;
+        this.renderStep();
+      }else if(this.scenario.video){
+        this.playVideoToEndThenFinish();
+      }else{
+        this.finish();
+      }
+    },850);
+  }
+
+  playVideoToEndThenFinish(){
+    const video=this.videoEl;
+    if(!video){this.finish();return;}
+    const phrase=this.view?.querySelector('.video-phrase-card');
+    const interaction=this.view?.querySelector('.video-interaction');
+    phrase?.classList.remove('is-ready');
+    if(interaction)interaction.style.pointerEvents='none';
+    const done=()=>{video.removeEventListener('ended',done);this.finish();};
+    video.addEventListener('ended',done,{once:true});
+    const p=video.play();
+    if(p?.catch)p.catch(()=>{video.removeEventListener('ended',done);this.finish();});
   }
   applyActivitySuccess(step,el){
     const host=this.view?.querySelector('[data-interaction]');
