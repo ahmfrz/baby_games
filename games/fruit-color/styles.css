@@ -305,7 +305,7 @@
 }
 
 /* Phase 5F — art studio */
-.fruit-game { background:url('../../assets/shared/art/backgrounds/learning/art-studio.svg') center/cover no-repeat; }
+.fruit-game { background:var(--asset-shared-bg-art-studio) center/cover no-repeat; }
 .fruit-header { background:rgba(255,255,255,.84); backdrop-filter:blur(14px); border-bottom:3px solid rgba(255,255,255,.92); }
 .fruit-brand .brand-art { width:58px; height:50px; object-fit:contain; }
 .fruit-library { background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,248,230,.45)); }

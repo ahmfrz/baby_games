@@ -9,18 +9,19 @@ import { AudioManager } from '../services/AudioManager.js';
 import { InputManager } from '../services/InputManager.js';
 import { tapFeedback } from '../services/FeedbackService.js';
 import { ToddlerCelebration } from '../engine/core/ToddlerCelebration.js';
+import { assetUrl, configureAssetCssVariables } from '../services/AssetService.js';
 
 const LAUNCHER_ART = {
-  'alphabet-learner': new URL('../assets/shared/art/education/abc-blocks.svg', import.meta.url).href,
-  'comic-stories': new URL('../assets/shared/art/education/story-book.svg', import.meta.url).href,
-  'fruit-color': new URL('../assets/shared/art/fruits/strawberry.svg', import.meta.url).href,
-  'star-collector': new URL('../assets/shared/art/stars/star.svg', import.meta.url).href,
-  'fruit-slice': new URL('../assets/shared/art/fruits/watermelon.svg', import.meta.url).href,
-  'shape-pop': new URL('../assets/shared/art/shapes/star.svg', import.meta.url).href,
-  'pinch-pop': new URL('../assets/shared/art/nest/bird.svg', import.meta.url).href,
-  'language-adventures': new URL('../assets/shared/art/education/globe-smile.svg', import.meta.url).href,
-  'strawberry-garden': new URL('../assets/games/strawberry-garden/art/strawberry.svg', import.meta.url).href,
-  'little-scribbles': new URL('../assets/shared/art/education/crayon-pal.svg', import.meta.url).href
+  'alphabet-learner': assetUrl('shared/art/education/abc-blocks.svg'),
+  'comic-stories': assetUrl('shared/art/education/story-book.svg'),
+  'fruit-color': assetUrl('shared/art/fruits/strawberry.svg'),
+  'star-collector': assetUrl('shared/art/stars/star.svg'),
+  'fruit-slice': assetUrl('shared/art/fruits/watermelon.svg'),
+  'shape-pop': assetUrl('shared/art/shapes/star.svg'),
+  'pinch-pop': assetUrl('shared/art/nest/bird.svg'),
+  'language-adventures': assetUrl('shared/art/education/globe-smile.svg'),
+  'strawberry-garden': assetUrl('games/strawberry-garden/art/strawberry.svg'),
+  'little-scribbles': assetUrl('shared/art/education/crayon-pal.svg')
 };
 
 // ============================================
@@ -45,6 +46,7 @@ class BabyGamesPlatform {
    * Initialize the platform
    */
   async initialize() {
+    configureAssetCssVariables();
     console.log('[BabyGamesPlatform] Initializing...');
 
     try {

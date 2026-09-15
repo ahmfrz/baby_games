@@ -1,10 +1,11 @@
 import { GameModule } from '../../core/GameModule.js';
+import { assetUrl } from '../../services/AssetService.js';
 import { tapFeedback, vibrate, rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
 const SHAPES = [
   ['circle', 'circle'], ['square', 'square'], ['triangle', 'triangle'], ['star', 'star'], ['diamond', 'diamond']
 ];
-const SHAPE_ART = (name) => new URL(`../../assets/shared/art/shapes/${name}.svg`, import.meta.url).href;
+const SHAPE_ART = (name) => assetUrl(`shared/art/shapes/${name}.svg`);
 
 export class ShapePopGame extends GameModule {
   static metadata = {

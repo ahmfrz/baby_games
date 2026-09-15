@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="330" viewBox="0 0 250 330">
+<defs>
+ <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffd8b5"/><stop offset="1" stop-color="#f2b985"/></linearGradient>
+ <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#70d7f0"/><stop offset="1" stop-color="#4b9fe7"/></linearGradient>
+ <linearGradient id="shorts" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#6e68d9"/><stop offset="1" stop-color="#4b4ca9"/></linearGradient>
+</defs>
+<ellipse cx="125" cy="306" rx="62" ry="14" fill="#62485a" opacity=".14"/>
+<g>
+ <path d="M67 88 Q54 49 88 29 Q126 4 164 28 Q197 49 183 88 Q168 119 125 120 Q82 119 67 88Z" fill="#6f453c" stroke="#51352f" stroke-width="7"/>
+ <ellipse cx="125" cy="112" rx="73" ry="75" fill="url(#skin)" stroke="#c88f65" stroke-width="6"/>
+ <path d="M67 89 Q74 39 124 39 Q176 40 184 89 Q169 70 149 70 Q113 71 88 95Z" fill="#7c4c3f"/>
+ <ellipse cx="101" cy="108" rx="9" ry="12" fill="#3f3340"/><ellipse cx="149" cy="108" rx="9" ry="12" fill="#3f3340"/>
+ <circle cx="98" cy="104" r="3" fill="#fff"/><circle cx="146" cy="104" r="3" fill="#fff"/>
+ <circle cx="84" cy="132" r="10" fill="#ff9aa8" opacity=".55"/><circle cx="166" cy="132" r="10" fill="#ff9aa8" opacity=".55"/>
+ <path d="M104 145 Q125 164 146 145" fill="none" stroke="#8e4e55" stroke-width="7" stroke-linecap="round"/>
+ <path d="M65 184 Q125 155 185 184 L198 249 Q125 279 52 249Z" fill="url(#shirt)" stroke="#3d80c3" stroke-width="7"/>
+ <path d="M81 177 Q125 198 169 177" fill="none" stroke="#baf2ff" stroke-width="8" opacity=".75"/>
+ <path d="M55 195 Q27 215 35 245" fill="none" stroke="url(#skin)" stroke-width="24" stroke-linecap="round"/>
+ <path d="M195 195 Q223 215 215 245" fill="none" stroke="url(#skin)" stroke-width="24" stroke-linecap="round"/>
+ <path d="M69 247 Q125 231 181 247 L170 292 Q125 306 80 292Z" fill="url(#shorts)" stroke="#424292" stroke-width="7"/>
+ <path d="M91 286 Q77 300 69 313" stroke="#f7cda8" stroke-width="24" stroke-linecap="round"/><path d="M159 286 Q173 300 181 313" stroke="#f7cda8" stroke-width="24" stroke-linecap="round"/>
+ <ellipse cx="67" cy="315" rx="27" ry="12" fill="#ffffff" stroke="#d7dbe7" stroke-width="5"/><ellipse cx="183" cy="315" rx="27" ry="12" fill="#ffffff" stroke="#d7dbe7" stroke-width="5"/>
+</g>
+</svg>

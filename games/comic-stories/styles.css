@@ -339,7 +339,7 @@
 }
 
 /* Phase 5F — storybook world */
-.comic-game { background:url('../../assets/shared/art/backgrounds/learning/storybook-room.svg') center/cover no-repeat; }
+.comic-game { background:var(--asset-shared-bg-storybook-room) center/cover no-repeat; }
 .comic-header { background:rgba(255,255,255,.84); backdrop-filter:blur(14px); border-bottom:3px solid rgba(255,255,255,.9); }
 .comic-brand .brand-art { width:68px; height:48px; object-fit:contain; }
 .comic-library { background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,248,230,.52)); }

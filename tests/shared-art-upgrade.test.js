@@ -36,7 +36,7 @@ const sources = [
 ];
 for (const rel of sources) {
   const text = fs.readFileSync(path.join(root, rel), 'utf8');
-  if (!text.includes("import.meta.url")) throw new Error(`No native asset resolution in ${rel}`);
+  if (!text.includes("assetUrl(")) throw new Error(`No runtime asset resolution in ${rel}`);
 }
 
 console.log(`[PASS] Shared illustrated art system: ${files.length} assets + 4 games`);

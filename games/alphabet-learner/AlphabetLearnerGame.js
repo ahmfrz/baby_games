@@ -1,8 +1,9 @@
 import { GameModule } from '../../core/GameModule.js';
+import { assetUrl } from '../../services/AssetService.js';
 import { rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
-const ABC_ART = new URL('../../assets/shared/art/education/abc-blocks.svg', import.meta.url).href;
-const TODDLER_ART = new URL('../../assets/shared/art/characters/toddler-mascot.svg', import.meta.url).href;
+const ABC_ART = assetUrl('shared/art/education/abc-blocks.svg');
+const TODDLER_ART = assetUrl('shared/art/characters/toddler-mascot.svg');
 
 const MODE_SEQUENCE = 'sequential';
 const MODE_RANDOM = 'random';
@@ -19,7 +20,7 @@ export class AlphabetLearnerGame extends GameModule {
     description: 'Learn letters and numbers with pictures, speech, and gentle play.',
     version: '3.0.1',
     author: 'Baby Games',
-    assetPath: 'games/alphabet-learner/assets/'
+    assetPath: 'games/alphabet-learner/'
   };
 
   constructor(platform) {
@@ -123,7 +124,7 @@ export class AlphabetLearnerGame extends GameModule {
         char,
         kind,
         word,
-        imagePath: `${AlphabetLearnerGame.metadata.assetPath}${imageDir}${entry.imageFile || ''}`
+        imagePath: assetUrl(`${AlphabetLearnerGame.metadata.assetPath}${imageDir}${entry.imageFile || ''}`)
       };
     }).filter((item) => item.char);
 
@@ -145,7 +146,7 @@ export class AlphabetLearnerGame extends GameModule {
 
   async fetchManifest() {
     try {
-      const response = await fetch(`${AlphabetLearnerGame.metadata.assetPath}manifest.json`);
+      const response = await fetch(assetUrl(`${AlphabetLearnerGame.metadata.assetPath}manifest.json`));
       if (!response.ok) throw new Error(`Manifest failed: ${response.status}`);
       return await response.json();
     } catch (error) {

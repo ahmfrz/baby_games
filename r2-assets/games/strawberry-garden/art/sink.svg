@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="390" viewBox="0 0 620 390">
+<defs>
+ <linearGradient id="ceramic" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#d8edf4"/></linearGradient>
+ <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a5efff"/><stop offset="1" stop-color="#4dc9e9"/></linearGradient>
+</defs>
+<ellipse cx="310" cy="350" rx="205" ry="20" fill="#47738b" opacity=".12"/>
+<rect x="42" y="83" width="536" height="246" rx="50" fill="url(#ceramic)" stroke="#a7c8d4" stroke-width="8"/>
+<ellipse cx="310" cy="217" rx="198" ry="76" fill="#c7edf6" stroke="#9cc8d5" stroke-width="7"/>
+<ellipse cx="310" cy="225" rx="168" ry="58" fill="url(#water)" opacity=".92"/>
+<path d="M230 104 V57 Q230 29 258 29 H362 Q390 29 390 57 V82" fill="none" stroke="#9db8c6" stroke-width="26" stroke-linecap="round"/>
+<path d="M250 70 Q310 54 370 70" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity=".8"/>
+<path d="M310 84 V145" stroke="#54cbe7" stroke-width="14" stroke-linecap="round" stroke-dasharray="5 12"/>
+<circle cx="310" cy="247" r="18" fill="#75d9ed" opacity=".7"/>
+<circle cx="272" cy="239" r="8" fill="#fff" opacity=".65"/><circle cx="348" cy="254" r="10" fill="#fff" opacity=".55"/>
+<path d="M160 293 Q310 327 460 293" fill="none" stroke="#c1dce5" stroke-width="9" stroke-linecap="round"/>
+</svg>

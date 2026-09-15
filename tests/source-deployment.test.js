@@ -18,8 +18,8 @@ export function runSourceDeploymentTests() {
   if (runtime.includes('module.default')) {
     throw new Error('Phaser runtime still assumes a default export from the browser ESM module');
   }
-  if (!manifest.includes('new URL(`./art/${name}`, import.meta.url)')) {
-    throw new Error('Strawberry asset manifest still depends on a Vite-only asset URL transform');
+  if (!manifest.includes("assetUrl(`games/strawberry-garden/art/${name}`)")) {
+    throw new Error('Strawberry asset manifest must use the runtime asset resolver');
   }
   return 4;
 }

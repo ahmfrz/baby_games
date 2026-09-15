@@ -808,7 +808,7 @@
 }
 
 /* Phase 5F — illustrated learning world */
-#alphabet-learner-game::before { content:""; position:absolute; inset:0; z-index:-2; background:url('../../assets/shared/art/backgrounds/learning/abc-garden.svg') center/cover no-repeat; opacity:.72; }
+#alphabet-learner-game::before { content:""; position:absolute; inset:0; z-index:-2; background:var(--asset-shared-bg-abc-garden) center/cover no-repeat; opacity:.72; }
 #alphabet-learner-game::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.28)); pointer-events:none; }
 .alphabet-brand { display:flex; align-items:center; gap:8px; }
 .alphabet-brand .brand-art { width:58px; height:42px; object-fit:contain; }

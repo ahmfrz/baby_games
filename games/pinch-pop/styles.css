@@ -1,3 +1,3 @@
 /* Phase 5F — nest world backdrop */
-.pinch-game { background:url('../../assets/shared/art/backgrounds/nest-garden.svg') center/cover no-repeat; }
+.pinch-game { background:var(--asset-shared-bg-nest-garden) center/cover no-repeat; }
 .pinch-stage { background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.2)); }

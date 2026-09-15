@@ -1,7 +1,8 @@
 import { GameModule } from '../../core/GameModule.js';
+import { assetUrl } from '../../services/AssetService.js';
 import { tapFeedback, vibrate, rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
-const STAR_ART = new URL('../../assets/shared/art/stars/star.svg', import.meta.url).href;
+const STAR_ART = assetUrl('shared/art/stars/star.svg');
 
 export class StarCollectorGame extends GameModule {
   static metadata = {

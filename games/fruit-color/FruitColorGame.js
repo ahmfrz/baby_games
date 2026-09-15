@@ -1,8 +1,9 @@
 import { GameModule } from '../../core/GameModule.js';
+import { assetUrl } from '../../services/AssetService.js';
 import { rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
-const STRAWBERRY_ART = new URL('../../assets/shared/art/fruits/strawberry.svg', import.meta.url).href;
-const CRAYON_ART = new URL('../../assets/shared/art/education/crayon-pal.svg', import.meta.url).href;
+const STRAWBERRY_ART = assetUrl('shared/art/fruits/strawberry.svg');
+const CRAYON_ART = assetUrl('shared/art/education/crayon-pal.svg');
 
 const CANVAS_SIZE = 400;
 const BRUSH_RADIUS = 24;
@@ -17,7 +18,7 @@ export class FruitColorGame extends GameModule {
     description: 'Rub your finger on the fruit to paint it — color appears where you touch, and only ever the right color.',
     version: '2.0.1',
     author: 'Baby Games',
-    assetPath: 'games/fruit-color/assets/'
+    assetPath: 'games/fruit-color/'
   };
 
   constructor(platform) {
@@ -102,7 +103,7 @@ export class FruitColorGame extends GameModule {
 
   async fetchManifest() {
     try {
-      const response = await fetch(`${FruitColorGame.metadata.assetPath}manifest.json`);
+      const response = await fetch(assetUrl(`${FruitColorGame.metadata.assetPath}manifest.json`));
       if (!response.ok) throw new Error(`Manifest failed: ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -112,7 +113,7 @@ export class FruitColorGame extends GameModule {
   }
 
   resolveAsset(relativePath) {
-    return `${FruitColorGame.metadata.assetPath}${relativePath}`;
+    return assetUrl(`${FruitColorGame.metadata.assetPath}${relativePath}`);
   }
 
   // ============================================

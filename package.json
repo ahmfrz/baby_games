@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/run.js"
+    "test": "node tests/run.js",
+    "prepare:r2-assets": "node scripts/asset-r2-layout.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

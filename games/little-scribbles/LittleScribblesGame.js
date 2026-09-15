@@ -1,7 +1,8 @@
 import { GameModule } from '../../core/GameModule.js';
+import { assetUrl } from '../../services/AssetService.js';
 import { rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
-const CRAYON_ART = new URL('../../assets/shared/art/education/crayon-pal.svg', import.meta.url).href;
+const CRAYON_ART = assetUrl('shared/art/education/crayon-pal.svg');
 
 const TRACE_STEPS = [
   { id: 'standing-line', name: 'Standing Line', hint: 'Draw down the line', type: 'polyline', points: [[0.5, 0.2], [0.5, 0.8]] },

@@ -1,4 +1,5 @@
 import { GameModule } from '../../core/GameModule.js';
+import { assetUrl } from '../../services/AssetService.js';
 import { tapFeedback, vibrate, rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
 const LEVELS = [
@@ -9,16 +10,16 @@ const LEVELS = [
 ];
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-const NEST_ART = new URL('../../assets/shared/art/nest/nest.svg', import.meta.url).href;
-const EGG_ART = new URL('../../assets/shared/art/nest/egg.svg', import.meta.url).href;
-const BIRD_ART = new URL('../../assets/shared/art/nest/bird.svg', import.meta.url).href;
+const NEST_ART = assetUrl('shared/art/nest/nest.svg');
+const EGG_ART = assetUrl('shared/art/nest/egg.svg');
+const BIRD_ART = assetUrl('shared/art/nest/bird.svg');
 const TREASURE_ART = [
-  new URL('../../assets/shared/art/nest/egg.svg', import.meta.url).href,
-  new URL('../../assets/shared/art/fruits/orange.svg', import.meta.url).href,
-  new URL('../../assets/shared/art/fruits/strawberry.svg', import.meta.url).href,
-  new URL('../../assets/shared/art/shapes/circle.svg', import.meta.url).href,
-  new URL('../../assets/shared/art/shapes/diamond.svg', import.meta.url).href,
-  new URL('../../assets/shared/art/shapes/star.svg', import.meta.url).href
+  assetUrl('shared/art/nest/egg.svg'),
+  assetUrl('shared/art/fruits/orange.svg'),
+  assetUrl('shared/art/fruits/strawberry.svg'),
+  assetUrl('shared/art/shapes/circle.svg'),
+  assetUrl('shared/art/shapes/diamond.svg'),
+  assetUrl('shared/art/shapes/star.svg')
 ];
 
 export class PinchPopGame extends GameModule {

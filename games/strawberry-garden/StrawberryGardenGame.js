@@ -20,13 +20,13 @@ function createStrawberryScene(Phaser, gamePlatform) {
 
   preload() {
     this.load.svg('sg-strawberry', strawberryAssets.character);
-    this.load.svg('sg-strawberry-idle', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-idle.svg', import.meta.url).href);
-    this.load.svg('sg-strawberry-happy', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-happy.svg', import.meta.url).href);
-    this.load.svg('sg-strawberry-pick', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-pick.svg', import.meta.url).href);
-    this.load.svg('sg-strawberry-wink', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-wink.svg', import.meta.url).href);
-    this.load.svg('sg-strawberry-surprised', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-surprised.svg', import.meta.url).href);
-    this.load.svg('sg-strawberry-jump', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-jump.svg', import.meta.url).href);
-    this.load.svg('sg-strawberry-celebrate', new URL('../..' + '/assets/games/strawberry-garden/art/characters/strawberry-celebrate.svg', import.meta.url).href);
+    this.load.svg('sg-strawberry-idle', strawberryAssets.idle);
+    this.load.svg('sg-strawberry-happy', strawberryAssets.happy);
+    this.load.svg('sg-strawberry-pick', strawberryAssets.pick);
+    this.load.svg('sg-strawberry-wink', strawberryAssets.wink);
+    this.load.svg('sg-strawberry-surprised', strawberryAssets.surprised);
+    this.load.svg('sg-strawberry-jump', strawberryAssets.jump);
+    this.load.svg('sg-strawberry-celebrate', strawberryAssets.celebrate);
     this.load.svg('sg-butterfly', strawberryAssets.butterfly);
     this.load.svg('sg-basket', strawberryAssets.basket);
     this.load.svg('sg-sink', strawberryAssets.sink);

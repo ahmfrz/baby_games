@@ -56,7 +56,7 @@
 }
 
 /* Phase 5F — creative studio */
-#little-scribbles-game { background:url('../../assets/shared/art/backgrounds/learning/pencil-playground.svg') center/cover no-repeat; }
+#little-scribbles-game { background:var(--asset-shared-bg-pencil-playground) center/cover no-repeat; }
 .scribbles-header { background:rgba(255,255,255,.78); backdrop-filter:blur(14px); border:3px solid rgba(255,255,255,.9); box-shadow:0 16px 36px rgba(65,76,94,.12); }
 .scribbles-brand { display:flex; align-items:center; gap:8px; }
 .scribbles-brand-art { width:70px; height:58px; object-fit:contain; flex:none; }

@@ -1,8 +1,9 @@
 import { GameModule } from '../../core/GameModule.js';
+import { assetUrl } from '../../services/AssetService.js';
 import { rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
-const BOOK_ART = new URL('../../assets/shared/art/education/story-book.svg', import.meta.url).href;
-const TODDLER_ART = new URL('../../assets/shared/art/characters/toddler-mascot.svg', import.meta.url).href;
+const BOOK_ART = assetUrl('shared/art/education/story-book.svg');
+const TODDLER_ART = assetUrl('shared/art/characters/toddler-mascot.svg');
 
 const SWIPE_THRESHOLD_PX = 40;
 
@@ -13,7 +14,7 @@ export class ComicStoryGame extends GameModule {
     description: 'Flip through comic-style storybooks, panel by panel.',
     version: '1.0.1',
     author: 'Baby Games',
-    assetPath: 'games/comic-stories/assets/'
+    assetPath: 'games/comic-stories/'
   };
 
   constructor(platform) {
@@ -96,7 +97,7 @@ export class ComicStoryGame extends GameModule {
 
   async fetchManifest() {
     try {
-      const response = await fetch(`${ComicStoryGame.metadata.assetPath}manifest.json`);
+      const response = await fetch(assetUrl(`${ComicStoryGame.metadata.assetPath}manifest.json`));
       if (!response.ok) throw new Error(`Manifest failed: ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -106,7 +107,7 @@ export class ComicStoryGame extends GameModule {
   }
 
   resolveImage(relativePath) {
-    return `${ComicStoryGame.metadata.assetPath}images/${relativePath}`;
+    return assetUrl(`${ComicStoryGame.metadata.assetPath}images/${relativePath}`);
   }
 
   // ============================================
