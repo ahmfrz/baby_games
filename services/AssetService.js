@@ -12,7 +12,7 @@
 const RAW_BASE = (import.meta.env?.VITE_ASSET_BASE_URL || '').trim();
 const EXTERNAL_ASSETS = /^https?:\/\//i.test(RAW_BASE);
 const CLOUDINARY_CLOUD_NAME = (import.meta.env?.VITE_CLOUDINARY_CLOUD_NAME || 'orxjbhtb').trim();
-const CLOUDINARY_PREFIX = 'little-adventures/release-1';
+const CLOUDINARY_PREFIX = 'little-adventures/release-2';
 
 const trimSlashes = (value) => String(value || '').replace(/^\/+|\/+$/g, '');
 const LOCAL_PREFIXES = [

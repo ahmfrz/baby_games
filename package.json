@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node tests/run.js",
-    "prepare:r2-assets": "node scripts/asset-r2-layout.mjs"
+    "prepare:r2-assets": "node scripts/asset-r2-layout.mjs",
+    "verify:cloudinary-assets": "node scripts/verify-cloudinary-assets.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

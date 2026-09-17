@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+import { fileURLToPath } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const art = path.join(root, 'assets/games/strawberry-garden/art');
 
 export function runVisualAssetSystemTests() {

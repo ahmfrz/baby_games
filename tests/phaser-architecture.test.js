@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const runtime = fs.readFileSync(path.join(root, 'engine/phaser/PhaserGameRuntime.js'), 'utf8');
 const game = fs.readFileSync(path.join(root, 'games/strawberry-garden/StrawberryGardenGame.js'), 'utf8');
 const main = fs.readFileSync(path.join(root, 'js/main.js'), 'utf8');
