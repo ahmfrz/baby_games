@@ -1,4 +1,4 @@
-import { assetUrl } from '../../services/AssetService.js';
+import { assetDirectoryUrl } from '../../services/AssetService.js';
 
 export const SCENARIOS = [
   { id:'home', title:'At Home', icon:'🏠', tone:'coral', art:'scenes/toy-room.webp', cardArt:'cards/home-video.webp', subtitle:'Little helpers make a big difference.', video:'home-tidy-room.mp4', steps:[
@@ -35,7 +35,7 @@ export const SCENARIOS = [
 
 // Runtime asset URL rooted at the site document, not the generated Vite JS chunk.
 // Using import.meta.url here breaks after build because Vite emits the chunk under /assets/.
-export const ASSET_ROOT = `${assetUrl('games/language-adventures')}/`;
-export const SCENE_ROOT = `${assetUrl('games/language-adventures/scenes')}/`;
-export const NEW_ART_ROOT = `${assetUrl('games/language-adventures/new')}/`;
-export const VIDEO_ROOT = `${assetUrl('games/language-adventures/video')}/`;
+export const ASSET_ROOT = assetDirectoryUrl('games/language-adventures', 'image');
+export const SCENE_ROOT = assetDirectoryUrl('games/language-adventures/scenes', 'image');
+export const NEW_ART_ROOT = assetDirectoryUrl('games/language-adventures/new', 'image');
+export const VIDEO_ROOT = assetDirectoryUrl('games/language-adventures/video', 'video');

@@ -73,6 +73,16 @@ export function assetUrl(logicalPath = '') {
   return `${RAW_BASE.replace(/\/+$/, '')}/${resourceType}/upload/${publicId}${resourceType === 'raw' ? '' : extension}`;
 }
 
+export function assetDirectoryUrl(logicalPath = '', resourceType = 'image') {
+  const normalized = trimSlashes(logicalPath);
+  if (!EXTERNAL_ASSETS) {
+    return new URL(`./${localPath(normalized)}/`, document.baseURI).href;
+  }
+
+  const type = String(resourceType || 'image').trim() || 'image';
+  return `${RAW_BASE.replace(/\/+$/, '')}/${type}/upload/${CLOUDINARY_PREFIX}/${normalized}/`;
+}
+
 export function assetBaseUrl() {
   return EXTERNAL_ASSETS
     ? `${RAW_BASE.replace(/\/+$/, '')}/`

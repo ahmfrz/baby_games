@@ -9,6 +9,13 @@ if (data.includes("new URL('./assets/new/', import.meta.url)") || data.includes(
   throw new Error('Little Adventures asset URLs must not be relative to the generated Vite chunk');
 }
 const css = read('games/language-adventures/styles.css');
+const resolver = read('services/AssetService.js');
+if (!resolver.includes('export function assetDirectoryUrl(logicalPath = \'\', resourceType = \'image\')')) {
+  throw new Error('AssetService must provide a resource-type-aware directory resolver');
+}
+if (!resolver.includes("return `${RAW_BASE.replace(/\\/+$/, '')}/${type}/upload/${CLOUDINARY_PREFIX}/${normalized}/`")) {
+  throw new Error('AssetService directory resolver must build Cloudinary resource-type URLs correctly');
+}
 
 const assets = [
   'games/language-adventures/assets/new/hero-explorer.webp',
@@ -74,7 +81,8 @@ if (css.includes('height:0') && css.includes('.play-scene{position:relative;flex
 
 if (!game.includes("if(this.scenario.videoUrl || this.scenario.video){ this.renderVideoStep(); return; }")) throw new Error('Home video scenario must enter the video renderer');
 if (!data.includes("video:'home-tidy-room.mp4'")) throw new Error('Home adventure must declare its public video asset');
-if (!data.includes("VIDEO_ROOT = `${assetUrl('games/language-adventures/video')}/`;")) throw new Error('Video asset root must preserve a trailing slash after normalization');
+if (!data.includes("import { assetDirectoryUrl } from '../../services/AssetService.js';")) throw new Error('Language Adventures must use the directory asset resolver');
+if (!data.includes("VIDEO_ROOT = assetDirectoryUrl('games/language-adventures/video', 'video');")) throw new Error('Video asset root must use Cloudinary video resource type');
 if (!data.includes("type:'video-tap'")) throw new Error('Home adventure must use video interaction checkpoints');
 for (const token of ['videoStart','videoPause','VIDEO_ROOT','home-tidy-room.mp4']) if (!data.includes(token)) throw new Error(`Video adventure data missing ${token}`);
 for (const token of ['videoStart:0','videoPause:1.85','videoStart:1.85','videoPause:5','videoStart:5','videoPause:6.85','videoStart:6.85','videoPause:8.55']) if (!data.includes(token)) throw new Error(`Home video checkpoint missing ${token}`);
