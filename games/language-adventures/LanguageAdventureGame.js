@@ -1,6 +1,7 @@
 import { GameModule } from '../../core/GameModule.js';
 import { rewardFeedback, tapFeedback, vibrate, completionFeedback } from '../../services/FeedbackService.js';
 import { ASSET_ROOT, NEW_ART_ROOT, SCENE_ROOT, VIDEO_ROOT, SCENARIOS } from './languageData.js';
+import targetsSvg from './assets/new/targets.svg?raw';
 
 const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
 
@@ -16,6 +17,7 @@ export class LanguageAdventureGame extends GameModule {
   tick(){ if(!this.isRunning)return; this.remainingSeconds=this.timerService?.getRemainingSeconds?.()??Math.max(0,this.remainingSeconds-1); this.updateStats(); if(this.remainingSeconds<=0)this.endSession(); }
   endSession(){ if(!this.isRunning)return; this.isRunning=false; clearInterval(this.timerId); this.timerId=null; this.clearTimers(); this.clearListeners(); this.timerService?.endSession?.(); this.showTimeUp(); completionFeedback(this.platform,`You explored ${this.score} little steps!`,'🌍',this.score); }
   mount(){
+    this.ensureTargetSymbols();
     const host=this.getGameContainerEl();
     this.root=document.createElement('section'); this.root.className='la2';
     this.root.innerHTML=`<div class="la2-shell"><header class="la2-header"><div class="la2-brand"><span class="la2-logo">🌍</span><div><strong>Little Adventures</strong><small>Explore • Learn • Grow</small></div></div><div class="la2-stats"><span>⏱ <b data-role="timer">2:00</b></span><span>⭐ <b data-role="score">0</b></span><span>🏆 <b data-role="total">0</b></span><button class="sound-toggle" data-sound aria-label="Turn sound off" aria-pressed="true">🔊</button></div></header><main class="la2-main"><div data-role="view"></div><div class="sr-only" data-role="status" aria-live="polite"></div></main></div>`;
@@ -237,10 +239,30 @@ export class LanguageAdventureGame extends GameModule {
       decorate('');
     }
   }
+  ensureTargetSymbols(){
+    if(document.getElementById('la-target-symbols')) return;
+
+    const inner=targetsSvg
+      .replace(/^[\s\S]*?<svg[^>]*>/i,'')
+      .replace(/<\/svg>\s*$/i,'');
+
+    const sprite=document.createElement('svg');
+    sprite.id='la-target-symbols';
+    sprite.setAttribute('aria-hidden','true');
+    sprite.setAttribute('width','0');
+    sprite.setAttribute('height','0');
+    sprite.style.position='absolute';
+    sprite.style.width='0';
+    sprite.style.height='0';
+    sprite.style.overflow='hidden';
+    sprite.style.pointerEvents='none';
+    sprite.innerHTML=inner;
+    document.body.appendChild(sprite);
+  }
   iconFor(k){
     const supported={toybox:1,teddy:1,ball:1,book:1,bed:1,puppy:1,butterfly:1,leaf:1,path:1,friend:1,crayons:1,cup:1,mountains:1,bottle:1,bin:1,earth:1,wrapper:1,plane:1,landmark:1,cloud:1,suitcase:1,globe:1,map:1,child:1};
     if(!supported[k]) return '<span class="fallback-icon">✨</span>';
-    return `<svg class="asset-icon icon-${k}" viewBox="0 0 200 190" aria-hidden="true"><use href="${NEW_ART_ROOT}targets.svg#${k}"></use></svg>`;
+    return `<svg class="asset-icon icon-${k}" viewBox="0 0 200 190" aria-hidden="true"><use href="#${k}"></use></svg>`;
   }
   targetLabel(k){return {child:'Explorer',friend:'Friend',bin:'Recycle',teddy:'Teddy',toybox:'Toy box',ball:'Ball',book:'Book'}[k]||k;}
   makeDrag(item,target,step){ let dragging=false,id=null,ox=0,oy=0; const [ix,iy]=step.itemPosition||[45,60]; const origin={left:`${ix}%`,top:`${iy}%`}; item.style.left=origin.left; item.style.top=origin.top; const move=e=>{if(!dragging||e.pointerId!==id)return; const r=this.view.querySelector('.play-scene').getBoundingClientRect(); item.style.left=`${clamp(e.clientX-r.left-ox,10,r.width-item.offsetWidth-10)}px`; item.style.top=`${clamp(e.clientY-r.top-oy,120,r.height-item.offsetHeight-15)}px`; const a=item.getBoundingClientRect(),b=target.getBoundingClientRect(); target.classList.toggle('near',!(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom));}; const up=e=>{if(e.pointerId!==id)return; dragging=false; item.releasePointerCapture?.(id); id=null; const a=item.getBoundingClientRect(),b=target.getBoundingClientRect(); const ok=!(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom); target.classList.remove('near'); if(ok)this.success(step,item); else {item.classList.add('return');item.style.left=origin.left;item.style.top=origin.top;this.schedule(()=>item.classList.remove('return'),280);this.wrong(item);} }; item.addEventListener('pointerdown',e=>{e.preventDefault();id=e.pointerId;dragging=true;const r=item.getBoundingClientRect();ox=e.clientX-r.left;oy=e.clientY-r.top;item.setPointerCapture?.(id)}); item.addEventListener('pointermove',move);item.addEventListener('pointerup',up);item.addEventListener('pointercancel',up); this.cleanupFns.push(()=>{item.removeEventListener('pointermove',move);item.removeEventListener('pointerup',up);item.removeEventListener('pointercancel',up);}); }

@@ -16,6 +16,7 @@ const CLOUDINARY_PREFIX = 'little-adventures/release-2';
 
 const trimSlashes = (value) => String(value || '').replace(/^\/+|\/+$/g, '');
 const LOCAL_PREFIXES = [
+  ['games/language-adventures/video/', 'games/language-adventures/video/'],
   ['shared/', 'assets/shared/'],
   ['games/strawberry-garden/', 'assets/games/strawberry-garden/'],
   ['games/alphabet-learner/', 'games/alphabet-learner/assets/'],

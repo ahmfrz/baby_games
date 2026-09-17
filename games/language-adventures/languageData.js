@@ -35,7 +35,7 @@ export const SCENARIOS = [
 
 // Runtime asset URL rooted at the site document, not the generated Vite JS chunk.
 // Using import.meta.url here breaks after build because Vite emits the chunk under /assets/.
-export const ASSET_ROOT = assetUrl('games/language-adventures/');
-export const SCENE_ROOT = assetUrl('games/language-adventures/scenes/');
-export const NEW_ART_ROOT = assetUrl('games/language-adventures/new/');
-export const VIDEO_ROOT = assetUrl('games/language-adventures/video/');
+export const ASSET_ROOT = `${assetUrl('games/language-adventures')}/`;
+export const SCENE_ROOT = `${assetUrl('games/language-adventures/scenes')}/`;
+export const NEW_ART_ROOT = `${assetUrl('games/language-adventures/new')}/`;
+export const VIDEO_ROOT = `${assetUrl('games/language-adventures/video')}/`;
