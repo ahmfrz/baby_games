@@ -10,7 +10,7 @@ if (data.includes("new URL('./assets/new/', import.meta.url)") || data.includes(
 }
 const css = read('games/language-adventures/styles.css');
 const resolver = read('services/AssetService.js');
-if (!resolver.includes('export function assetDirectoryUrl(logicalPath = \'\', resourceType = \'image\')')) {
+if (!resolver.includes("export function assetDirectoryUrl(logicalPath = '', resourceType = 'image')")) {
   throw new Error('AssetService must provide a resource-type-aware directory resolver');
 }
 if (!resolver.includes("return `${RAW_BASE.replace(/\\/+$/, '')}/${type}/upload/${CLOUDINARY_PREFIX}/${normalized}/`")) {
@@ -91,6 +91,19 @@ for (const token of ['.adventure-video','.video-hotspot','.video-progress','.vid
 const svg=read('games/language-adventures/assets/new/targets.svg');
 for (const id of ['toybox','teddy','ball','bed','puppy','butterfly','friend','child','crayons','book','mountains','bottle','bin','earth','plane','landmark','globe','map']) if (!svg.includes(`id="${id}"`)) throw new Error(`Missing vector target: ${id}`);
 console.log(`[PASS] Little Adventures v2: ${assets.length} art assets, vector targets, distinct activity surfaces, and character reactions`);
+
+
+const renderVideoStart=game.indexOf('  renderVideoStep(){');
+const renderVideoEnd=game.indexOf('\n  showVideoError(videoSrc){');
+if(renderVideoStart < 0 || renderVideoEnd < 0 || renderVideoEnd <= renderVideoStart) throw new Error('Unable to isolate persistent video renderer');
+const renderVideo=game.slice(renderVideoStart,renderVideoEnd);
+if(!renderVideo.includes('const canReuse=Boolean(video && existingShell')) throw new Error('Home video must reuse the existing video element across checkpoints');
+if(!renderVideo.includes('this.videoState={...this.videoState,stepIndex:this.stepIndex')) throw new Error('Home video checkpoint state must update without recreating the video');
+if(!renderVideo.includes('if(continuing){')) throw new Error('Home video must resume the same video when advancing a checkpoint');
+if(!renderVideo.includes('video.play()?.catch?.(err=>console.warn')) throw new Error('Home video must resume playback after a checkpoint');
+if(renderVideo.includes('this.videoEl=null')) throw new Error('Persistent video renderer must not discard the active video element');
+if(!game.includes("    },300);\n  }\n\n  playVideoToEndThenFinish()")) throw new Error('Home video checkpoint transition should use the short success delay');
+if(!game.includes("if(this.scenario.video){\n          this.renderVideoStep();")) throw new Error('Video checkpoint transitions must stay inside the persistent video renderer');
 
 const main = read('js/main.js');
 if (!main.includes("'strawberry-garden': assetUrl('games/strawberry-garden/art/strawberry.svg')")) {

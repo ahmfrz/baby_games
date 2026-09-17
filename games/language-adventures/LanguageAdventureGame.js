@@ -7,11 +7,11 @@ const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
 
 export class LanguageAdventureGame extends GameModule {
   static metadata = { id:'language-adventures', name:'🗺️ Little Adventures', description:'Explore, learn, and make kind choices.', version:'2.2.2', author:'Baby Games', assetPath:'games/language-adventures/' };
-  constructor(platform){ super(platform); this.root=null; this.stage=null; this.scenario=null; this.videoEl=null; this.stepIndex=0; this.score=0; this.totalStars=this.loadTotalStars(); this.soundEnabled=this.loadSoundPreference(); this.isRunning=false; this.remainingSeconds=0; this.timerId=null; this.stepLocked=false; this.timers=new Set(); this.cleanupFns=[]; this.completed=this.loadProgress(); }
+  constructor(platform){ super(platform); this.root=null; this.stage=null; this.scenario=null; this.videoEl=null; this.videoState=null; this.videoCleanup=null; this.stepIndex=0; this.score=0; this.totalStars=this.loadTotalStars(); this.soundEnabled=this.loadSoundPreference(); this.isRunning=false; this.remainingSeconds=0; this.timerId=null; this.stepLocked=false; this.timers=new Set(); this.cleanupFns=[]; this.completed=this.loadProgress(); }
   async initialize(){ this.mount(); this.showMap(); }
   start(){ this.timerService?.startSession?.(); this.remainingSeconds=this.timerService?.getRemainingSeconds?.()??120; this.score=0; this.isRunning=true; this.startTimerLoop(); this.updateStats(); }
   stop(){ this.isRunning=false; clearInterval(this.timerId); this.timerId=null; this.videoEl?.pause?.(); this.videoEl=null; this.clearTimers(); this.clearListeners(); this.platform?.audioManager?.stopSpeaking?.(); }
-  pause(){this.isRunning=false;clearInterval(this.timerId);this.timerId=null;this.videoEl?.pause?.();this.platform?.audioManager?.stopSpeaking?.()} resume(){ if(this.remainingSeconds>0){this.isRunning=true;this.startTimerLoop();if(this.scenario){if(this.scenario.video&&this.videoEl){this.videoEl.play()?.catch?.(()=>{});}else this.renderStep();}else this.showMap();} }
+  pause(){this.isRunning=false;clearInterval(this.timerId);this.timerId=null;this.videoEl?.pause?.();this.platform?.audioManager?.stopSpeaking?.()} resume(){ if(this.remainingSeconds>0){this.isRunning=true;this.startTimerLoop();if(this.scenario){if(this.scenario.video&&this.videoEl){if(!this.videoState?.waitingForTap && !this.videoState?.finishing)this.videoEl.play()?.catch?.(()=>{});}else this.renderStep();}else this.showMap();} }
   reset(){this.stop();this.start();this.showMap();}
   cleanup(){this.stop();this.root?.remove();this.root=null;}
   tick(){ if(!this.isRunning)return; this.remainingSeconds=this.timerService?.getRemainingSeconds?.()??Math.max(0,this.remainingSeconds-1); this.updateStats(); if(this.remainingSeconds<=0)this.endSession(); }
@@ -34,6 +34,9 @@ export class LanguageAdventureGame extends GameModule {
   announce(message){ if(this.statusEl)this.statusEl.textContent=message; }
   startTimerLoop(){ clearInterval(this.timerId); this.timerId=setInterval(()=>this.tick(),250); }
   showMap(){
+    this.destroyVideoController();
+    this.clearTimers();
+    this.clearListeners();
     this.scenario=null;
     const completedCount=SCENARIOS.filter(s=>this.completed[s.id]).length;
     this.view.innerHTML=`<section class="la2-map"><div class="la2-map-hero"><div class="la2-hero-art"><img class="hero-character-art" src="${NEW_ART_ROOT}characters/toddler/happy.webp" alt="Little explorer"></div><div class="la2-hero-copy"><span class="eyebrow">BIG WORLD • SMALL STEPS</span><h1>Choose an adventure</h1><p>Tap a place, learn a simple phrase, and make a kind choice.</p><div class="la2-values"><span>💛 Be kind</span><span>🔎 Be curious</span><span>🌱 Keep growing</span></div></div></div><div class="la2-path">${SCENARIOS.map((s,i)=>{const done=Boolean(this.completed[s.id]);return `<button class="la2-card tone-${s.tone} ${done?'is-complete':''}" data-id="${s.id}"><div class="card-art"><img src="${NEW_ART_ROOT}${s.cardArt||s.art}" alt=""></div><div class="card-body"><div class="card-title"><span>${s.icon}</span><strong>${s.title}</strong><em>${done?'✓':i+1}</em></div><p>${s.subtitle}</p><span class="play-pill">${done?'Play again':'Play adventure'} <b>→</b></span></div></button>`}).join('')}</div><div class="la2-progress-panel"><div><strong>${completedCount}/${SCENARIOS.length} adventures explored</strong><span>${this.totalStars} total stars</span></div><div class="progress-track"><i style="width:${(completedCount/SCENARIOS.length)*100}%"></i></div></div><div class="la2-map-footer">✨ Every adventure teaches a little phrase and a big idea. ✨</div></section>`;
@@ -101,66 +104,121 @@ export class LanguageAdventureGame extends GameModule {
     const s=this.scenario;
     const step=s?.steps?.[this.stepIndex];
     if(!s || !step || !this.view)return;
-    this.clearTimers();
-    this.clearListeners();
-    this.stepLocked=false;
-    this.videoEl?.pause?.();
-    this.videoEl=null;
 
     const videoSrc=s.videoUrl || (s.video ? `${VIDEO_ROOT}${s.video}` : '');
-    this.view.innerHTML=`<section class="la2-play la2-video-play"><div class="play-top"><button class="back-btn" data-back>← Adventures</button><div class="step-title"><span>${s.icon}</span><strong>${s.title}</strong><div class="dots">${s.steps.map((_,i)=>`<i class="${i<=this.stepIndex?'on':''}"></i>`).join('')}</div><small>${this.stepIndex+1}/${s.steps.length}</small></div><button class="sound-btn" data-speak>🔊</button></div><div class="play-scene video-scene tone-${s.tone}"><video class="adventure-video" data-adventure-video playsinline muted preload="auto" src="${videoSrc}"></video><div class="video-shade"></div><div class="phrase-card video-phrase-card"><div class="phrase">${step.phrase}</div><div class="prompt">${step.prompt}</div></div><div class="interaction video-interaction" data-interaction data-activity="${step.activity}"></div><div class="video-progress"><i data-video-progress></i></div><div class="guide video-guide">💡 ${this.guideFor(step)}</div></div></section>`;
+    let video=this.videoEl;
+    const existingShell=this.view.querySelector('.la2-video-play');
+    const canReuse=Boolean(video && existingShell && this.videoState?.scenarioId===s.id && this.videoState?.videoSrc===videoSrc);
 
-    this.view.querySelector('[data-back]').addEventListener('click',()=>this.showMap());
-    this.view.querySelector('[data-speak]').addEventListener('click',()=>this.speak(step));
-    this.videoEl=this.view.querySelector('[data-adventure-video]');
+    if(!canReuse){
+      this.destroyVideoController();
+      this.clearTimers();
+      this.view.innerHTML=`<section class="la2-play la2-video-play"><div class="play-top"><button class="back-btn" data-back>← Adventures</button><div class="step-title"><span data-video-title-icon>${s.icon}</span><strong data-video-title>${s.title}</strong><div class="dots" data-video-dots></div><small data-video-step-count></small></div><button class="sound-btn" data-speak>🔊</button></div><div class="play-scene video-scene tone-${s.tone}"><video class="adventure-video" data-adventure-video playsinline muted preload="auto" src="${videoSrc}"></video><div class="video-shade"></div><div class="phrase-card video-phrase-card"><div class="phrase" data-video-phrase></div><div class="prompt" data-video-prompt></div></div><div class="interaction video-interaction" data-interaction></div><div class="video-progress"><i data-video-progress></i></div><div class="guide video-guide" data-video-guide></div></div></section>`;
+      this.view.querySelector('[data-back]')?.addEventListener('click',()=>this.showMap());
+      this.view.querySelector('[data-speak]')?.addEventListener('click',()=>this.speak(this.scenario?.steps?.[this.stepIndex]));
+
+      video=this.view.querySelector('[data-adventure-video]');
+      this.videoEl=video;
+      if(!video){ this.showVideoError(videoSrc); return; }
+
+      const onTimeUpdate=()=>this.handleVideoTimeUpdate();
+      const onLoadedMetadata=()=>this.handleVideoLoadedMetadata();
+      const onError=()=>this.showVideoError(videoSrc);
+      video.addEventListener('timeupdate',onTimeUpdate);
+      video.addEventListener('loadedmetadata',onLoadedMetadata);
+      video.addEventListener('error',onError,{once:true});
+      this.videoCleanup=()=>{
+        video.removeEventListener('timeupdate',onTimeUpdate);
+        video.removeEventListener('loadedmetadata',onLoadedMetadata);
+        video.removeEventListener('error',onError);
+      };
+      this.videoState={scenarioId:s.id,videoSrc,waitingForTap:false,finishing:false,start:0,pauseAt:0};
+    }
+
+    this.updateVideoStepUi(step);
+    this.stepLocked=false;
+
+    const previousStepIndex=this.videoState?.stepIndex;
+    const continuing=Number.isInteger(previousStepIndex) && previousStepIndex < this.stepIndex;
+    this.videoState={...this.videoState,stepIndex:this.stepIndex,start:Math.max(0,Number(step.videoStart)||0),pauseAt:Math.max((Number(step.videoStart)||0)+0.1,Number(step.videoPause)||((Number(step.videoStart)||0)+2)),waitingForTap:false,finishing:false};
     this.buildVideoInteraction(step);
 
+    // The Home adventure is one continuous video. After a successful tap we
+    // resume from the exact checkpoint where the same video was paused rather
+    // than recreating the <video> element or seeking to another timestamp.
+    if(continuing){
+      this.videoState.waitingForTap=false;
+      video.play()?.catch?.(err=>console.warn('[Little Adventures] Video playback resumed after checkpoint:',err));
+    }else if(video.readyState>=1){
+      this.startVideoPlaybackFromCheckpoint();
+    }
+  }
+
+  updateVideoStepUi(step){
+    const s=this.scenario;
+    const dots=this.view?.querySelector('[data-video-dots]');
+    if(dots)dots.innerHTML=s.steps.map((_,i)=>`<i class="${i<=this.stepIndex?'on':''}"></i>`).join('');
+    const count=this.view?.querySelector('[data-video-step-count]');
+    if(count)count.textContent=`${this.stepIndex+1}/${s.steps.length}`;
+    const title=this.view?.querySelector('[data-video-title]');
+    if(title)title.textContent=s.title;
+    const icon=this.view?.querySelector('[data-video-title-icon]');
+    if(icon)icon.textContent=s.icon;
+    const phrase=this.view?.querySelector('[data-video-phrase]');
+    if(phrase)phrase.textContent=step.phrase;
+    const prompt=this.view?.querySelector('[data-video-prompt]');
+    if(prompt)prompt.textContent=step.prompt;
+    const guide=this.view?.querySelector('[data-video-guide]');
+    if(guide)guide.textContent=`💡 ${this.guideFor(step)}`;
+    const phraseCard=this.view?.querySelector('.video-phrase-card');
+    phraseCard?.classList.remove('is-ready');
+    const progress=this.view?.querySelector('[data-video-progress]');
+    if(progress)progress.style.width='0%';
+  }
+
+  startVideoPlaybackFromCheckpoint(){
     const video=this.videoEl;
-    const start=Math.max(0,Number(step.videoStart)||0);
-    const pauseAt=Math.max(start+0.1,Number(step.videoPause)||start+2);
-    const progress=this.view.querySelector('[data-video-progress]');
-    const phraseCard=this.view.querySelector('.video-phrase-card');
-    const hotspot=this.view.querySelector('[data-video-tap]');
-    const readyForInteraction=()=>{
+    const state=this.videoState;
+    if(!video || !state || state.finishing)return;
+    try{
+      const target=state.start;
+      if(Math.abs((video.currentTime||0)-target)>0.15) {
+        video.currentTime=Math.min(target,Math.max(0,(video.duration||target)-0.05));
+      }
+    }catch{}
+    video.play()?.catch?.(err=>console.warn('[Little Adventures] Video autoplay prevented:',err));
+  }
+
+  handleVideoLoadedMetadata(){
+    this.startVideoPlaybackFromCheckpoint();
+  }
+
+  handleVideoTimeUpdate(){
+    const video=this.videoEl;
+    const state=this.videoState;
+    if(!video || !state || state.finishing)return;
+    const span=Math.max(0.1,state.pauseAt-state.start);
+    const pct=Math.max(0,Math.min(100,((video.currentTime-state.start)/span)*100));
+    const progress=this.view?.querySelector('[data-video-progress]');
+    if(progress)progress.style.width=`${pct}%`;
+    if(video.currentTime >= state.pauseAt-0.03 && !state.waitingForTap){
+      video.pause();
+      try{video.currentTime=Math.min(state.pauseAt,video.duration||state.pauseAt);}catch{}
+      state.waitingForTap=true;
+      if(progress)progress.style.width='100%';
+      const phraseCard=this.view?.querySelector('.video-phrase-card');
+      const hotspot=this.view?.querySelector('[data-video-tap]');
       phraseCard?.classList.add('is-ready');
       hotspot?.classList.add('is-ready');
       if(hotspot)hotspot.disabled=false;
-      this.speak(step);
-      this.announce(step.prompt);
-    };
-    const syncProgress=()=>{
-      const span=Math.max(0.1,pauseAt-start);
-      const pct=Math.max(0,Math.min(100,((video.currentTime-start)/span)*100));
-      if(progress)progress.style.width=`${pct}%`;
-      if(video.currentTime >= pauseAt-0.03){
-        video.pause();
-        video.currentTime=Math.min(pauseAt,video.duration||pauseAt);
-        if(progress)progress.style.width='100%';
-        readyForInteraction();
-      }
-    };
-    const startPlayback=()=>{
-      try{ video.currentTime=Math.min(start,Math.max(0,(video.duration||pauseAt)-0.05)); }catch{}
-      phraseCard?.classList.remove('is-ready');
-      hotspot?.classList.remove('is-ready');
-      if(hotspot)hotspot.disabled=true;
-      const playPromise=video.play();
-      if(playPromise?.catch)playPromise.catch(err=>console.warn('[Little Adventures] Video autoplay prevented:',err));
-    };
-    const onError=()=>{
-      console.error('[Little Adventures] Failed to load video:',videoSrc);
-      this.showVideoError(videoSrc);
-    };
-    video.addEventListener('timeupdate',syncProgress);
-    video.addEventListener('loadedmetadata',startPlayback,{once:true});
-    video.addEventListener('ended',syncProgress);
-    video.addEventListener('error',onError,{once:true});
-    this.cleanupFns.push(()=>{video.removeEventListener('timeupdate',syncProgress);video.removeEventListener('loadedmetadata',startPlayback);video.removeEventListener('ended',syncProgress);video.removeEventListener('error',onError);video.pause();});
-    if(video.readyState>=1)startPlayback();
+      const step=this.scenario?.steps?.[this.stepIndex];
+      if(step){this.speak(step);this.announce(step.prompt);}
+    }
   }
 
   showVideoError(videoSrc){
     if(!this.view)return;
+    this.destroyVideoController();
     this.clearTimers();
     this.clearListeners();
     this.view.querySelector('.la2-video-play')?.classList.add('video-load-failed');
@@ -270,6 +328,7 @@ export class LanguageAdventureGame extends GameModule {
     if(this.stepLocked||!this.isRunning)return;
     this.stepLocked=true;
     el?.classList.add('hit');
+    if(this.scenario?.video && el instanceof HTMLButtonElement) el.disabled=true;
     this.applyActivitySuccess(step,el);
     this.score+=1;
     this.setCharacterReaction('happy',step.success);
@@ -285,18 +344,23 @@ export class LanguageAdventureGame extends GameModule {
       if(!this.scenario)return;
       if(this.stepIndex<this.scenario.steps.length-1){
         this.stepIndex++;
-        this.renderStep();
+        if(this.scenario.video){
+          this.renderVideoStep();
+        }else{
+          this.renderStep();
+        }
       }else if(this.scenario.video){
         this.playVideoToEndThenFinish();
       }else{
         this.finish();
       }
-    },850);
+    },300);
   }
 
   playVideoToEndThenFinish(){
     const video=this.videoEl;
     if(!video){this.finish();return;}
+    if(this.videoState)this.videoState={...this.videoState,finishing:true,waitingForTap:false};
     const phrase=this.view?.querySelector('.video-phrase-card');
     const interaction=this.view?.querySelector('.video-interaction');
     phrase?.classList.remove('is-ready');
@@ -326,12 +390,19 @@ export class LanguageAdventureGame extends GameModule {
   }
   wrong(el){ this.announce('Try again.'); this.setCharacterReaction('surprised','Try again!'); this.schedule(()=>this.setCharacterReaction('idle'),900); tapFeedback(this.platform?.audioManager,'error');vibrate(10);el?.classList.remove('wrong');void el?.offsetWidth;el?.classList.add('wrong');}
   showTimeUp(){
+    this.destroyVideoController();
     this.view.innerHTML=`<section class="la2-timeup"><div class="timeup-card"><div class="timeup-icon">⏰</div><h2>Time for a little break!</h2><p>You explored ${this.score} little steps. Adventures can wait for another day.</p><div class="complete-actions"><button data-retry>Try again</button><button data-map>Choose an adventure</button></div></div></section>`;
     this.view.querySelector('[data-retry]')?.addEventListener('click',()=>{this.start();this.showMap()});
     this.view.querySelector('[data-map]')?.addEventListener('click',()=>{this.start();this.showMap()});
   }
-  finish(){this.clearTimers();this.clearListeners(); const s=this.scenario; if(s){this.completed[s.id]=true;this.saveProgress();} this.view.innerHTML=`<section class="la2-complete" style="--scene:url('${NEW_ART_ROOT}adventure-complete.webp')"><div class="complete-art"></div><div class="complete-characters"><img class="complete-toddler" src="${NEW_ART_ROOT}explorer-celebrate.webp" alt="Explorer celebrating"><img class="complete-mumma" src="${NEW_ART_ROOT}mumma-encourage.webp" alt="Mumma cheering"><span>${this.iconFor('globe')}</span></div><div class="complete-card"><div class="burst">✨ ⭐ ✨</div><h2>Adventure complete!</h2><p>${s.title} • ${s.steps.length} phrases</p><div class="earned"><span>⭐ ${s.steps.length}</span><span>💛 Kind choice</span><span>🌍 Explorer</span></div><div class="complete-actions"><button data-again>Play again</button><button data-map>Choose another</button></div></div></section>`; completionFeedback(this.platform,`${s.title} adventure complete!`,'🌟',s.steps.length); this.view.querySelector('[data-again]').addEventListener('click',()=>{this.stepIndex=0;this.renderStep()}); this.view.querySelector('[data-map]').addEventListener('click',()=>this.showMap()); }
+  finish(){this.clearTimers();this.clearListeners();this.destroyVideoController(); const s=this.scenario; if(s){this.completed[s.id]=true;this.saveProgress();} this.view.innerHTML=`<section class="la2-complete" style="--scene:url('${NEW_ART_ROOT}adventure-complete.webp')"><div class="complete-art"></div><div class="complete-characters"><img class="complete-toddler" src="${NEW_ART_ROOT}explorer-celebrate.webp" alt="Explorer celebrating"><img class="complete-mumma" src="${NEW_ART_ROOT}mumma-encourage.webp" alt="Mumma cheering"><span>${this.iconFor('globe')}</span></div><div class="complete-card"><div class="burst">✨ ⭐ ✨</div><h2>Adventure complete!</h2><p>${s.title} • ${s.steps.length} phrases</p><div class="earned"><span>⭐ ${s.steps.length}</span><span>💛 Kind choice</span><span>🌍 Explorer</span></div><div class="complete-actions"><button data-again>Play again</button><button data-map>Choose another</button></div></div></section>`; completionFeedback(this.platform,`${s.title} adventure complete!`,'🌟',s.steps.length); this.view.querySelector('[data-again]').addEventListener('click',()=>{this.stepIndex=0;this.renderStep()}); this.view.querySelector('[data-map]').addEventListener('click',()=>this.showMap()); }
   updateStats(){if(this.scoreEl)this.scoreEl.textContent=String(this.score);if(this.totalEl)this.totalEl.textContent=String(this.totalStars);if(this.timerEl){const m=Math.floor(this.remainingSeconds/60),s=String(this.remainingSeconds%60).padStart(2,'0');this.timerEl.textContent=`${m}:${s}`;}}
+  destroyVideoController(){
+    if(this.videoCleanup){this.videoCleanup();this.videoCleanup=null;}
+    this.videoEl?.pause?.();
+    this.videoEl=null;
+    this.videoState=null;
+  }
   schedule(fn,ms){const id=setTimeout(()=>{this.timers.delete(id);fn();},ms);this.timers.add(id);return id;}
   clearTimers(){this.timers.forEach(clearTimeout);this.timers.clear();}
   clearListeners(){this.cleanupFns.forEach(fn=>fn());this.cleanupFns=[];}
