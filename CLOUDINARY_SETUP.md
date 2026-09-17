@@ -1,4 +1,4 @@
-# Cloudinary setup for Little Adventures
+﻿# Cloudinary setup for Little Adventures
 
 Cloudinary cloud name: `orxjbhtb`
 
@@ -10,15 +10,15 @@ The application uses Cloudinary's shared CDN:
 
 Assets are expected under the public ID prefix:
 
-`little-adventures/release-1/`
+`little-adventures/release-2/`
 
 For example:
 
-`little-adventures/release-1/shared/art/characters/toddler-mascot`
+`little-adventures/release-2/shared/art/characters/toddler-mascot`
 
 is delivered as:
 
-`https://res.cloudinary.com/orxjbhtb/image/upload/little-adventures/release-1/shared/art/characters/toddler-mascot.svg`
+`https://res.cloudinary.com/orxjbhtb/image/upload/little-adventures/release-2/shared/art/characters/toddler-mascot.svg`
 
 Cloudinary uses the `video` resource type for both video and audio assets; the app resolver handles `.mp4` and `.wav` accordingly.
 
@@ -26,7 +26,7 @@ Cloudinary uses the `video` resource type for both video and audio assets; the a
 
 Because this is a frontend-only game with no user uploads, use the Cloudinary CLI or Media Library rather than putting credentials in the application.
 
-For the safest repeatable migration, the CLI should upload the prepared `r2-assets` directory with public IDs matching its relative paths under `little-adventures/release-1`.
+For the safest repeatable migration, the CLI should upload the prepared `r2-assets` directory with public IDs matching its relative paths under `little-adventures/release-2`.
 
 Do **not** put an API secret in GitHub, Render, the frontend, or `.env` files shipped to the browser.
 
@@ -42,3 +42,4 @@ Before switching Render to Cloudinary, verify at least:
 - one `manifest.json`
 
 The application should remain usable locally with `VITE_ASSET_BASE_URL` unset.
+
