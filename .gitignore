@@ -25,3 +25,8 @@ build/
 AGENTS.md
 CLAUDE.md
 vite/
+
+# Generated Little Adventures videos are uploaded to Cloudinary and should not be committed.
+games/language-adventures/video/park-adventure.mp4
+games/language-adventures/video/school-adventure.mp4
+games/language-adventures/video/world-adventure.mp4

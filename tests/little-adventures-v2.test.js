@@ -72,7 +72,7 @@ if (!css.includes('.la2-main{min-height:0;flex:1 1 auto;display:flex;flex-direct
 if (css.includes('.play-scene{position:absolute;')) throw new Error('Little Adventures play-scene must remain in normal grid flow');
 if (!data.includes("art:'scenes/toy-room.webp'")) throw new Error('Home adventure must use the clean toy-room scene background');
 if (!data.includes("cardArt:'cards/home-video.webp'")) throw new Error('Home adventure card must use the video-derived artwork');
-if (!game.includes("characters/toddler/happy.webp")) throw new Error('Main map must use the clean toddler hero cutout');
+if (!game.includes("cards/home-video.webp")) throw new Error('Main map must use the Home adventure cover');
 if (!game.includes("s.id!=='home'")) throw new Error('Globe companion must not overlap the Home Mumma layout');
 if (!css.includes('.play-scene.is-home-scene')) throw new Error('Home adventure layout fixes are missing');
 if (css.includes('height:0') && css.includes('.play-scene{position:relative;flex:1 1 auto;min-height:0;height:0;')) {
@@ -86,6 +86,7 @@ if (!data.includes("VIDEO_ROOT = assetDirectoryUrl('games/language-adventures/vi
 if (!data.includes("type:'video-tap'")) throw new Error('Home adventure must use video interaction checkpoints');
 for (const token of ['videoStart','videoPause','VIDEO_ROOT','home-tidy-room.mp4']) if (!data.includes(token)) throw new Error(`Video adventure data missing ${token}`);
 for (const token of ['videoStart:0','videoPause:1.85','videoStart:1.85','videoPause:5','videoStart:5','videoPause:6.85','videoStart:6.85','videoPause:8.55']) if (!data.includes(token)) throw new Error(`Home video checkpoint missing ${token}`);
+for (const token of ["video:'park-adventure.mp4'","video:'school-adventure.mp4'","video:'world-adventure.mp4'",'videoPause:2.20','videoPause:4.60','videoPause:7.50','videoPause:9.20']) if (!data.includes(token)) throw new Error(`Little Adventures video integration missing ${token}`);
 for (const token of ['.adventure-video','.video-hotspot','.video-progress','.video-phrase-card']) if (!css.includes(token)) throw new Error(`Video adventure style missing ${token}`);
 
 const svg=read('games/language-adventures/assets/new/targets.svg');
