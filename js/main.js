@@ -22,7 +22,7 @@ const LAUNCHER_ART = {
   'language-adventures': assetUrl('shared/art/education/globe-smile.svg'),
   'strawberry-garden': assetUrl('games/strawberry-garden/art/strawberry.svg'),
   'little-scribbles': assetUrl('shared/art/education/crayon-pal.svg'),
-  'bunny-run': assetUrl('games/bunny-run/art/bunny.svg')
+  'bunny-run': assetUrl('games/bunny-run/art/rabbit-idle.png')
 };
 
 // ============================================
