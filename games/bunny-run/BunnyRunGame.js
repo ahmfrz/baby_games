@@ -3,9 +3,22 @@ import { assetUrl } from '../../services/AssetService.js';
 import { tapFeedback, rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
 
 const ART = {
-  bunny: assetUrl('games/bunny-run/art/bunny.svg'),
-  carrot: assetUrl('games/bunny-run/art/carrot.svg'),
-  background: assetUrl('games/bunny-run/art/countryside.png')
+  rabbitRun: [1, 2, 3, 4].map((n) => assetUrl(`games/bunny-run/art/rabbit-run-${n}.png`)),
+  rabbitJump: [1, 2].map((n) => assetUrl(`games/bunny-run/art/rabbit-jump-${n}.png`)),
+  rabbitIdle: assetUrl('games/bunny-run/art/rabbit-idle.png'),
+  carrot: assetUrl('games/bunny-run/art/carrot-1.png'),
+  obstacles: {
+    log: assetUrl('games/bunny-run/art/log-horizontal.png'),
+    rock: assetUrl('games/bunny-run/art/rock-large.png'),
+    bush: assetUrl('games/bunny-run/art/grass-tuft.png')
+  },
+  scenery: {
+    mountainBack: assetUrl('games/bunny-run/art/mountain-blue.png'),
+    mountainFront: assetUrl('games/bunny-run/art/mountain-green.png'),
+    treeSmall: assetUrl('games/bunny-run/art/tree-small.png'),
+    treeTall: assetUrl('games/bunny-run/art/tree-tall.png'),
+    grass: assetUrl('games/bunny-run/art/grass-clump.png')
+  }
 };
 
 export class BunnyRunGame extends GameModule {
@@ -52,9 +65,12 @@ export class BunnyRunGame extends GameModule {
       if (event.target.closest('button')) return;
       if (this.state === 'ready' || this.state === 'over') this.start(); else this.jump();
     });
-    this.images.bunny = await this.loadImage(ART.bunny);
+    this.images.rabbitRun = await Promise.all(ART.rabbitRun.map((src) => this.loadImage(src)));
+    this.images.rabbitJump = await Promise.all(ART.rabbitJump.map((src) => this.loadImage(src)));
+    this.images.rabbitIdle = await this.loadImage(ART.rabbitIdle);
     this.images.carrot = await this.loadImage(ART.carrot);
-    this.images.background = await this.loadImage(ART.background);
+    this.images.obstacles = Object.fromEntries(await Promise.all(Object.entries(ART.obstacles).map(async ([key, src]) => [key, await this.loadImage(src)])));
+    this.images.scenery = Object.fromEntries(await Promise.all(Object.entries(ART.scenery).map(async ([key, src]) => [key, await this.loadImage(src)])));
     window.addEventListener('resize', this.boundResize);
     this.boundKeydown = (event) => {
       if (this.state !== 'running' || !['Space', 'ArrowUp', 'Enter'].includes(event.code)) return;
@@ -138,36 +154,38 @@ export class BunnyRunGame extends GameModule {
   draw(now = 0) {
     if (!this.ctx) return;
     const ctx = this.ctx, w = this.width, h = this.height, ground = this.groundY(); ctx.clearRect(0, 0, w, h);
-    if (this.images.background) {
-      const bg = this.images.background;
-      ctx.drawImage(bg, 0, 0, w, h * 0.92);
-    } else {
-      const sky = ctx.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, '#75cafa'); sky.addColorStop(1, '#e5f8cf');
-      ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#91d66c'; ctx.beginPath(); ctx.ellipse(w / 2, ground, w * .8, h * .23, 0, Math.PI, 0); ctx.fill();
-    }
+    const sky = ctx.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, '#79d1fa'); sky.addColorStop(1, '#e8f8d7');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
+    // Layered hills, mountains and trees create a gentle scrolling countryside.
+    const scenery = this.images.scenery || {};
+    const drawTiled = (img, y, drawW, drawH, factor, gap) => {
+      if (!img) return;
+      const offset = (this.elapsed * this.speed * factor) % gap;
+      for (let x = -offset - gap; x < w + gap; x += gap) ctx.drawImage(img, x, y, drawW, drawH);
+    };
+    drawTiled(scenery.mountainBack, h * .29, w * .47, h * .43, .035, w * .48);
+    drawTiled(scenery.mountainFront, h * .40, w * .40, h * .34, .07, w * .43);
+    drawTiled(scenery.treeSmall, ground - h * .31, w * .15, h * .31, .16, w * .42);
+    drawTiled(scenery.treeTall, ground - h * .43, w * .19, h * .43, .22, w * .58);
     ctx.fillStyle = '#b77b42'; ctx.fillRect(0, ground + 7, w, h - ground);
     ctx.fillStyle = '#e7b96f'; ctx.fillRect(0, ground + 4, w, 8); ctx.fillStyle = '#4c9c45'; ctx.fillRect(0, ground - 2, w, 9);
     ctx.fillStyle = '#83c95c';
     for (let i = 0; i < Math.ceil(w / 34) + 1; i++) { const x = i * 34 - (this.elapsed * this.speed * .35) % 34; ctx.beginPath(); ctx.ellipse(x, ground + 5, 12, 4, 0, 0, Math.PI * 2); ctx.fill(); }
     this.objects.forEach((item) => this.drawObject(item));
     const bounce = this.player.grounded ? Math.sin(now / 105) * 2 : 0;
-    if (this.images.bunny) ctx.drawImage(this.images.bunny, this.player.x, this.player.y + bounce, this.player.w, this.player.h);
+    let rabbit;
+    if (!this.player.grounded) rabbit = this.images.rabbitJump?.[Math.floor(now / 150) % (this.images.rabbitJump.length || 1)];
+    else if (this.state === 'running') rabbit = this.images.rabbitRun?.[Math.floor(now / 105) % (this.images.rabbitRun.length || 1)];
+    rabbit = rabbit || this.images.rabbitIdle;
+    if (rabbit) ctx.drawImage(rabbit, this.player.x, this.player.y + bounce, this.player.w, this.player.h);
     else { ctx.font = '64px serif'; ctx.fillText('🐰', this.player.x, this.player.y + this.player.h); }
   }
   drawObject(item) {
     const ctx = this.ctx;
     if (item.type === 'carrot') { if (this.images.carrot) ctx.drawImage(this.images.carrot, item.x, item.y, item.w, item.h); else { ctx.font = '38px serif'; ctx.fillText('🥕', item.x, item.y + item.h); } return; }
-    ctx.save();
-    if (item.type === 'log') {
-      ctx.fillStyle = '#92552c'; ctx.strokeStyle = '#67391f'; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(item.x, item.y + 6, item.w, item.h - 7, 13); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#d79a58'; ctx.beginPath(); ctx.ellipse(item.x + 9, item.y + item.h / 2 + 2, 8, 12, 0, 0, Math.PI * 2); ctx.fill();
-    } else if (item.type === 'rock') {
-      ctx.fillStyle = '#87939a'; ctx.strokeStyle = '#65747c'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(item.x + 2, item.y + item.h); ctx.lineTo(item.x + 7, item.y + 19); ctx.lineTo(item.x + 23, item.y + 3); ctx.lineTo(item.x + 38, item.y + 12); ctx.lineTo(item.x + item.w - 2, item.y + item.h); ctx.closePath(); ctx.fill(); ctx.stroke();
-    } else {
-      ctx.fillStyle = '#3d994d'; ctx.strokeStyle = '#27743c'; ctx.lineWidth = 3;
-      for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(item.x + 13 + i * 13, item.y + 25 + Math.sin(i) * 4, 18, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-    }
-    ctx.restore();
+    const sprite = this.images.obstacles?.[item.type];
+    if (sprite) ctx.drawImage(sprite, item.x, item.y, item.w, item.h);
+    else { ctx.fillStyle = '#6c8748'; ctx.beginPath(); ctx.roundRect(item.x, item.y, item.w, item.h, 10); ctx.fill(); }
   }
   updateHud() {
     if (this.scoreEl) this.scoreEl.textContent = this.score;

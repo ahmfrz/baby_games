@@ -1,0 +1,1 @@
+Bunny Run sprites cropped from the user-provided sprite sheet. PNG files preserve transparency. Rabbit run/jump sequences are used for animation; carrot-1 is the collectible; obstacle and scenery sprites are used by BunnyRunGame.js.
