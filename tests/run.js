@@ -5,6 +5,7 @@ import { runVisualAssetSystemTests } from './visual-asset-system.test.js';
 import { runToddlerExperienceTests } from './toddler-experience.test.js';
 import { runCssLoadingTests } from './css-loading.test.js';
 import { runSourceDeploymentTests } from './source-deployment.test.js';
+import { runBunnyRunTests } from './bunny-run.test.js';
 
 import { runPhase5ECelebrationTests } from './phase5e-celebration.test.js';
 import './little-adventures-v2.test.js';
@@ -17,6 +18,7 @@ console.log(`[PASS] Visual assets: ${runVisualAssetSystemTests()} checks`);
 console.log(`[PASS] Toddler experience systems: ${runToddlerExperienceTests()} checks`);
 console.log(`[PASS] CSS loading architecture: ${runCssLoadingTests()} games`);
 console.log(`[PASS] Source deployment compatibility: ${runSourceDeploymentTests()} checks`);
+runBunnyRunTests();
 
 console.log('Starting TimerService Tests...');
 

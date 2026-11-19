@@ -19,6 +19,7 @@ const LOCAL_PREFIXES = [
   ['games/language-adventures/video/', 'games/language-adventures/video/'],
   ['shared/', 'assets/shared/'],
   ['games/strawberry-garden/', 'assets/games/strawberry-garden/'],
+  ['games/bunny-run/', 'assets/games/bunny-run/'],
   ['games/alphabet-learner/', 'games/alphabet-learner/assets/'],
   ['games/comic-stories/', 'games/comic-stories/assets/'],
   ['games/fruit-color/', 'games/fruit-color/assets/'],

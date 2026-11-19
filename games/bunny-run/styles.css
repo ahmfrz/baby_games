@@ -1,0 +1,23 @@
+.bunny-run-game { background:#dff4ff; }
+.bunny-run-header { color:#31543b; background:rgba(255,255,255,.96); }
+.bunny-run-brand { display:flex; align-items:center; gap:8px; font-size:1.12rem; font-weight:950; white-space:nowrap; }
+.bunny-run-brand:first-letter { font-size:1.35em; }
+.bunny-run-stats { display:flex; align-items:center; gap:clamp(8px,2vw,22px); color:#536b56; font-size:clamp(.82rem,2vw,1rem); white-space:nowrap; }
+.bunny-run-stats b { color:#263f2b; font-variant-numeric:tabular-nums; }
+.bunny-run-stage { position:relative; flex:1; min-height:0; overflow:hidden; touch-action:pan-y; background:#8bd4f3; isolation:isolate; }
+.bunny-run-stage canvas { display:block; width:100%; height:100%; touch-action:pan-y; }
+.bunny-run-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:18px; background:rgba(26,61,42,.2); backdrop-filter:blur(3px); z-index:3; }
+.bunny-run-overlay.is-hidden,.bunny-run-hint.is-hidden { display:none; }
+.bunny-run-panel { width:min(420px,92%); padding:clamp(20px,4vw,34px); border:4px solid rgba(255,255,255,.9); border-radius:30px; text-align:center; background:linear-gradient(160deg,#fffdf4,#fff0ce); box-shadow:0 16px 38px rgba(47,76,41,.24); color:#38533b; }
+.bunny-run-big-emoji { font-size:clamp(3.3rem,8vw,5rem); line-height:1.2; }
+.bunny-run-panel h2 { margin:8px 0; font-size:clamp(1.5rem,4vw,2.1rem); }
+.bunny-run-panel p { margin:8px 0 20px; color:#61745e; font-weight:650; line-height:1.45; }
+.bunny-run-panel button { min-height:58px; padding:12px 30px; border:0; border-radius:999px; color:#fff; background:linear-gradient(180deg,#79c94f,#4a9f3c); box-shadow:0 5px 0 #397b31,0 9px 16px rgba(47,113,42,.2); font-size:1.15rem; font-weight:900; cursor:pointer; }
+.bunny-run-panel button:active { transform:translateY(3px); box-shadow:0 2px 0 #397b31; }
+.bunny-run-hint { position:absolute; right:16px; bottom:14px; z-index:2; padding:8px 13px; border-radius:999px; color:#31543b; background:rgba(255,255,255,.82); font-size:.75rem; font-weight:950; letter-spacing:.08em; pointer-events:none; }
+@media(max-width:520px) {
+ .bunny-run-header { align-items:center; padding:9px 10px; }
+ .bunny-run-brand { font-size:.95rem; }
+ .bunny-run-stats { gap:7px; font-size:.76rem; }
+ .bunny-run-panel { border-radius:24px; }
+}

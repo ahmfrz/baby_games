@@ -21,7 +21,8 @@ const LAUNCHER_ART = {
   'pinch-pop': assetUrl('shared/art/nest/bird.svg'),
   'language-adventures': assetUrl('shared/art/education/globe-smile.svg'),
   'strawberry-garden': assetUrl('games/strawberry-garden/art/strawberry.svg'),
-  'little-scribbles': assetUrl('shared/art/education/crayon-pal.svg')
+  'little-scribbles': assetUrl('shared/art/education/crayon-pal.svg'),
+  'bunny-run': assetUrl('games/bunny-run/art/bunny.svg')
 };
 
 // ============================================
@@ -172,6 +173,13 @@ class BabyGamesPlatform {
         description: 'Practice pre-writing lines and shapes, then draw anything you like.',
         loader: () => import('../games/little-scribbles/LittleScribblesGame.js'),
         exportName: 'LittleScribblesGame'
+      },
+      {
+        id: 'bunny-run',
+        name: '🐰 Bunny Run',
+        description: 'Help a happy bunny hop over logs and collect yummy carrots.',
+        loader: () => import('../games/bunny-run/BunnyRunGame.js'),
+        exportName: 'BunnyRunGame'
       }
     ];
 

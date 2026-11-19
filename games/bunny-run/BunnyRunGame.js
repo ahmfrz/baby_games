@@ -1,0 +1,189 @@
+import { GameModule } from '../../core/GameModule.js';
+import { assetUrl } from '../../services/AssetService.js';
+import { tapFeedback, rewardFeedback, completionFeedback } from '../../services/FeedbackService.js';
+
+const ART = {
+  bunny: assetUrl('games/bunny-run/art/bunny.svg'),
+  carrot: assetUrl('games/bunny-run/art/carrot.svg'),
+  background: assetUrl('games/bunny-run/art/countryside.png')
+};
+
+export class BunnyRunGame extends GameModule {
+  static metadata = {
+    id: 'bunny-run', name: '🐰 Bunny Run',
+    description: 'Help a happy bunny hop over logs and collect yummy carrots.',
+    version: '1.0.0', author: 'Baby Games', assetPath: 'games/bunny-run/art/'
+  };
+
+  constructor(platform) {
+    super(platform);
+    this.root = null; this.raf = 0; this.timerId = null; this.state = 'ready';
+    this.width = 800; this.height = 420; this.dpr = 1; this.elapsed = 0;
+    this.score = 0; this.carrots = 0; this.speed = 290; this.spawnIn = 1.8;
+    this.remainingSeconds = 0; this.objects = []; this.images = {};
+    this.player = { x: 112, y: 0, vy: 0, w: 76, h: 66, grounded: true };
+    this.boundResize = () => this.resize();
+  }
+
+  async initialize() {
+    const host = this.getGameContainerEl();
+    if (!host) throw new Error('Bunny Run could not find the game container.');
+    this.root = document.createElement('section');
+    this.root.className = 'simple-game bunny-run-game';
+    this.root.innerHTML = `
+      <header class="simple-game-header bunny-run-header"><div class="bunny-run-brand">🐰 Bunny Run</div>
+        <div class="bunny-run-stats"><span>⏱ <b data-role="timer">0:00</b></span><span>🥕 <b data-role="carrots">0</b></span><span>⭐ <b data-role="score">0</b></span></div>
+      </header>
+      <div class="bunny-run-stage" data-role="stage">
+        <canvas data-role="canvas" aria-label="Tap to make the bunny jump over obstacles and collect carrots"></canvas>
+        <div class="bunny-run-overlay" data-role="overlay"><div class="bunny-run-panel">
+          <div class="bunny-run-big-emoji">🐰🥕</div><h2 data-role="title">Ready, Bunny?</h2>
+          <p data-role="copy">Tap to hop over the logs and collect carrots!</p><button type="button" data-role="play">Let's hop!</button>
+        </div></div><div class="bunny-run-hint" data-role="hint">TAP TO JUMP</div>
+      </div>`;
+    host.appendChild(this.root);
+    this.canvas = this.root.querySelector('[data-role="canvas"]'); this.ctx = this.canvas.getContext('2d');
+    this.timerEl = this.root.querySelector('[data-role="timer"]'); this.scoreEl = this.root.querySelector('[data-role="score"]');
+    this.carrotsEl = this.root.querySelector('[data-role="carrots"]'); this.overlay = this.root.querySelector('[data-role="overlay"]');
+    this.titleEl = this.root.querySelector('[data-role="title"]'); this.copyEl = this.root.querySelector('[data-role="copy"]');
+    this.playButton = this.root.querySelector('[data-role="play"]'); this.hint = this.root.querySelector('[data-role="hint"]');
+    this.playButton.addEventListener('click', () => this.start());
+    this.root.querySelector('[data-role="stage"]').addEventListener('pointerdown', (event) => {
+      if (event.target.closest('button')) return;
+      if (this.state === 'ready' || this.state === 'over') this.start(); else this.jump();
+    });
+    this.images.bunny = await this.loadImage(ART.bunny);
+    this.images.carrot = await this.loadImage(ART.carrot);
+    this.images.background = await this.loadImage(ART.background);
+    window.addEventListener('resize', this.boundResize);
+    this.boundKeydown = (event) => {
+      if (this.state !== 'running' || !['Space', 'ArrowUp', 'Enter'].includes(event.code)) return;
+      event.preventDefault(); this.jump();
+    };
+    window.addEventListener('keydown', this.boundKeydown);
+    this.resize(); this.draw(0);
+  }
+
+  loadImage(src) {
+    return new Promise((resolve) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = () => resolve(null); img.src = src; });
+  }
+  groundY() { return this.height * 0.79; }
+  resize() {
+    if (!this.canvas) return;
+    const rect = this.canvas.getBoundingClientRect(); this.width = Math.max(320, rect.width || 800); this.height = Math.max(260, rect.height || 420);
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.canvas.width = Math.round(this.width * this.dpr); this.canvas.height = Math.round(this.height * this.dpr);
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); this.player.x = Math.max(54, this.width * 0.14);
+    if (this.player.grounded) this.player.y = this.groundY() - this.player.h;
+    this.draw(0);
+  }
+
+  start() {
+    this.stopLoop(); this.timerService?.startSession?.();
+    this.remainingSeconds = this.timerService?.getRemainingSeconds?.() ?? 120;
+    this.elapsed = 0; this.score = 0; this.carrots = 0; this.speed = Math.max(270, this.width * 0.36);
+    this.spawnIn = 1.9; this.objects = []; this.player.vy = 0; this.player.grounded = true;
+    this.player.y = this.groundY() - this.player.h; this.state = 'running';
+    this.overlay.classList.add('is-hidden'); this.hint.classList.remove('is-hidden'); this.updateHud();
+    this.lastFrame = performance.now(); this.raf = requestAnimationFrame((now) => this.frame(now));
+    this.timerId = setInterval(() => this.tickTimer(), 500);
+    this.audioManager?.speak?.('Help the bunny jump and collect carrots!');
+  }
+  stopLoop() { if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0; clearInterval(this.timerId); this.timerId = null; }
+  tickTimer() {
+    if (this.state !== 'running') return;
+    this.remainingSeconds = this.timerService?.getRemainingSeconds?.() ?? Math.max(0, this.remainingSeconds - 1);
+    this.updateHud(); if (this.remainingSeconds <= 0) this.finish('time');
+  }
+  jump() {
+    if (this.state !== 'running' || !this.player.grounded) return;
+    this.player.vy = -Math.max(570, this.height * 1.48); this.player.grounded = false; tapFeedback(this.audioManager, 'click');
+  }
+  frame(now) {
+    if (this.state !== 'running') return;
+    const dt = Math.min((now - this.lastFrame) / 1000, 0.035); this.lastFrame = now;
+    this.update(dt); this.draw(now); this.raf = requestAnimationFrame((next) => this.frame(next));
+  }
+  update(dt) {
+    this.elapsed += dt; this.speed = Math.min(this.width * 0.68, this.width * 0.36 + this.elapsed * 8.5);
+    this.score = Math.floor(this.elapsed * 10) + this.carrots * 25;
+    this.player.vy += this.height * 4.25 * dt; this.player.y += this.player.vy * dt;
+    const floor = this.groundY() - this.player.h;
+    if (this.player.y >= floor) { this.player.y = floor; this.player.vy = 0; this.player.grounded = true; }
+    this.spawnIn -= dt;
+    if (this.spawnIn <= 0) { this.spawnObject(); this.spawnIn = 1.85 + Math.random() * 0.9 - Math.min(0.65, this.elapsed / 100); }
+    for (const item of this.objects) item.x -= this.speed * dt;
+    this.objects = this.objects.filter((item) => item.x + item.w > -20 && !item.collected);
+    const playerBox = { x: this.player.x + 17, y: this.player.y + 13, w: this.player.w - 31, h: this.player.h - 20 };
+    for (const item of this.objects) {
+      const box = item.type === 'carrot'
+        ? { x: item.x + 7, y: item.y + 8, w: item.w - 14, h: item.h - 14 }
+        : { x: item.x + 9, y: item.y + 8, w: item.w - 18, h: item.h - 10 };
+      if (!this.overlaps(playerBox, box)) continue;
+      if (item.type === 'carrot') { item.collected = true; this.carrots += 1; rewardFeedback(this.platform, 'Carrot!', '🥕'); this.audioManager?.playSound?.('success'); }
+      else { this.finish('collision'); return; }
+    }
+    this.updateHud();
+  }
+  overlaps(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+  spawnObject() {
+    const ground = this.groundY();
+    if (Math.random() < 0.62) {
+      const kind = ['log', 'rock', 'bush'][Math.floor(Math.random() * 3)];
+      const size = kind === 'log' ? { w: 66, h: 34 } : kind === 'rock' ? { w: 48, h: 43 } : { w: 62, h: 48 };
+      this.objects.push({ type: kind, x: this.width + 30, y: ground - size.h + 3, ...size });
+    } else this.objects.push({ type: 'carrot', x: this.width + 30, y: ground - (105 + Math.random() * 55), w: 35, h: 48 });
+  }
+
+  draw(now = 0) {
+    if (!this.ctx) return;
+    const ctx = this.ctx, w = this.width, h = this.height, ground = this.groundY(); ctx.clearRect(0, 0, w, h);
+    if (this.images.background) {
+      const bg = this.images.background;
+      ctx.drawImage(bg, 0, 0, w, h * 0.92);
+    } else {
+      const sky = ctx.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, '#75cafa'); sky.addColorStop(1, '#e5f8cf');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#91d66c'; ctx.beginPath(); ctx.ellipse(w / 2, ground, w * .8, h * .23, 0, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#b77b42'; ctx.fillRect(0, ground + 7, w, h - ground);
+    ctx.fillStyle = '#e7b96f'; ctx.fillRect(0, ground + 4, w, 8); ctx.fillStyle = '#4c9c45'; ctx.fillRect(0, ground - 2, w, 9);
+    ctx.fillStyle = '#83c95c';
+    for (let i = 0; i < Math.ceil(w / 34) + 1; i++) { const x = i * 34 - (this.elapsed * this.speed * .35) % 34; ctx.beginPath(); ctx.ellipse(x, ground + 5, 12, 4, 0, 0, Math.PI * 2); ctx.fill(); }
+    this.objects.forEach((item) => this.drawObject(item));
+    const bounce = this.player.grounded ? Math.sin(now / 105) * 2 : 0;
+    if (this.images.bunny) ctx.drawImage(this.images.bunny, this.player.x, this.player.y + bounce, this.player.w, this.player.h);
+    else { ctx.font = '64px serif'; ctx.fillText('🐰', this.player.x, this.player.y + this.player.h); }
+  }
+  drawObject(item) {
+    const ctx = this.ctx;
+    if (item.type === 'carrot') { if (this.images.carrot) ctx.drawImage(this.images.carrot, item.x, item.y, item.w, item.h); else { ctx.font = '38px serif'; ctx.fillText('🥕', item.x, item.y + item.h); } return; }
+    ctx.save();
+    if (item.type === 'log') {
+      ctx.fillStyle = '#92552c'; ctx.strokeStyle = '#67391f'; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(item.x, item.y + 6, item.w, item.h - 7, 13); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#d79a58'; ctx.beginPath(); ctx.ellipse(item.x + 9, item.y + item.h / 2 + 2, 8, 12, 0, 0, Math.PI * 2); ctx.fill();
+    } else if (item.type === 'rock') {
+      ctx.fillStyle = '#87939a'; ctx.strokeStyle = '#65747c'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(item.x + 2, item.y + item.h); ctx.lineTo(item.x + 7, item.y + 19); ctx.lineTo(item.x + 23, item.y + 3); ctx.lineTo(item.x + 38, item.y + 12); ctx.lineTo(item.x + item.w - 2, item.y + item.h); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.fillStyle = '#3d994d'; ctx.strokeStyle = '#27743c'; ctx.lineWidth = 3;
+      for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(item.x + 13 + i * 13, item.y + 25 + Math.sin(i) * 4, 18, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+    }
+    ctx.restore();
+  }
+  updateHud() {
+    if (this.scoreEl) this.scoreEl.textContent = this.score;
+    if (this.carrotsEl) this.carrotsEl.textContent = this.carrots;
+    if (this.timerEl) this.timerEl.textContent = `${Math.floor(this.remainingSeconds / 60)}:${String(this.remainingSeconds % 60).padStart(2, '0')}`;
+  }
+  finish(reason) {
+    if (this.state !== 'running') return;
+    this.state = 'over'; this.stopLoop(); this.timerService?.endSession?.(); this.hint.classList.add('is-hidden'); this.overlay.classList.remove('is-hidden');
+    this.titleEl.textContent = reason === 'time' ? 'Wonderful running!' : 'Good hopping!';
+    this.copyEl.textContent = `You collected ${this.carrots} ${this.carrots === 1 ? 'carrot' : 'carrots'} and earned ${this.score} points. Try again?`;
+    this.playButton.textContent = 'Run again!'; completionFeedback(this.platform, `You collected ${this.carrots} carrots!`, '🐰', this.score);
+  }
+  pause() { if (this.state === 'running') { this.state = 'paused'; this.stopLoop(); } }
+  resume() { if (this.state === 'paused') { this.state = 'running'; this.lastFrame = performance.now(); this.raf = requestAnimationFrame((now) => this.frame(now)); this.timerId = setInterval(() => this.tickTimer(), 500); } }
+  stop() { this.stopLoop(); if (this.state === 'running') this.timerService?.endSession?.(); this.state = 'stopped'; }
+  reset() { this.start(); }
+  cleanup() { this.stop(); window.removeEventListener('resize', this.boundResize); window.removeEventListener('keydown', this.boundKeydown); this.root?.remove(); this.root = null; this.canvas = null; this.ctx = null; }
+}

@@ -12,6 +12,7 @@ const gameModules = [
   ['language-adventures', './games/language-adventures/LanguageAdventureGame.js', './games/language-adventures/styles.css'],
   ['strawberry-garden', './games/strawberry-garden/StrawberryGardenGame.js', './games/strawberry-garden/styles.css'],
   ['little-scribbles', './games/little-scribbles/LittleScribblesGame.js', './games/little-scribbles/styles.css'],
+  ['bunny-run', './games/bunny-run/BunnyRunGame.js', './games/bunny-run/styles.css'],
 ];
 
 export function runCssLoadingTests() {
