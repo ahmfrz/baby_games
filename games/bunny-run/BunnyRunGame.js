@@ -778,7 +778,9 @@ export class BunnyRunGame extends GameModule {
     if (this.state !== 'running') return;
     this.state = 'over';
     this.stopLoop();
-    this.timerService?.endSession?.();
+    if (reason === 'time') {
+      this.timerService?.endSession?.();
+    }
     this.hint.classList.add('is-hidden');
     this.overlay.classList.remove('is-hidden');
 
@@ -818,7 +820,6 @@ export class BunnyRunGame extends GameModule {
 
   stop() {
     this.stopLoop();
-    if (this.state === 'running') this.timerService?.endSession?.();
     this.state = 'stopped';
   }
 

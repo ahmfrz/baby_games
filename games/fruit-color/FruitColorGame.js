@@ -346,9 +346,14 @@ export class FruitColorGame extends GameModule {
     this.elements.library.classList.add('hidden');
     this.elements.canvasScreen.classList.remove('hidden');
     this.elements.celebration.classList.add('hidden');
+    this.elements.outlineImg.crossOrigin = 'anonymous';
     this.elements.outlineImg.src = this.resolveAsset(fruit.outline);
     this.clearPaint();
-    await this.loadRegionMasks(fruit);
+    try {
+      await this.loadRegionMasks(fruit);
+    } catch (err) {
+      console.error('[FruitColorGame] Failed to load region masks for', fruit.id, err);
+    }
   }
 
   openNextFruit() {
@@ -421,8 +426,24 @@ export class FruitColorGame extends GameModule {
   loadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.onload = () => resolve(img);
-      img.onerror = reject;
+      img.onerror = (err) => {
+        // Fallback to local file if remote CDN fetch fails (e.g. CORS or offline)
+        if (src.includes('cloudinary.com') || src.startsWith('http')) {
+          console.warn('[FruitColorGame] Remote image failed, attempting local fallback:', src);
+          const match = src.match(/\/games\/fruit-color\/(.*)$/);
+          if (match && match[1]) {
+            const fallbackImg = new Image();
+            fallbackImg.crossOrigin = 'anonymous';
+            fallbackImg.onload = () => resolve(fallbackImg);
+            fallbackImg.onerror = () => reject(err);
+            fallbackImg.src = `./games/fruit-color/assets/${match[1]}`;
+            return;
+          }
+        }
+        reject(err);
+      };
       img.src = src;
     });
   }
@@ -482,23 +503,38 @@ export class FruitColorGame extends GameModule {
 
   paintAtClientPoint(clientX, clientY) {
     const rect = this.paintCanvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
     const scaleX = CANVAS_SIZE / rect.width;
     const scaleY = CANVAS_SIZE / rect.height;
     const x = (clientX - rect.left) * scaleX;
     const y = (clientY - rect.top) * scaleY;
 
-    if (this.lastDabPoint) {
-      const dist = Math.hypot(x - this.lastDabPoint.x, y - this.lastDabPoint.y);
-      if (dist < MIN_DAB_SPACING) return;
+    if (!this.lastDabPoint) {
+      this.lastDabPoint = { x, y };
+      const regionId = this.regionIdAt(x, y);
+      if (regionId) this.paintDab(regionId, x, y);
+      return;
     }
+
+    const dist = Math.hypot(x - this.lastDabPoint.x, y - this.lastDabPoint.y);
+    if (dist < MIN_DAB_SPACING) return;
+
+    // Interpolate points along the stroke to ensure unbroken, continuous coloring
+    const steps = Math.ceil(dist / MIN_DAB_SPACING);
+    const prev = this.lastDabPoint;
     this.lastDabPoint = { x, y };
 
-    const regionId = this.regionIdAt(x, y);
-    if (!regionId) return;
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const px = prev.x + (x - prev.x) * t;
+      const py = prev.y + (y - prev.y) * t;
+      const regionId = this.regionIdAt(px, py);
+      if (regionId) {
+        this.paintDab(regionId, px, py);
+      }
+    }
 
-    this.paintDab(regionId, x, y);
-
-    this.dabsSinceCheck += 1;
+    this.dabsSinceCheck += steps;
     if (this.dabsSinceCheck >= COVERAGE_CHECK_EVERY) {
       this.dabsSinceCheck = 0;
       this.checkCompletion();
@@ -506,11 +542,28 @@ export class FruitColorGame extends GameModule {
   }
 
   regionIdAt(x, y) {
+    if (!this.mapSampleData) return null;
     const xi = Math.max(0, Math.min(CANVAS_SIZE - 1, Math.floor(x)));
     const yi = Math.max(0, Math.min(CANVAS_SIZE - 1, Math.floor(y)));
     const idx = (yi * CANVAS_SIZE + xi) * 4;
+
     for (const [regionId, meta] of this.regionMeta.entries()) {
       if (this.colorsClose(this.mapSampleData, idx, meta.mapColor)) return regionId;
+    }
+
+    // Forgiving neighbor check: if touch hits an antialiased or black outline edge,
+    // check nearby pixels (±3px) to smoothly detect the region
+    const offsets = [
+      [0, -2], [0, 2], [-2, 0], [2, 0],
+      [-3, -3], [3, 3], [-3, 3], [3, -3]
+    ];
+    for (const [ox, oy] of offsets) {
+      const nx = Math.max(0, Math.min(CANVAS_SIZE - 1, xi + ox));
+      const ny = Math.max(0, Math.min(CANVAS_SIZE - 1, yi + oy));
+      const nIdx = (ny * CANVAS_SIZE + nx) * 4;
+      for (const [regionId, meta] of this.regionMeta.entries()) {
+        if (this.colorsClose(this.mapSampleData, nIdx, meta.mapColor)) return regionId;
+      }
     }
     return null;
   }

@@ -25,6 +25,14 @@ const LAUNCHER_ART = {
   'bunny-run': assetUrl('games/bunny-run/art/rabbit-idle.png')
 };
 
+const HIDDEN_GAME_IDS = new Set([
+  'comic-stories',
+  'star-collector',
+  'fruit-slice',
+  'pinch-pop',
+  'strawberry-garden'
+]);
+
 // ============================================
 // Platform Initialization
 // ============================================
@@ -522,7 +530,7 @@ class BabyGamesPlatform {
       if (gamesList) {
         gamesList.innerHTML = '';
 
-        const games = gameRegistry.listGames();
+        const games = gameRegistry.listGames().filter((g) => !HIDDEN_GAME_IDS.has(g.id));
         games.forEach((gameMetadata, index) => {
           const gameCard = this.createGameCard(gameMetadata);
           gamesList.appendChild(gameCard);
@@ -614,8 +622,8 @@ class BabyGamesPlatform {
     }
     const gameContainer = document.getElementById('gameContainer');
     if (gameContainer) gameContainer.style.display = 'none';
+    this.hideGameNavigation();
     await this.showLauncher();
-    this.showGameNavigation();
   }
 
   /**
